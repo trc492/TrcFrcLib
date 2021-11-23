@@ -23,7 +23,7 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.LinearFilter;
-import trclib.TrcFilter;
+import TrcCommonLib.trclib.TrcFilter;
 
 public class FrcHighPassFilter extends TrcFilter
 {

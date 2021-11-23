@@ -23,9 +23,9 @@
 package frclib;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import trclib.TrcPidController;
-import trclib.TrcServo;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcPidController;
+import TrcCommonLib.trclib.TrcServo;
+import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcTalonServo extends TrcServo
 {

@@ -23,7 +23,7 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.MedianFilter;
-import trclib.TrcFilter;
+import TrcCommonLib.trclib.TrcFilter;
 
 public class FrcMedianFilter extends TrcFilter
 {

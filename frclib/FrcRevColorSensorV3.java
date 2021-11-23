@@ -27,7 +27,7 @@ import com.revrobotics.ColorSensorV3;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.util.Color;
-import trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class implements the platform dependent Rev Color Sensor V3. It is a wrapper class extending the ColorSensorV3

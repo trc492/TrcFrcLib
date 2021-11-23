@@ -27,8 +27,8 @@ import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.I2C.Port;
-import trclib.TrcDbgTrace;
-import trclib.TrcSerialBusDevice;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcSerialBusDevice;
 
 /**
  * This class implements a platform dependent I2C device. It extends TrcSerialBusDevice to provide asynchronous

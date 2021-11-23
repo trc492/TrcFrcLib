@@ -23,9 +23,9 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.SerialPort;
-import trclib.TrcDbgTrace;
-import trclib.TrcEmic2TextToSpeech;
-import trclib.TrcSerialBusDevice;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcEmic2TextToSpeech;
+import TrcCommonLib.trclib.TrcSerialBusDevice;
 
 /**
  * This class implements a platform dependent Emic2 text to speech device that is connected to a Serial Port.

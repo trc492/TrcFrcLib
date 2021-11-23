@@ -23,8 +23,8 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
-import trclib.TrcDbgTrace;
-import trclib.TrcRGBLight;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcRGBLight;
 
 public class FrcDigitalRGB extends TrcRGBLight
 {

@@ -23,8 +23,8 @@
 package frclib;
 
 import com.cuforge.libcu.Lasershark;
-import trclib.TrcDbgTrace;
-import trclib.TrcDistanceSensor;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDistanceSensor;
 
 /**
  * This class implements the platform dependent Lasershark LIDAR sensor. It is a wrapper class extending the Lasershark

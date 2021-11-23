@@ -32,10 +32,10 @@ import com.ctre.phoenix.motorcontrol.can.BaseTalon;
 import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableRegistry;
-import trclib.TrcDbgTrace;
-import trclib.TrcMotor;
-import trclib.TrcPidController;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcMotor;
+import TrcCommonLib.trclib.TrcPidController;
+import TrcCommonLib.trclib.TrcUtil;
 
 public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMotor
 {

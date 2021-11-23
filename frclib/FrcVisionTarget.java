@@ -28,7 +28,7 @@ import org.opencv.core.Scalar;
 
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
-import trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class implements a Vision Targeting system that uses OpenCV. It uses a separate vision thread and will take

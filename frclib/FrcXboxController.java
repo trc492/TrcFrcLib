@@ -24,10 +24,10 @@ package frclib;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.XboxController;
-import trclib.TrcDbgTrace;
-import trclib.TrcRobot;
-import trclib.TrcTaskMgr;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcRobot;
+import TrcCommonLib.trclib.TrcTaskMgr;
+import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcXboxController extends XboxController
 {

@@ -23,8 +23,8 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
-import trclib.TrcDbgTrace;
-import trclib.TrcDigitalOutput;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDigitalOutput;
 
 /**
  * This class implements a platform dependent digital output extending TrcDigitalOutput. It provides

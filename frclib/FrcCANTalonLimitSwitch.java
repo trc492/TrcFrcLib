@@ -22,8 +22,8 @@
 
 package frclib;
 
-import trclib.TrcDbgTrace;
-import trclib.TrcDigitalInput;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDigitalInput;
 
 /**
  * This class implements a platform dependent digital input sensor extending TrcDigitalInput. It provides

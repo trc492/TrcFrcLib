@@ -28,9 +28,9 @@ import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableRegistry;
-import trclib.TrcDbgTrace;
-import trclib.TrcGyro;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcGyro;
+import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcAHRSGyro extends TrcGyro
 {

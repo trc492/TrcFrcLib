@@ -23,10 +23,10 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.AnalogInput;
-import trclib.TrcAnalogInput;
-import trclib.TrcDbgTrace;
-import trclib.TrcFilter;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcAnalogInput;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcFilter;
+import TrcCommonLib.trclib.TrcUtil;
 
 /**
  * This class implements a platform dependent AnalogInput sensor extending TrcAnalogInput. It provides implementation

@@ -23,7 +23,7 @@
 package frclib;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcUtil;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;

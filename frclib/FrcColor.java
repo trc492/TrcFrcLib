@@ -23,8 +23,8 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.util.Color;
-import trclib.TrcColor;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcColor;
+import TrcCommonLib.trclib.TrcUtil;
 
 /**
  * This class implements an FRC specific color object. It extends TrcColor so it can be used by the rest of trclib.

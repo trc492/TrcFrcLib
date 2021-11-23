@@ -30,10 +30,10 @@ import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel;
-import trclib.TrcDbgTrace;
-import trclib.TrcMotor;
-import trclib.TrcPidController;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcMotor;
+import TrcCommonLib.trclib.TrcPidController;
+import TrcCommonLib.trclib.TrcUtil;
 
 /**
  * This class implements a SparkMAX motor controller by REV robototics. It extends the TrcMotor class and

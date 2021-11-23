@@ -23,9 +23,9 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.GyroBase;
-import trclib.TrcDbgTrace;
-import trclib.TrcGyro;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcGyro;
+import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcGyro extends TrcGyro
 {

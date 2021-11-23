@@ -33,13 +33,13 @@ import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
-import trclib.TrcEvent;
-import trclib.TrcPidController;
-import trclib.TrcPose2D;
-import trclib.TrcRobot;
-import trclib.TrcSwerveDriveBase;
-import trclib.TrcTaskMgr;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcEvent;
+import TrcCommonLib.trclib.TrcPidController;
+import TrcCommonLib.trclib.TrcPose2D;
+import TrcCommonLib.trclib.TrcRobot;
+import TrcCommonLib.trclib.TrcSwerveDriveBase;
+import TrcCommonLib.trclib.TrcTaskMgr;
+import TrcCommonLib.trclib.TrcUtil;
 
 import java.util.Arrays;
 

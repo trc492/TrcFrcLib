@@ -22,8 +22,8 @@
 
 package frclib;
 
-import trclib.TrcDbgTrace;
-import trclib.TrcRobotBattery;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcRobotBattery;
 
 /**
  * This class extends the TrcRobotBattery which provides a task to monitor the robot battery levels and the methods to

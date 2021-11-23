@@ -25,8 +25,8 @@ package frclib;
 import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.I2C;
-import trclib.TrcDbgTrace;
-import trclib.TrcI2cLEDPanel;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcI2cLEDPanel;
 
 /**
  * This class implements a platform dependent I2C LED panel device. It extends the platform independent counterpart

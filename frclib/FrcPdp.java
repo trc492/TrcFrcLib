@@ -29,10 +29,10 @@ import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.SensorUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableRegistry;
-import trclib.TrcDbgTrace;
-import trclib.TrcRobot;
-import trclib.TrcTaskMgr;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcRobot;
+import TrcCommonLib.trclib.TrcTaskMgr;
+import TrcCommonLib.trclib.TrcUtil;
 
 /**
  * This class extends the WPI PowerDistricbutonPanel class to provide monitoring of energy consumption of registered

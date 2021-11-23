@@ -24,7 +24,7 @@ package frclib;
 
 import com.google.gson.Gson;
 import edu.wpi.first.networktables.NetworkTableEntry;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcRaspiVisionProcessor extends FrcRemoteVisionProcessor
 {

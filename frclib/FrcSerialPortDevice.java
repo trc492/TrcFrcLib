@@ -26,8 +26,8 @@ import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.SerialPort.*;
-import trclib.TrcDbgTrace;
-import trclib.TrcSerialBusDevice;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcSerialBusDevice;
 
 /**
  * This class implements a platform dependent serial port device (UART). It extends TrcSerialBusDevice to provide

@@ -23,13 +23,13 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.Solenoid;
-import trclib.TrcDbgTrace;
-import trclib.TrcEvent;
-import trclib.TrcRobot;
-import trclib.TrcStateMachine;
-import trclib.TrcTaskMgr;
-import trclib.TrcTimer;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcEvent;
+import TrcCommonLib.trclib.TrcRobot;
+import TrcCommonLib.trclib.TrcStateMachine;
+import TrcCommonLib.trclib.TrcTaskMgr;
+import TrcCommonLib.trclib.TrcTimer;
+import TrcCommonLib.trclib.TrcUtil;
 
 /**
  * This class implements a platform dependent pneumatic object. A pneumatic object consists of multiple pneumatic

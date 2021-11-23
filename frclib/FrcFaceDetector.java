@@ -30,7 +30,7 @@ import org.opencv.objdetect.CascadeClassifier;
 
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
-import trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class implements an OpenCV face detector using the provided classifier.

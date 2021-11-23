@@ -27,9 +27,9 @@ import java.util.Arrays;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SerialPort;
-import trclib.TrcDbgTrace;
-import trclib.TrcSerialBusDevice;
-import trclib.TrcPixyCam2;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcSerialBusDevice;
+import TrcCommonLib.trclib.TrcPixyCam2;
 
 /**
  * This class implements a platform dependent pixy camera 2 that is either connected to an I2C bus, SPI or a

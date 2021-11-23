@@ -23,8 +23,8 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.Servo;
-import trclib.TrcDbgTrace;
-import trclib.TrcServo;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcServo;
 
 /**
  * This class implements an FRC specific servo motor that connects to a specified PWM channel on the RoboRIO.

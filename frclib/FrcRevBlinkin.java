@@ -23,8 +23,8 @@
 package frclib;
 
 import edu.wpi.first.wpilibj.Spark;
-import trclib.TrcDbgTrace;
-import trclib.TrcRevBlinkin;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcRevBlinkin;
 
 /**
  * This class implements a platform dependent REV Blinkin device. It provides a platform dependent method that

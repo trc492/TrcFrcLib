@@ -30,8 +30,8 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-import trclib.TrcDbgTrace;
-import trclib.TrcVisionTask;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcVisionTask;
 
 /**
  * This class implements a generic OpenCV detector. Typically, it is extended by a specific detector that provides
