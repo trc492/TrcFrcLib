@@ -25,7 +25,6 @@ package TrcFrcLib.frclib;
 import java.util.HashMap;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import hallib.HalDashboard;
 import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
@@ -42,6 +41,7 @@ public class FrcChoiceMenu<T>
     private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
     protected TrcDbgTrace dbgTrace = null;
 
+    private final FrcDashboard dashboard = FrcDashboard.getInstance();
     private final String menuTitle;
     private SendableChooser<T> chooser;
     private HashMap<T, String> hashMap;
@@ -96,7 +96,6 @@ public class FrcChoiceMenu<T>
      * @param defChoice specifies true to set it the default choice, false otherwise.
      * @param lastChoice specifies true if this is the last choice added to the choice menu, false otherwise.
      */
-    @SuppressWarnings("deprecation")
     public void addChoice(String choiceText, T choiceObject, boolean defChoice, boolean lastChoice)
     {
         final String funcName = "addChoice";
@@ -110,16 +109,16 @@ public class FrcChoiceMenu<T>
         hashMap.put(choiceObject, choiceText);
         if (defChoice)
         {
-            chooser.addDefault(choiceText, choiceObject);
+            chooser.setDefaultOption(choiceText, choiceObject);
         }
         else
         {
-            chooser.addObject(choiceText, choiceObject);
+            chooser.addOption(choiceText, choiceObject);
         }
 
         if (lastChoice)
         {
-            HalDashboard.putData(menuTitle, chooser);
+            dashboard.putData(menuTitle, chooser);
         }
 
         if (debugEnabled)

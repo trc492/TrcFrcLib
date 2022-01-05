@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.wpilibj.Sendable;
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import TrcCommonLib.trclib.TrcDashboard;
 import TrcCommonLib.trclib.TrcDbgTrace;
@@ -45,18 +45,26 @@ public class FrcDashboard extends TrcDashboard
     private static String[] display;
 
     /**
+     * This method returns the instance of this object if one already exist, creates one if none existed.
+     *
+     * @return instance of the object, null if none existed.
+     */
+    public static FrcDashboard getInstance()
+    {
+        if (instance == null)
+        {
+            instance = new FrcDashboard(MAX_NUM_TEXTLINES);
+        }
+
+        return (FrcDashboard)instance;
+    }   //getInstance
+
+    /**
      * Constructor: Creates an instance of the object.
      */
     public FrcDashboard(int numLines)
     {
         super(numLines);
-
-        if (debugEnabled)
-        {
-            dbgTrace = useGlobalTracer ?
-                TrcDbgTrace.getGlobalTracer() :
-                new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
-        }
 
         instance = this;
         display = new String[numLines];
@@ -72,7 +80,7 @@ public class FrcDashboard extends TrcDashboard
      * @return the value associated with the given key or the given default
      * value if there is no value associated with the key
      */
-    public static boolean[] getBooleanArray(String key, boolean[] defaultValue)
+    public boolean[] getBooleanArray(String key, boolean[] defaultValue)
     {
         return getEntry(key).getBooleanArray(defaultValue);
     }   //getBooleanArray
@@ -86,7 +94,7 @@ public class FrcDashboard extends TrcDashboard
      * @return the value associated with the given key or the given default
      * value if there is no value associated with the key
      */
-    public static Boolean[] getBooleanArray(String key, Boolean[] defaultValue)
+    public Boolean[] getBooleanArray(String key, Boolean[] defaultValue)
     {
         return getEntry(key).getBooleanArray(defaultValue);
     }   //getBooleanArray
@@ -96,11 +104,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean putBooleanArray(String key, boolean[] value)
+    public void putBooleanArray(String key, boolean[] value)
     {
-        return getEntry(key).setBooleanArray(value);
+        if (!getEntry(key).setBooleanArray(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putBooleanArray
 
     /**
@@ -108,11 +119,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean putBooleanArray(String key, Boolean[] value)
+    public void putBooleanArray(String key, Boolean[] value)
     {
-        return getEntry(key).setBooleanArray(value);
+        if (!getEntry(key).setBooleanArray(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putBooleanArray
 
     /**
@@ -120,11 +134,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultBoolean(String key, boolean defaultValue)
+    public void setDefaultBoolean(String key, boolean defaultValue)
     {
-        return getEntry(key).setDefaultBoolean(defaultValue);
+        if (!getEntry(key).setDefaultBoolean(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultBoolean
 
     /**
@@ -132,11 +149,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultBooleanArray(String key, boolean[] defaultValue)
+    public void setDefaultBooleanArray(String key, boolean[] defaultValue)
     {
-        return getEntry(key).setDefaultBooleanArray(defaultValue);
+        if (!getEntry(key).setDefaultBooleanArray(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultBooleanArray
 
     /**
@@ -144,11 +164,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultBooleanArray(String key, Boolean[] defaultValue)
+    public void setDefaultBooleanArray(String key, Boolean[] defaultValue)
     {
-        return getEntry(key).setDefaultBooleanArray(defaultValue);
+        if (!getEntry(key).setDefaultBooleanArray(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultBooleanArray
 
     /**
@@ -160,7 +183,7 @@ public class FrcDashboard extends TrcDashboard
      * @return the value associated with the given key or the given default
      * value if there is no value associated with the key
      */
-    public static double[] getNumberArray(String key, double[] defaultValue)
+    public double[] getNumberArray(String key, double[] defaultValue)
     {
         return getEntry(key).getDoubleArray(defaultValue);
     }   //getNumberArray
@@ -174,7 +197,7 @@ public class FrcDashboard extends TrcDashboard
      * @return the value associated with the given key or the given default
      * value if there is no value associated with the key
      */
-    public static Double[] getNumberArray(String key, Double[] defaultValue)
+    public Double[] getNumberArray(String key, Double[] defaultValue)
     {
         return getEntry(key).getDoubleArray(defaultValue);
     }   //getNumberArray
@@ -184,11 +207,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean putNumberArray(String key, double[] value)
+    public void putNumberArray(String key, double[] value)
     {
-        return getEntry(key).setDoubleArray(value);
+        if (!getEntry(key).setDoubleArray(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putNumberArray
 
     /**
@@ -196,11 +222,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean putNumberArray(String key, Double[] value)
+    public void putNumberArray(String key, Double[] value)
     {
-        return getEntry(key).setNumberArray(value);
+        if (!getEntry(key).setNumberArray(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putNumberArray
 
     /**
@@ -208,11 +237,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultNumber(String key, double defaultValue)
+    public void setDefaultNumber(String key, double defaultValue)
     {
-        return getEntry(key).setDefaultDouble(defaultValue);
+        if (!getEntry(key).setDefaultDouble(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultNumber
 
     /**
@@ -220,11 +252,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultNumberArray(String key, double[] defaultValue)
+    public void setDefaultNumberArray(String key, double[] defaultValue)
     {
-        return getEntry(key).setDefaultDoubleArray(defaultValue);
+        if (!getEntry(key).setDefaultDoubleArray(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultNumberArray
 
     /**
@@ -232,11 +267,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultNumberArray(String key, Double[] defaultValue)
+    public void setDefaultNumberArray(String key, Double[] defaultValue)
     {
-        return getEntry(key).setDefaultNumberArray(defaultValue);
+        if (!getEntry(key).setDefaultNumberArray(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultNumberArray
 
     /**
@@ -248,7 +286,7 @@ public class FrcDashboard extends TrcDashboard
      * @return the value associated with the given key or the given default
      * value if there is no value associated with the key
      */
-    public static String[] getStringArray(String key, String[] defaultValue)
+    public String[] getStringArray(String key, String[] defaultValue)
     {
         return getEntry(key).getStringArray(defaultValue);
     }   //getStringArray
@@ -258,11 +296,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean putStringArray(String key, String[] value)
+    public void putStringArray(String key, String[] value)
     {
-        return getEntry(key).setStringArray(value);
+        if (!getEntry(key).setStringArray(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putStringArray
 
     /**
@@ -270,11 +311,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultString(String key, String defaultValue)
+    public void setDefaultString(String key, String defaultValue)
     {
-        return getEntry(key).setDefaultString(defaultValue);
+        if (!getEntry(key).setDefaultString(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultString
 
     /**
@@ -282,11 +326,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultStringArray(String key, String[] defaultValue)
+    public void setDefaultStringArray(String key, String[] defaultValue)
     {
-        return getEntry(key).setDefaultStringArray(defaultValue);
+        if (!getEntry(key).setDefaultStringArray(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultStringArray
 
     /**
@@ -296,7 +343,7 @@ public class FrcDashboard extends TrcDashboard
      * @return the value
      * @throws IllegalArgumentException if the key is null
      */
-    public static synchronized Sendable getData(String key)
+    public synchronized Sendable getData(String key)
     {
         return SmartDashboard.getData(key);
     }   //getData
@@ -310,7 +357,7 @@ public class FrcDashboard extends TrcDashboard
      * @param data the value
      * @throws IllegalArgumentException If key is null
      */
-    public static synchronized void putData(String key, Sendable data)
+    public synchronized void putData(String key, Sendable data)
     {
         SmartDashboard.putData(key, data);
     }   //putData
@@ -324,7 +371,7 @@ public class FrcDashboard extends TrcDashboard
      * @param value the value
      * @throws IllegalArgumentException If key is null
      */
-    public static void putData(Sendable value)
+    public void putData(Sendable value)
     {
         SmartDashboard.putData(value);
     }   //putData
@@ -335,7 +382,7 @@ public class FrcDashboard extends TrcDashboard
      * @param key the key name
      * @return the flags, or 0 if the key is not defined
      */
-    public static int getFlags(String key)
+    public int getFlags(String key)
     {
         return getEntry(key).getFlags();
     }   //getFlags
@@ -346,7 +393,7 @@ public class FrcDashboard extends TrcDashboard
      * @param key   the key name
      * @param flags the flags to set (bitmask)
      */
-    public static void setFlags(String key, int flags)
+    public void setFlags(String key, int flags)
     {
         getEntry(key).setFlags(flags);
     }   //setFlags
@@ -357,7 +404,7 @@ public class FrcDashboard extends TrcDashboard
      * @param key   the key name
      * @param flags the flags to clear (bitmask)
      */
-    public static void clearFlags(String key, int flags)
+    public void clearFlags(String key, int flags)
     {
         getEntry(key).clearFlags(flags);
     }   //clearFlags
@@ -368,7 +415,7 @@ public class FrcDashboard extends TrcDashboard
      * @param key the key name
      * @return Network table entry.
      */
-    public static NetworkTableEntry getEntry(String key)
+    public NetworkTableEntry getEntry(String key)
     {
         return SmartDashboard.getEntry(key);
     }   //getEntry
@@ -379,7 +426,7 @@ public class FrcDashboard extends TrcDashboard
      * @param types bitmask of types; 0 is treated as a "don't care".
      * @return keys currently in the table
      */
-    public static Set<String> getKeys(int types)
+    public Set<String> getKeys(int types)
     {
         return SmartDashboard.getKeys(types);
     }   //getKeys
@@ -389,7 +436,7 @@ public class FrcDashboard extends TrcDashboard
      *
      * @return keys currently in the table.
      */
-    public static Set<String> getKeys()
+    public Set<String> getKeys()
     {
         return SmartDashboard.getKeys();
     }   //getKeys
@@ -400,7 +447,7 @@ public class FrcDashboard extends TrcDashboard
      * @param key the key to search for
      * @return true if the table as a value assigned to the given key
      */
-    public static boolean containsKey(String key)
+    public boolean containsKey(String key)
     {
         return SmartDashboard.containsKey(key);
     }   //containKey
@@ -411,7 +458,7 @@ public class FrcDashboard extends TrcDashboard
      * @param key          The name of the entry.
      * @param defaultValue The value to create the entry with if it doesn't exist.
      */
-    public static void refreshKey(String key, Object defaultValue)
+    public void refreshKey(String key, Object defaultValue)
     {
         SmartDashboard.getEntry(key).setDefaultValue(defaultValue);
     }   //refreshKey
@@ -425,7 +472,7 @@ public class FrcDashboard extends TrcDashboard
      * @return the value associated with the given key or the given default
      * value if there is no value associated with the key
      */
-    public static byte[] getRaw(String key, byte[] defaultValue)
+    public byte[] getRaw(String key, byte[] defaultValue)
     {
         return getEntry(key).getRaw(defaultValue);
     }   //getRaw
@@ -435,11 +482,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean putRaw(String key, byte[] value)
+    public void putRaw(String key, byte[] value)
     {
-        return getEntry(key).setRaw(value);
+        if (!getEntry(key).setRaw(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putRaw
 
     /**
@@ -448,11 +498,14 @@ public class FrcDashboard extends TrcDashboard
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
      * @param len   the length of the value
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean putRaw(String key, ByteBuffer value, int len)
+    public void putRaw(String key, ByteBuffer value, int len)
     {
-        return getEntry(key).setRaw(value, len);
+        if (!getEntry(key).setRaw(value, len))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setRaw
 
     /**
@@ -460,11 +513,14 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key          the key
      * @param defaultValue the default value to set if key does not exist.
-     * @return False if the table key exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
-    public static boolean setDefaultRaw(String key, byte[] defaultValue)
+    public void setDefaultRaw(String key, byte[] defaultValue)
     {
-        return getEntry(key).setDefaultRaw(defaultValue);
+        if (!getEntry(key).setDefaultRaw(defaultValue))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //setDefaultRaw
 
     /**
@@ -473,7 +529,7 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key the key name
      */
-    public static void setPersistent(String key)
+    public void setPersistent(String key)
     {
         getEntry(key).setPersistent();
     }   //setPersistent
@@ -484,7 +540,7 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key the key name
      */
-    public static void clearPersistent(String key)
+    public void clearPersistent(String key)
     {
         getEntry(key).clearPersistent();
     }   //clearPersistent
@@ -496,7 +552,7 @@ public class FrcDashboard extends TrcDashboard
      * @param key the key name
      * @return True if the value is persistent.
      */
-    public static boolean isPersistent(String key)
+    public boolean isPersistent(String key)
     {
         return getEntry(key).isPersistent();
     }   //isPersistent
@@ -506,7 +562,7 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key the key name
      */
-    public static void delete(String key)
+    public void delete(String key)
     {
         SmartDashboard.delete(key);
     }   //delete
@@ -514,7 +570,7 @@ public class FrcDashboard extends TrcDashboard
     /**
      * Puts all sendable data to the dashboard.
      */
-    public static synchronized void updateValues()
+    public synchronized void updateValues()
     {
         SmartDashboard.updateValues();
     }   //updateValues
@@ -592,7 +648,7 @@ public class FrcDashboard extends TrcDashboard
      * value if there is no value associated with the key
      */
     @Override
-    public static boolean getBoolean(String key, boolean defaultValue)
+    public boolean getBoolean(String key, boolean defaultValue)
     {
         return getEntry(key).getBoolean(defaultValue);
     }   //getBoolean
@@ -602,12 +658,15 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
     @Override
-    public static boolean putBoolean(String key, boolean value)
+    public void putBoolean(String key, boolean value)
     {
-        return getEntry(key).setBoolean(value);
+        if (!getEntry(key).setBoolean(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putBoolean
 
     /**
@@ -622,7 +681,7 @@ public class FrcDashboard extends TrcDashboard
      * not exist.
      */
     @Override
-    public static double getNumber(String key, double defaultValue)
+    public double getNumber(String key, double defaultValue)
     {
         double value = defaultValue;
 
@@ -643,12 +702,15 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
     @Override
-    public static boolean putNumber(String key, double value)
+    public void putNumber(String key, double value)
     {
-        return getEntry(key).setDouble(value);
+        if (!getEntry(key).setDouble(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putNumber
 
     /**
@@ -663,7 +725,7 @@ public class FrcDashboard extends TrcDashboard
      * not exist.
      */
     @Override
-    public static String getString(String key, String defaultValue)
+    public String getString(String key, String defaultValue)
     {
         String value = defaultValue;
 
@@ -684,12 +746,15 @@ public class FrcDashboard extends TrcDashboard
      *
      * @param key   the key to be assigned to
      * @param value the value that will be assigned
-     * @return False if the table key already exists with a different type
+     * @throws RuntimeException if key already exists with a different type.
      */
     @Override
-    public static boolean putString(String key, String value)
+    public void putString(String key, String value)
     {
-        return getEntry(key).setString(value);
+        if (!getEntry(key).setString(value))
+        {
+            throw new RuntimeException("Key already exists with a different type.");
+        }
     }   //putString
 
 }   // class FrcDashboard

@@ -80,7 +80,7 @@ public abstract class FrcRobotBase extends RobotBase
     public TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
 
     private TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
-    private FrcDashboard dashboard = new FrcDashboard();
+    private FrcDashboard dashboard = FrcDashboard.getInstance();
 
     private static FrcRobotBase instance = null;
     private static long loopCounter = 0;
@@ -436,7 +436,7 @@ public abstract class FrcRobotBase extends RobotBase
             // Run the time slice.
             //
             double modeElapsedTime = TrcUtil.getModeElapsedTime();
-            boolean periodReady = nextPeriodReady();
+            boolean periodReady = isNewDataAvailable();
             //
             // PreContinuous
             //
@@ -628,14 +628,5 @@ public abstract class FrcRobotBase extends RobotBase
 
         return hostName;
     }   //getHostName
-
-    /**
-     * Determine if the appropriate next periodic function should be called. Call the periodic functions whenever
-     * a packet is received from the Driver Station or about every 20 msec.
-     */
-    private boolean nextPeriodReady()
-    {
-        return m_ds.isNewControlData();
-    }   //nextPeriodReady
 
 }   //class FrcRobotBase
