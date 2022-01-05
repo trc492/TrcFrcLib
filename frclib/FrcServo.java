@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.Servo;
 import TrcCommonLib.trclib.TrcDbgTrace;
@@ -104,9 +104,9 @@ import TrcCommonLib.trclib.TrcServo;
      * @param position specifies the logical servo position.
      */
     @Override
-    public void setLogicalPosition(double position)
+    public void setPosition(double position)
     {
-        final String funcName = "setLogicalPosition";
+        final String funcName = "setPosition";
 
         if (debugEnabled)
         {
@@ -116,7 +116,7 @@ import TrcCommonLib.trclib.TrcServo;
 
         this.prevLogicalPos = inverted? 1.0 - position: position;
         servo.set(prevLogicalPos);
-    }   //setLogicalPosition
+    }   //setPosition
 
     /**
      * This method returns the logical position value set by the last setPosition call. Note that servo motors do not
@@ -125,9 +125,9 @@ import TrcCommonLib.trclib.TrcServo;
      * @return servo position value set by the last setPosition call.
      */
     @Override
-    public double getLogicalPosition()
+    public double getPosition()
     {
-        final String funcName = "getLogicalPosition";
+        final String funcName = "getPosition";
 
         if (debugEnabled)
         {
@@ -136,6 +136,6 @@ import TrcCommonLib.trclib.TrcServo;
         }
 
         return prevLogicalPos;
-    }   //getLogicalPosition
+    }   //getPosition
 
 }   //class FrcServo

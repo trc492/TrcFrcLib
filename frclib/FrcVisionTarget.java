@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;

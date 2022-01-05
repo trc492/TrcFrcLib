@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobotBattery;

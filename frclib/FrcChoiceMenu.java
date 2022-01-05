@@ -20,13 +20,13 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import java.util.HashMap;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import hallib.HalDashboard;
-import trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class implements a choice menu where a number of choices are presented to the user on the dashboard. The user

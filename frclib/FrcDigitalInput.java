@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import TrcCommonLib.trclib.TrcDbgTrace;

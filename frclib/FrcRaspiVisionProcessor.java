@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import com.google.gson.Gson;
 import edu.wpi.first.networktables.NetworkTableEntry;

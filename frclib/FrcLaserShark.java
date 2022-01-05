@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import com.cuforge.libcu.Lasershark;
 import TrcCommonLib.trclib.TrcDbgTrace;

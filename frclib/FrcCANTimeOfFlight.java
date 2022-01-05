@@ -1,7 +1,8 @@
-package frclib;
+package TrcFrcLib.frclib;
 
 import com.playingwithfusion.TimeOfFlight;
 import TrcCommonLib.trclib.TrcDistanceSensor;
+import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcCANTimeOfFlight extends TimeOfFlight implements TrcDistanceSensor
 {
@@ -26,6 +27,6 @@ public class FrcCANTimeOfFlight extends TimeOfFlight implements TrcDistanceSenso
     public double getDistanceInches()
     {
         double distMeters = getRange() / 1000.0;
-        return distMeters / TrcDistanceSensor.METERS_PER_INCH;
+        return distMeters / TrcUtil.METERS_PER_INCH;
     }
 }

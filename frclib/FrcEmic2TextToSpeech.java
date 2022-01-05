@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.SerialPort;
 import TrcCommonLib.trclib.TrcDbgTrace;

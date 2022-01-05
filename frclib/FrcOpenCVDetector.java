@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
@@ -114,8 +114,8 @@ public class FrcPath extends TrcPath
         double endTheta = Math.toDegrees(Math.atan2(last.x - prev.x, last.y - prev.y));
 
         double targetHeading = last.angle;
-        path.getWaypoint(0).heading = startTheta;
-        path.getLastWaypoint().heading = endTheta;
+        path.getWaypoint(0).pose.angle = startTheta;
+        path.getLastWaypoint().pose.angle = endTheta;
 
         Trajectory trajectory = createTrajectory(path, config, SplineType.CLAMPED_CUBIC);
         return new FrcHolonomicTrajectory(trajectory, targetHeading);

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -31,13 +31,11 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import hallib.HalDashboard;
-import hallib.HalDbgLog;
-import trclib.TrcDbgTrace;
-import trclib.TrcRobot;
-import trclib.TrcRobot.*;
-import trclib.TrcTaskMgr;
-import trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcRobot;
+import TrcCommonLib.trclib.TrcRobot.*;
+import TrcCommonLib.trclib.TrcTaskMgr;
+import TrcCommonLib.trclib.TrcUtil;
 
 /**
  * This class defines and implements the FrcRobotBase object. The FrcRobotBase object implements a cooperative
@@ -82,7 +80,7 @@ public abstract class FrcRobotBase extends RobotBase
     public TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
 
     private TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
-    private HalDashboard dashboard = new HalDashboard();
+    private FrcDashboard dashboard = new FrcDashboard();
 
     private static FrcRobotBase instance = null;
     private static long loopCounter = 0;
@@ -116,6 +114,7 @@ public abstract class FrcRobotBase extends RobotBase
 
         this.progName = progName;
         FrcRobotBase.instance = this;
+        TrcDbgTrace.setDbgLog(new FrcDbgLog());
         // Initialize modeStartTime just in case somebody's calling TrcUtil.getModeElapsedTime before it's initialized.
         TrcUtil.recordModeStartTime();
         dashboard.clearDisplay();
@@ -225,14 +224,14 @@ public abstract class FrcRobotBase extends RobotBase
         final String funcName = "startCompetition";
 
         globalTracer.tracePrintf(
-            HalDbgLog.ESC_PREFIX + HalDbgLog.SGR_FG_BLACK +
-            HalDbgLog.ESC_SEP + HalDbgLog.SGR_BG_WHITE +
-            HalDbgLog.ESC_SUFFIX +
+            FrcDbgLog.ESC_PREFIX + FrcDbgLog.SGR_FG_BLACK +
+            FrcDbgLog.ESC_SEP + FrcDbgLog.SGR_BG_WHITE +
+            FrcDbgLog.ESC_SUFFIX +
             "\n****************************************\n" +
             "Host Name: %s\n" +
             "  Program: %s\n"+
             "\n****************************************\n" +
-            HalDbgLog.ESC_NORMAL,
+            FrcDbgLog.ESC_NORMAL,
             getHostName(), progName);
 
         HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_Iterative);

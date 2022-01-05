@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package frclib;
+package TrcFrcLib.frclib;
 
 /**
  * This interface, if provided, will allow this class to do a notification callback when there are button
