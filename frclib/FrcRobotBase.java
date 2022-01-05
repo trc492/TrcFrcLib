@@ -272,7 +272,7 @@ public abstract class FrcRobotBase extends RobotBase
             {
                 currMode = RunMode.AUTO_MODE;
             }
-            else if (isOperatorControl())
+            else if (isTeleop())
             {
                 currMode = RunMode.TELEOP_MODE;
             }

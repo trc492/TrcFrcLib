@@ -22,7 +22,7 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.first.wpilibj.MedianFilter;
+import edu.wpi.first.math.filter.MedianFilter;
 import TrcCommonLib.trclib.TrcFilter;
 
 public class FrcMedianFilter extends TrcFilter

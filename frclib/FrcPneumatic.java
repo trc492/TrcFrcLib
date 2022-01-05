@@ -22,6 +22,7 @@
 
 package TrcFrcLib.frclib;
 
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcEvent;
@@ -115,12 +116,13 @@ public class FrcPneumatic
      *
      * @param instanceName specifies the instance name.
      * @param module specifies the CAN ID of the Pneumatics Control Module.
+     * @param moduleType specifies the module type to use.
      * @param channel specifies the pneumatic channel assigned to this pneumatic object instance.
      */
-    public FrcPneumatic(final String instanceName, final int module, final int channel)
+    public FrcPneumatic(String instanceName, int module, PneumaticsModuleType moduleType, int channel)
     {
         solenoids = new Solenoid[1];
-        solenoids[0] = new Solenoid(module, channel);
+        solenoids[0] = new Solenoid(module, moduleType, channel);
         initPneumatic(instanceName);
     }   //FrcPneumatic
 
@@ -129,14 +131,15 @@ public class FrcPneumatic
      *
      * @param instanceName specifies the instance name.
      * @param module specifies the CAN ID of the Pneumatics Control Module.
+     * @param moduleType specifies the module type to use.
      * @param channel1 specifies one of the pneumatic channels assigned to this pneumatic object instance.
      * @param channel2 specifies one of the pneumatic channels assigned to this pneumatic object instance.
      */
-    public FrcPneumatic(final String instanceName, final int module, final int channel1, final int channel2)
+    public FrcPneumatic(String instanceName, int module, PneumaticsModuleType moduleType, int channel1, int channel2)
     {
         solenoids = new Solenoid[2];
-        solenoids[0] = new Solenoid(module, channel1);
-        solenoids[1] = new Solenoid(module, channel2);
+        solenoids[0] = new Solenoid(module, moduleType, channel1);
+        solenoids[1] = new Solenoid(module, moduleType, channel2);
         initPneumatic(instanceName);
     }   //FrcPneumatic
 
@@ -145,17 +148,18 @@ public class FrcPneumatic
      *
      * @param instanceName specifies the instance name.
      * @param module specifies the CAN ID of the Pneumatics Control Module.
+     * @param moduleType specifies the module type to use.
      * @param channel1 specifies one of the pneumatic channels assigned to this pneumatic object instance.
      * @param channel2 specifies one of the pneumatic channels assigned to this pneumatic object instance.
      * @param channel3 specifies one of the pneumatic channels assigned to this pneumatic object instance.
      */
     public FrcPneumatic(
-        final String instanceName, final int module, final int channel1, final int channel2, final int channel3)
+        String instanceName, int module, PneumaticsModuleType moduleType, int channel1, int channel2, int channel3)
     {
         solenoids = new Solenoid[3];
-        solenoids[0] = new Solenoid(module, channel1);
-        solenoids[1] = new Solenoid(module, channel2);
-        solenoids[2] = new Solenoid(module, channel3);
+        solenoids[0] = new Solenoid(module, moduleType, channel1);
+        solenoids[1] = new Solenoid(module, moduleType, channel2);
+        solenoids[2] = new Solenoid(module, moduleType, channel3);
         initPneumatic(instanceName);
     }   //FrcPneumatic
 
@@ -164,14 +168,15 @@ public class FrcPneumatic
      *
      * @param instanceName specifies the instance name.
      * @param module specifies the CAN ID of the Pneumatics Control Module.
+     * @param moduleType specifies the module type to use.
      * @param channels specifies an array of pneumatic channels assigned to this pneumatic object instance.
      */
-    public FrcPneumatic(final String instanceName, final int module, int[] channels)
+    public FrcPneumatic(String instanceName, int module, PneumaticsModuleType moduleType, int[] channels)
     {
         solenoids = new Solenoid[channels.length];
         for (int i = 0; i < solenoids.length; i++)
         {
-            solenoids[i] = new Solenoid(module, channels[i]);
+            solenoids[i] = new Solenoid(module, moduleType, channels[i]);
         }
         initPneumatic(instanceName);
     }   //FrcPneumatic

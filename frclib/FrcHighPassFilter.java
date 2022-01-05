@@ -22,7 +22,7 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.first.wpilibj.LinearFilter;
+import edu.wpi.first.math.filter.LinearFilter;
 import TrcCommonLib.trclib.TrcFilter;
 
 public class FrcHighPassFilter extends TrcFilter

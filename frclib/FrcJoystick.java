@@ -125,7 +125,6 @@ public class FrcJoystick extends Joystick
 
     private final String instanceName;
     private final int port;
-    private final DriverStation ds;
     private int prevButtons;
     private FrcButtonHandler buttonHandler = null;
     private int ySign = 1;
@@ -137,7 +136,7 @@ public class FrcJoystick extends Joystick
      * @param instanceName specifies the instance name.
      * @param port         specifies the joystick port ID.
      */
-    public FrcJoystick(final String instanceName, final int port)
+    public FrcJoystick(String instanceName, int port)
     {
         super(port);
 
@@ -150,8 +149,7 @@ public class FrcJoystick extends Joystick
 
         this.instanceName = instanceName;
         this.port = port;
-        ds = DriverStation.getInstance();
-        prevButtons = ds.getStickButtons(port);
+        prevButtons = DriverStation.getStickButtons(port);
 
         TrcTaskMgr.TaskObject buttonEventTaskObj = TrcTaskMgr.getInstance()
             .createTask(instanceName + ".buttonEvent", this::buttonEventTask);
@@ -289,7 +287,7 @@ public class FrcJoystick extends Joystick
                 Boolean.toString(squared), deadbandThreshold);
         }
 
-        double value = adjustValueWithDeadband(getX(Hand.kRight), squared, deadbandThreshold);
+        double value = adjustValueWithDeadband(getX(), squared, deadbandThreshold);
 
         if (debugEnabled)
         {
@@ -327,7 +325,7 @@ public class FrcJoystick extends Joystick
                 Boolean.toString(squared), deadbandThreshold);
         }
 
-        double value = adjustValueWithDeadband(ySign * getY(Hand.kRight), squared, deadbandThreshold);
+        double value = adjustValueWithDeadband(ySign * getY(), squared, deadbandThreshold);
 
         if (debugEnabled)
         {
@@ -597,7 +595,7 @@ public class FrcJoystick extends Joystick
         {
             nextPeriod = currTime + samplingPeriod;
 
-            int currButtons = ds.getStickButtons(port);
+            int currButtons = DriverStation.getStickButtons(port);
             if (buttonHandler != null && runMode != TrcRobot.RunMode.DISABLED_MODE)
             {
                 int changedButtons = prevButtons ^ currButtons;

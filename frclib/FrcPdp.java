@@ -24,11 +24,11 @@ package TrcFrcLib.frclib;
 
 import java.util.Arrays;
 
-import edu.wpi.first.wpilibj.PowerDistributionPanel;
-import edu.wpi.first.wpilibj.Sendable;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.util.sendable.SendableRegistry;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.SensorUtil;
-import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
-import edu.wpi.first.wpilibj.smartdashboard.SendableRegistry;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
@@ -38,7 +38,7 @@ import TrcCommonLib.trclib.TrcUtil;
  * This class extends the WPI PowerDistricbutonPanel class to provide monitoring of energy consumption of registered
  * power channel.
  */
-public class FrcPdp extends PowerDistributionPanel
+public class FrcPdp extends PowerDistribution
 {
     private static final String moduleName = "FrcPdp";
     private static final boolean debugEnabled = false;
@@ -46,7 +46,7 @@ public class FrcPdp extends PowerDistributionPanel
     private static final boolean useGlobalTracer = false;
     private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
     private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    public static final int kPDPChannels = SensorUtil.kPDPChannels;
+    public static final int kPDPChannels = SensorUtil.kCTREPDPChannels;
     private TrcDbgTrace dbgTrace = null;
 
     /**
@@ -88,10 +88,11 @@ public class FrcPdp extends PowerDistributionPanel
      * Constructor: Creates an instance of the object.
      *
      * @param canId specifies the CAN ID of the PDP.
+     * @param moduleType specifies the module type (automatic, CTRE, or REV).
      */
-    public FrcPdp(int canId)
+    public FrcPdp(int canId, ModuleType moduleType)
     {
-        super(canId);
+        super(canId, moduleType);
 
         if (debugEnabled)
         {
@@ -107,6 +108,16 @@ public class FrcPdp extends PowerDistributionPanel
             channelNames[i] = null;
             channelEnergyUsed[i] = 0.0;
         }
+    }   //FrcPdp
+
+    /**
+     * Constructor: Creates an instance of the object.
+     *
+     * @param canId specifies the CAN ID of the PDP.
+     */
+    public FrcPdp(int canId)
+    {
+        this(canId, ModuleType.kAutomatic);
     }   //FrcPdp
 
     /**

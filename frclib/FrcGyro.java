@@ -22,17 +22,17 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.first.wpilibj.GyroBase;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcGyro;
 import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcGyro extends TrcGyro
 {
-    private GyroBase gyro;
+    private Gyro gyro;
     private double zSign = 1.0;
 
-    public FrcGyro(final String instanceName, GyroBase gyro)
+    public FrcGyro(final String instanceName, Gyro gyro)
     {
         super(instanceName, 1, GYRO_HAS_Z_AXIS, null);
         this.gyro = gyro;

@@ -58,7 +58,6 @@ public class FrcXboxController extends XboxController
 
     private final String instanceName;
     private final int port;
-    private final DriverStation ds;
     private int prevButtons;
     private FrcButtonHandler buttonHandler = null;
     private int leftYSign = 1;
@@ -84,8 +83,7 @@ public class FrcXboxController extends XboxController
 
         this.port = port;
         this.instanceName = instanceName;
-        ds = DriverStation.getInstance();
-        prevButtons = ds.getStickButtons(port);
+        prevButtons = DriverStation.getStickButtons(port);
 
         TrcTaskMgr.TaskObject buttonEventTaskObj = TrcTaskMgr.getInstance()
             .createTask(instanceName + ".buttonEvent", this::buttonEventTask);
@@ -231,7 +229,7 @@ public class FrcXboxController extends XboxController
                 Boolean.toString(squared), deadbandThreshold);
         }
 
-        double value = adjustValueWithDeadband(getX(Hand.kLeft), squared, deadbandThreshold);
+        double value = adjustValueWithDeadband(getLeftX(), squared, deadbandThreshold);
 
         if (debugEnabled)
         {
@@ -257,7 +255,7 @@ public class FrcXboxController extends XboxController
                 Boolean.toString(squared), deadbandThreshold);
         }
 
-        double value = adjustValueWithDeadband(getX(Hand.kRight), squared, deadbandThreshold);
+        double value = adjustValueWithDeadband(getRightX(), squared, deadbandThreshold);
 
         if (debugEnabled)
         {
@@ -283,7 +281,7 @@ public class FrcXboxController extends XboxController
                 Boolean.toString(squared), deadbandThreshold);
         }
 
-        double value = leftYSign * adjustValueWithDeadband(getY(Hand.kLeft), squared, deadbandThreshold);
+        double value = leftYSign * adjustValueWithDeadband(getLeftY(), squared, deadbandThreshold);
 
         if (debugEnabled)
         {
@@ -309,7 +307,7 @@ public class FrcXboxController extends XboxController
                 Boolean.toString(squared), deadbandThreshold);
         }
 
-        double value = rightYSign * adjustValueWithDeadband(getY(Hand.kRight), squared, deadbandThreshold);
+        double value = rightYSign * adjustValueWithDeadband(getRightY(), squared, deadbandThreshold);
 
         if (debugEnabled)
         {
@@ -335,7 +333,7 @@ public class FrcXboxController extends XboxController
                 Boolean.toString(squared), deadbandThreshold);
         }
 
-        double value = adjustValueWithDeadband(getTriggerAxis(Hand.kLeft), squared, deadbandThreshold);
+        double value = adjustValueWithDeadband(getLeftTriggerAxis(), squared, deadbandThreshold);
 
         if (debugEnabled)
         {
@@ -361,7 +359,7 @@ public class FrcXboxController extends XboxController
                 Boolean.toString(squared), deadbandThreshold);
         }
 
-        double value = adjustValueWithDeadband(getTriggerAxis(Hand.kRight), squared, deadbandThreshold);
+        double value = adjustValueWithDeadband(getRightTriggerAxis(), squared, deadbandThreshold);
 
         if (debugEnabled)
         {
@@ -392,7 +390,7 @@ public class FrcXboxController extends XboxController
         {
             nextPeriod = currTime + samplingPeriod;
 
-            int currButtons = ds.getStickButtons(port);
+            int currButtons = DriverStation.getStickButtons(port);
             if (buttonHandler != null && runMode != TrcRobot.RunMode.DISABLED_MODE)
             {
                 int changedButtons = prevButtons ^ currButtons;

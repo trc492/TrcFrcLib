@@ -22,8 +22,8 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.cscore.CvSink;
-import edu.wpi.cscore.CvSource;
+import edu.wpi.first.cscore.CvSink;
+import edu.wpi.first.cscore.CvSource;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
