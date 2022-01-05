@@ -22,7 +22,7 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.PWM;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRevBlinkin;
 
@@ -32,7 +32,7 @@ import TrcCommonLib.trclib.TrcRevBlinkin;
  */
 public class FrcRevBlinkin extends TrcRevBlinkin
 {
-    private Spark device;
+    private PWM device;
     private LEDPattern currPattern = LEDPattern.SolidBlack;
 
     /**
@@ -44,7 +44,11 @@ public class FrcRevBlinkin extends TrcRevBlinkin
     public FrcRevBlinkin(final String instanceName, int channel)
     {
         super(instanceName);
-        device = new Spark(channel);
+        device = new PWM(channel);
+        device.setBounds(2.003, 1.55, 1.50, 1.46, 0.999);
+        device.setPeriodMultiplier(PWM.PeriodMultiplier.k1X);
+        device.setSpeed(0.0);
+        device.setZeroLatch();
         setPattern(currPattern);
     }   //FrcRevBlinkin
 
@@ -89,7 +93,7 @@ public class FrcRevBlinkin extends TrcRevBlinkin
         }
 
         currPattern = pattern;
-        device.set(pattern.value);
+        device.setPosition(pattern.value);
 
         if (debugEnabled)
         {
