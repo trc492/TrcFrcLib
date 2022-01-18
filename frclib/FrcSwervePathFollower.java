@@ -196,7 +196,7 @@ public class FrcSwervePathFollower
     private void setSwerveStates(SwerveModuleState[] states)
     {
         // normalize wheel speeds
-        SwerveDriveKinematics.normalizeWheelSpeeds(states, maxWheelSpeed / unitsPerMeter);
+        SwerveDriveKinematics.desaturateWheelSpeeds(states, maxWheelSpeed / unitsPerMeter);
         // states has meters per second, and CCW angles
         double[][] velocities = Arrays.stream(states)
             .map(s -> new double[] { s.speedMetersPerSecond * unitsPerMeter / maxWheelSpeed, -s.angle.getDegrees() })

@@ -24,6 +24,7 @@ package TrcFrcLib.frclib;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobotBattery;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 
 /**
  * This class extends the TrcRobotBattery which provides a task to monitor the robot battery levels and the methods to
@@ -49,9 +50,9 @@ public class FrcRobotBattery extends TrcRobotBattery
      *
      * @param canId specifies the CAN ID of the PDP.
      */
-    public FrcRobotBattery(int canId)
+    public FrcRobotBattery(int canId, ModuleType moduleType)
     {
-        this(new FrcPdp(canId));
+        this(new FrcPdp(canId, moduleType));
     }   //FrcRobotBattery
 
     //

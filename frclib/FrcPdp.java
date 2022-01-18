@@ -111,16 +111,6 @@ public class FrcPdp extends PowerDistribution
     }   //FrcPdp
 
     /**
-     * Constructor: Creates an instance of the object.
-     *
-     * @param canId specifies the CAN ID of the PDP.
-     */
-    public FrcPdp(int canId)
-    {
-        this(canId, ModuleType.kAutomatic);
-    }   //FrcPdp
-
-    /**
      * This method enables/disables the energy monitoring task. When the task is enabled, it also clears the
      * totalEnergyUsed array.
      *
