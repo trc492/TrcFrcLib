@@ -22,14 +22,15 @@
 
 package TrcFrcLib.frclib;
 
-import com.revrobotics.CANDigitalInput;
-import com.revrobotics.CANDigitalInput.LimitSwitchPolarity;
-import com.revrobotics.CANEncoder;
-import com.revrobotics.CANError;
-import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.SparkMaxLimitSwitch.Type;
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.REVLibError;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxLimitSwitch;
+import com.revrobotics.SparkMaxPIDController;
+
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
@@ -45,8 +46,8 @@ public class FrcCANSparkMax extends TrcMotor
 {
     public CANSparkMax motor;
     private boolean brushless;
-    private CANEncoder encoder;
-    private CANDigitalInput fwdLimitSwitch, revLimitSwitch;
+    private RelativeEncoder encoder;
+    private SparkMaxLimitSwitch fwdLimitSwitch, revLimitSwitch;
     private double maxVelocity = 0.0;
     // private boolean feedbackDeviceIsPot = false;
     private boolean limitSwitchesSwapped = false;
@@ -73,8 +74,8 @@ public class FrcCANSparkMax extends TrcMotor
         motor = new CANSparkMax(deviceId,
             brushless ? CANSparkMaxLowLevel.MotorType.kBrushless : CANSparkMaxLowLevel.MotorType.kBrushed);
         encoder = motor.getEncoder();
-        fwdLimitSwitch = motor.getForwardLimitSwitch(CANDigitalInput.LimitSwitchPolarity.kNormallyOpen);
-        revLimitSwitch = motor.getReverseLimitSwitch(CANDigitalInput.LimitSwitchPolarity.kNormallyOpen);
+        fwdLimitSwitch = motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+        revLimitSwitch = motor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
         resetPosition(true);
     }   //FrcCANSparkMax
 
@@ -137,7 +138,7 @@ public class FrcCANSparkMax extends TrcMotor
 
         if (pidCoefficients != null)
         {
-            CANPIDController pidController = motor.getPIDController();
+            SparkMaxPIDController pidController = motor.getPIDController();
             pidController.setP(pidCoefficients.kP);
             pidController.setI(pidCoefficients.kI);
             pidController.setD(pidCoefficients.kD);
@@ -201,7 +202,7 @@ public class FrcCANSparkMax extends TrcMotor
         }
 
         fwdLimitSwitch = motor.getForwardLimitSwitch(
-            normalOpen ? LimitSwitchPolarity.kNormallyOpen : LimitSwitchPolarity.kNormallyClosed);
+            normalOpen ? Type.kNormallyOpen : Type.kNormallyClosed);
     }   //configFwdLimitSwitchNormallyOpen
 
     /**
@@ -220,7 +221,7 @@ public class FrcCANSparkMax extends TrcMotor
         }
 
         revLimitSwitch = motor.getReverseLimitSwitch(
-            normalOpen ? LimitSwitchPolarity.kNormallyOpen : LimitSwitchPolarity.kNormallyClosed);
+            normalOpen ? Type.kNormallyOpen : Type.kNormallyClosed);
     }   //configRevLimitSwitchNormallyOpen
 
     // /**
@@ -420,7 +421,7 @@ public class FrcCANSparkMax extends TrcMotor
     public boolean isLowerLimitSwitchActive()
     {
         final String funcName = "isLowerLimitSwitchActive";
-        boolean isActive = limitSwitchesSwapped ? fwdLimitSwitch.get() : revLimitSwitch.get();
+        boolean isActive = limitSwitchesSwapped ? fwdLimitSwitch.isPressed() : revLimitSwitch.isPressed();
 
         if (debugEnabled)
         {
@@ -440,7 +441,7 @@ public class FrcCANSparkMax extends TrcMotor
     public boolean isUpperLimitSwitchActive()
     {
         final String funcName = "isUpperLimitSwitchActive";
-        boolean isActive = limitSwitchesSwapped ? revLimitSwitch.get() : fwdLimitSwitch.get();
+        boolean isActive = limitSwitchesSwapped ? revLimitSwitch.isPressed() : fwdLimitSwitch.isPressed();
 
         if (debugEnabled)
         {
@@ -470,8 +471,8 @@ public class FrcCANSparkMax extends TrcMotor
 
         if (hardware)
         {
-            CANError error = encoder.setPosition(0.0);
-            if (error != CANError.kOk)
+            REVLibError error = encoder.setPosition(0.0);
+            if (error != REVLibError.kOk)
             {
                 TrcDbgTrace.getGlobalTracer().traceErr(funcName, "resetPosition() on SparkMax %d failed with error %s!", motor.getDeviceId(),
                     error.name());
