@@ -100,6 +100,15 @@ public abstract class FrcRobotBase extends RobotBase
      */
     public FrcRobotBase(final String progName)
     {
+        if (FrcRobotBase.instance != null)
+        {
+            throw new RuntimeException("FrcRobotBase has already been instantiated.");
+        }
+        //
+        // Must be done before instantiating TrcDbgTrace.
+        //
+        TrcDbgTrace.setDbgLog(new FrcDbgLog());
+
         if (debugEnabled)
         {
             dbgTrace = useGlobalTracer?
@@ -107,14 +116,8 @@ public abstract class FrcRobotBase extends RobotBase
                 new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
         }
 
-        if (FrcRobotBase.instance != null)
-        {
-            throw new RuntimeException("FrcRobotBase has already been instantiated.");
-        }
-
         this.progName = progName;
         FrcRobotBase.instance = this;
-        TrcDbgTrace.setDbgLog(new FrcDbgLog());
         // Initialize modeStartTime just in case somebody's calling TrcUtil.getModeElapsedTime before it's initialized.
         TrcUtil.recordModeStartTime();
         dashboard.clearDisplay();
