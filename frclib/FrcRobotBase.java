@@ -77,10 +77,9 @@ public abstract class FrcRobotBase extends RobotBase
      */
     public abstract void robotStopMode(RunMode runMode, RunMode nextMode);
 
-    public TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-
-    private TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
-    private FrcDashboard dashboard = FrcDashboard.getInstance();
+    public TrcDbgTrace globalTracer;
+    private TrcTaskMgr taskMgr;
+    private FrcDashboard dashboard;
 
     private static FrcRobotBase instance = null;
     private static long loopCounter = 0;
@@ -108,11 +107,14 @@ public abstract class FrcRobotBase extends RobotBase
         // Must be done before instantiating TrcDbgTrace.
         //
         TrcDbgTrace.setDbgLog(new FrcDbgLog());
+        globalTracer = TrcDbgTrace.getGlobalTracer();
+        taskMgr = TrcTaskMgr.getInstance();
+        dashboard = FrcDashboard.getInstance();
 
         if (debugEnabled)
         {
             dbgTrace = useGlobalTracer?
-                TrcDbgTrace.getGlobalTracer():
+                globalTracer:
                 new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
         }
 
