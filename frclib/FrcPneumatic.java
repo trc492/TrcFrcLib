@@ -95,8 +95,7 @@ public class FrcPneumatic
         }
 
         this.instanceName = instanceName;
-        TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
-        pneumaticTaskObj = taskMgr.createTask(instanceName + ".pneumaticTask", this::pneumaticTask);
+        pneumaticTaskObj = TrcTaskMgr.createTask(instanceName + ".pneumaticTask", this::pneumaticTask);
         solSM = new TrcStateMachine<>(instanceName);
         solTimer = new TrcTimer(instanceName);
         timerEvent = new TrcEvent(instanceName);

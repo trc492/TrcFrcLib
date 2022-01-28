@@ -87,7 +87,7 @@ public class FrcSwervePathFollower
             new Translation2d(halfLength, -halfWidth), new Translation2d(-halfLength, halfWidth),
             new Translation2d(-halfLength, -halfWidth));
 
-        driveTaskObj = TrcTaskMgr.getInstance().createTask(instanceName + ".driveTaskObj", this::driveTask);
+        driveTaskObj = TrcTaskMgr.createTask(instanceName + ".driveTaskObj", this::driveTask);
     }
 
     public void start(Trajectory... trajectories)

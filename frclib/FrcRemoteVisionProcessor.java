@@ -57,7 +57,7 @@ public abstract class FrcRemoteVisionProcessor
         NetworkTableInstance instance = NetworkTableInstance.getDefault();
         networkTable = instance.getTable(networkTableName);
         instance.addConnectionListener(this::connectionListener, false);
-        visionTaskObj = TrcTaskMgr.getInstance().createTask(instanceName + ".visionTask", this::updateTargetInfo);
+        visionTaskObj = TrcTaskMgr.createTask(instanceName + ".visionTask", this::updateTargetInfo);
     }
 
     public FrcRemoteVisionProcessor(String instanceName, String networkTableName, int relayPort)

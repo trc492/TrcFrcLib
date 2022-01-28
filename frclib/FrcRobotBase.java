@@ -78,7 +78,6 @@ public abstract class FrcRobotBase extends RobotBase
     public abstract void robotStopMode(RunMode runMode, RunMode nextMode);
 
     public TrcDbgTrace globalTracer;
-    private TrcTaskMgr taskMgr;
     private FrcDashboard dashboard;
 
     private static FrcRobotBase instance = null;
@@ -108,7 +107,6 @@ public abstract class FrcRobotBase extends RobotBase
         //
         TrcDbgTrace.setDbgLog(new FrcDbgLog());
         globalTracer = TrcDbgTrace.getGlobalTracer();
-        taskMgr = TrcTaskMgr.getInstance();
         dashboard = FrcDashboard.getInstance();
 
         if (debugEnabled)
@@ -302,13 +300,13 @@ public abstract class FrcRobotBase extends RobotBase
                     if (debugEnabled)
                     {
                         startTime = TrcUtil.getCurrentTime();
-                        taskMgr.executeTaskType(TrcTaskMgr.TaskType.STOP_TASK, prevMode);
+                        TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.STOP_TASK, prevMode);
                         elapsedTime = TrcUtil.getCurrentTime() - startTime;
                         dbgTrace.traceInfo(funcName, "%s.stopTask took %.3fs", prevMode, elapsedTime);
                     }
                     else
                     {
-                        taskMgr.executeTaskType(TrcTaskMgr.TaskType.STOP_TASK, prevMode);
+                        TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.STOP_TASK, prevMode);
                     }
                     //
                     // Stop previous mode.
@@ -426,13 +424,13 @@ public abstract class FrcRobotBase extends RobotBase
                     if (debugEnabled)
                     {
                         startTime = TrcUtil.getCurrentTime();
-                        taskMgr.executeTaskType(TrcTaskMgr.TaskType.START_TASK, currMode);
+                        TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.START_TASK, currMode);
                         elapsedTime = TrcUtil.getCurrentTime() - startTime;
                         dbgTrace.traceInfo(funcName, "%s.startTask took %.3fs", currMode, elapsedTime);
                     }
                     else
                     {
-                        taskMgr.executeTaskType(TrcTaskMgr.TaskType.START_TASK, currMode);
+                        TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.START_TASK, currMode);
                     }
                 }
             }
@@ -446,7 +444,7 @@ public abstract class FrcRobotBase extends RobotBase
             // PreContinuous
             //
             startTime = TrcUtil.getCurrentTime();
-            taskMgr.executeTaskType(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK, currMode);
+            TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK, currMode);
             elapsedTime = TrcUtil.getCurrentTime() - startTime;
             if (elapsedTime > taskTimeThreshold)
             {
@@ -459,7 +457,7 @@ public abstract class FrcRobotBase extends RobotBase
             if (periodReady)
             {
                 startTime = TrcUtil.getCurrentTime();
-                taskMgr.executeTaskType(TrcTaskMgr.TaskType.PREPERIODIC_TASK, currMode);
+                TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.PREPERIODIC_TASK, currMode);
                 elapsedTime = TrcUtil.getCurrentTime() - startTime;
                 if (elapsedTime > taskTimeThreshold)
                 {
@@ -542,7 +540,7 @@ public abstract class FrcRobotBase extends RobotBase
             // PostContinuous
             //
             startTime = TrcUtil.getCurrentTime();
-            taskMgr.executeTaskType(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK, currMode);
+            TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK, currMode);
             elapsedTime = TrcUtil.getCurrentTime() - startTime;
             if (elapsedTime > taskTimeThreshold)
             {
@@ -555,7 +553,7 @@ public abstract class FrcRobotBase extends RobotBase
             if (periodReady)
             {
                 startTime = TrcUtil.getCurrentTime();
-                taskMgr.executeTaskType(TrcTaskMgr.TaskType.POSTPERIODIC_TASK, currMode);
+                TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.POSTPERIODIC_TASK, currMode);
                 elapsedTime = TrcUtil.getCurrentTime() - startTime;
                 if (elapsedTime > taskTimeThreshold)
                 {

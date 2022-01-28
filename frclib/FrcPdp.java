@@ -101,7 +101,7 @@ public class FrcPdp extends PowerDistribution
                 new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
         }
 
-        energyUsedTaskObj = TrcTaskMgr.getInstance().createTask(moduleName + ".energyUsedTask", this::energyUsedTask);
+        energyUsedTaskObj = TrcTaskMgr.createTask(moduleName + ".energyUsedTask", this::energyUsedTask);
 
         for (int i = 0; i < kPDPChannels; i++)
         {

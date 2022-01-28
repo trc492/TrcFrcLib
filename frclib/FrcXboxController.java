@@ -85,8 +85,8 @@ public class FrcXboxController extends XboxController
         this.instanceName = instanceName;
         prevButtons = DriverStation.getStickButtons(port);
 
-        TrcTaskMgr.TaskObject buttonEventTaskObj = TrcTaskMgr.getInstance()
-            .createTask(instanceName + ".buttonEvent", this::buttonEventTask);
+        TrcTaskMgr.TaskObject buttonEventTaskObj = TrcTaskMgr.createTask(
+            instanceName + ".buttonEvent", this::buttonEventTask);
         buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.PREPERIODIC_TASK);
     }
 

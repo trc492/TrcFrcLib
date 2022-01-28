@@ -105,8 +105,7 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
 
         sm = new TrcStateMachine<>(instanceName);
 
-        motionProfileTaskObject = TrcTaskMgr.getInstance()
-            .createTask(instanceName + ".motionProfileTask", this::motionProfileTask);
+        motionProfileTaskObject = TrcTaskMgr.createTask(instanceName + ".motionProfileTask", this::motionProfileTask);
     }
 
     /**
