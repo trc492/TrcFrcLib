@@ -58,16 +58,9 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
 
     public final T motor;
     private double maxVelocity = 0.0;
-    private boolean feedbackDeviceIsPot = false;
-    private boolean limitSwitchesSwapped = false;
     private boolean revLimitSwitchNormalOpen = false;
     private boolean fwdLimitSwitchNormalOpen = false;
-    private double zeroPosition = 0.0;
-    private double prevPower = 0.0;
-    private boolean softLowerLimitEnabled = false;
-    private boolean softUpperLimitEnabled = false;
-    private double softLowerLimit = 0.0;
-    private double softUpperLimit = 0.0;
+    private double motorPower = 0.0;
     private FeedbackDevice feedbackDeviceType;
 
     /**
@@ -86,7 +79,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         super(instanceName);
         motor = baseTalon;
-        resetPosition(true);
+        resetMotorPosition();
     }   //FrcCANPhoenixController
 
     /**
@@ -174,6 +167,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     /**
      * This method disables velocity mode returning it to power mode.
      */
+    @Override
     public void disableVelocityMode()
     {
         final String funcName = "disableVelocityMode";
@@ -188,30 +182,10 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //disableVelocityMode
 
     /**
-     * This method swaps the forward and reverse limit switches. By default, the lower limit switch is associated
-     * with the reverse limit switch and the upper limit switch is associated with the forward limit switch. This
-     * method will swap the association.
-     *
-     * @param swapped specifies true to swap the limit switches, false otherwise.
-     */
-    public void setLimitSwitchesSwapped(boolean swapped)
-    {
-        final String funcName = "setLimitSwitchesSwapped";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "swapped=%s", Boolean.toString(swapped));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        limitSwitchesSwapped = swapped;
-    }   //setLimitSwitchesSwapped
-
-    /**
      * This method sets this motor to follow another motor.
      */
     @Override
-    public void follow(TrcMotor motor)
+    public void followMotor(TrcMotor motor)
     {
         if (motor instanceof FrcCANPhoenixController)
         {
@@ -219,7 +193,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         }
         else
         {
-            super.follow(motor);
+            super.followMotor(motor);
         }
     }   //follow
 
@@ -284,12 +258,130 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
 
         this.feedbackDeviceType = devType;
         recordResponseCode(motor.configSelectedFeedbackSensor(devType, 0, 10));
-        feedbackDeviceIsPot = devType == FeedbackDevice.Analog;
     }   //setFeedbackDevice
 
     //
-    // Implements TrcMotor abstract methods.
+    // Implements TrcMotor abstract methods and overrides some of its methods supported in hardware.
     //
+
+    /**
+     * This method returns the state of the motor controller direction.
+     *
+     * @return true if the motor direction is inverted, false otherwise.
+     */
+    @Override
+    public boolean isInverted()
+    {
+        final String funcName = "getInverted";
+        boolean inverted = motor.getInverted();
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(inverted));
+        }
+
+        return inverted;
+    }   //getInverted
+
+    /**
+     * This method inverts the motor direction.
+     *
+     * @param inverted specifies true to invert motor direction, false otherwise.
+     */
+    @Override
+    public void setInverted(boolean inverted)
+    {
+        final String funcName = "setInverted";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+        }
+
+        motor.setInverted(inverted);
+        recordResponseCode(motor.getLastError());
+    }   //setInverted
+
+    /**
+     * This method gets the last set power.
+     *
+     * @return the last setPower value.
+     */
+    @Override
+    public double getMotorPower()
+    {
+        final String funcName = "getMotorPower";
+        double power = motor.getMotorOutputPercent();
+        recordResponseCode(motor.getLastError());
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", power);
+        }
+
+        return power;
+    }   //getMotorPower
+
+    /**
+     * This method sets the raw motor power.
+     *
+     * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
+     */
+    @Override
+    public void setMotorPower(double power)
+    {
+        final String funcName = "setMotorPower";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", power);
+        }
+
+        if (power != motorPower)
+        {
+            if (maxVelocity != 0.0)
+            {
+                motor.set(ControlMode.Velocity, power);
+            }
+            else
+            {
+                motor.set(ControlMode.PercentOutput, TrcUtil.round(power*maxVelocity));
+            }
+            recordResponseCode(motor.getLastError());
+            motorPower = power;
+        }
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", power);
+        }
+    }   //setMotorPower
+
+    /**
+     * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
+     * potentiometer.
+     */
+    @Override
+    public void resetMotorPosition()
+    {
+        final String funcName = "resetMotorPosition";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+        }
+
+        ErrorCode error = recordResponseCode(motor.setSelectedSensorPosition(0, 0, 10));
+        if (error != ErrorCode.OK)
+        {
+            TrcDbgTrace.getGlobalTracer().traceErr(
+                funcName, "resetPosition() on device %d failed with error %s!", motor.getDeviceID(), error.name());
+        }
+    }   //resetMotorPosition
 
     /**
      * This method returns the motor position by reading the position sensor. The position sensor can be an encoder
@@ -321,7 +413,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * This method returns the motor velocity from the platform dependent motor hardware. If the hardware does
      * not support velocity info, it should throw an UnsupportedOperationException.
      *
-     * @return current motor velocity in raw sensor units per 100 msec.
+     * @return current motor velocity in raw sensor units per sec.
      */
     @Override
     public double getMotorVelocity()
@@ -333,7 +425,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        double currVel = motor.getSelectedSensorVelocity();
+        double currVel = motor.getSelectedSensorVelocity() / 0.1;
 
         if (debugEnabled)
         {
@@ -344,277 +436,44 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //getMotorVelocity
 
     /**
-     * This method sets the raw motor power.
+     * This method returns the state of the reverse limit switch.
      *
-     * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
+     * @return true if reverse limit switch is active, false otherwise.
      */
     @Override
-    public void setMotorPower(double power)
+    public boolean isRevLimitSwitchActive()
     {
-        final String funcName = "setMotorPower";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", power);
-        }
-
-        if (power != prevPower)
-        {
-            motor.set(ControlMode.PercentOutput, power);
-            prevPower = power;
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", power);
-        }
-    }   //setMotorPower
-
-    //
-    // Implements TrcMotorController interface.
-    //
-
-    /**
-     * This method returns the state of the motor controller direction.
-     *
-     * @return true if the motor direction is inverted, false otherwise.
-     */
-    @Override
-    public boolean getInverted()
-    {
-        final String funcName = "getInverted";
-        boolean inverted = motor.getInverted();
+        final String funcName = "isRevLimitSwitchActive";
+        boolean isActive = revLimitSwitchNormalOpen == (motor.isRevLimitSwitchClosed() == 1);
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(inverted));
-        }
-
-        return inverted;
-    }   //getInverted
-
-    /**
-     * This method returns the motor position by reading the position sensor. The position sensor can be an encoder
-     * or a potentiometer.
-     *
-     * @return current motor position.
-     */
-    @Override
-    public double getPosition()
-    {
-        final String funcName = "getPosition";
-        double pos = motor.getSelectedSensorPosition(0);
-        recordResponseCode(motor.getLastError());
-
-        pos -= zeroPosition;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", pos);
-        }
-
-        return pos;
-    }   //getPosition
-
-    /**
-     * This method gets the last set power.
-     *
-     * @return the last setPower value.
-     */
-    @Override
-    public double getPower()
-    {
-        final String funcName = "getPower";
-        double power = motor.getMotorOutputPercent();
-        recordResponseCode(motor.getLastError());
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", power);
-        }
-
-        return power;
-    }   //getPower
-
-    /**
-     * This method returns the velocity of the motor rotation in sensor unit per second.
-     *
-     * @return motor rotation velocity in sensor unit per second.
-     */
-    @Override
-    public double getVelocity()
-    {
-        final String funcName = "getVelocity";
-        // double speed = motor.getSelectedSensorVelocity(0)/
-        //     (motor.getStatusFramePeriod(feedbackDeviceIsPot? StatusFrameEnhanced.Status_2_Feedback0:
-        //         StatusFrameEnhanced.Status_3_Quadrature, 0)/1000.0);
-        //
-        // The sensor velocity is in the raw sensor unit per 100 msec, adjust it to sensor unit per second.
-        //
-        double velocity = motor.getSelectedSensorVelocity(0) / 0.1;
-        recordResponseCode(motor.getLastError());
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", velocity);
-        }
-
-        return velocity;
-    }   //getVelocity
-
-    /**
-     * This method returns the state of the lower limit switch.
-     *
-     * @return true if lower limit switch is active, false otherwise.
-     */
-    @Override
-    public boolean isLowerLimitSwitchActive()
-    {
-        final String funcName = "isLowerLimitSwitchActive";
-        boolean isActive = limitSwitchesSwapped ?
-            fwdLimitSwitchNormalOpen == (motor.isFwdLimitSwitchClosed() == 1):
-            revLimitSwitchNormalOpen == (motor.isRevLimitSwitchClosed() == 1);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(isActive));
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", isActive);
         }
 
         return isActive;
-    }   //isLowerLimitSwitchClosed
+    }   //isRevLimitSwitchActive
 
     /**
-     * This method returns the state of the upper limit switch.
+     * This method returns the state of the forward limit switch.
      *
-     * @return true if upper limit switch is active, false otherwise.
+     * @return true if forward limit switch is active, false otherwise.
      */
     @Override
-    public boolean isUpperLimitSwitchActive()
+    public boolean isFwdLimitSwitchActive()
     {
-        final String funcName = "isUpperLimitSwitchActive";
-        boolean isActive = limitSwitchesSwapped ?
-            revLimitSwitchNormalOpen == (motor.isRevLimitSwitchClosed() == 1) :
-            fwdLimitSwitchNormalOpen == (motor.isFwdLimitSwitchClosed() == 1);
+        final String funcName = "isFwdLimitSwitchActive";
+        boolean isActive = fwdLimitSwitchNormalOpen == (motor.isFwdLimitSwitchClosed() == 1);
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(isActive));
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", isActive);
         }
 
         return isActive;
-    }   //isUpperLimitSwitchActive
-
-    /**
-     * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
-     * potentiometer.
-     *
-     * @param hardware specifies true for resetting hardware position, false for resetting software position.
-     */
-    @Override
-    public void resetPosition(boolean hardware)
-    {
-        final String funcName = "resetPosition";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "hardware=%s", Boolean.toString(hardware));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        if (feedbackDeviceIsPot || !hardware)
-        {
-            //
-            // Potentiometer has no hardware position to reset. So clear the software one.
-            //
-            zeroPosition = motor.getSelectedSensorPosition(0);
-            recordResponseCode(motor.getLastError());
-        }
-        else if (hardware)
-        {
-            ErrorCode error = recordResponseCode(motor.setSelectedSensorPosition(0, 0, 10));
-            if (error != ErrorCode.OK)
-            {
-                TrcDbgTrace.getGlobalTracer().traceErr(funcName, "resetPosition() on device %d failed with error %s!", motor.getDeviceID(),
-                    error.name());
-            }
-            zeroPosition = 0.0;
-        }
-    }   //resetPosition
-
-    /**
-     * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
-     * potentiometer.
-     */
-    public void resetPosition()
-    {
-        resetPosition(false);
-    }   //resetPosition
-
-    /**
-     * This method checks if the device is connected to the robot.
-     *
-     * @return True if the device is connected, false otherwise.
-     */
-    @Override
-    public boolean isConnected()
-    {
-        // hacky, but should work
-        return motor.getBusVoltage() > 0.0;
-    } //isConnected
-
-    /**
-     * This method sets the motor output value. The value can be power or velocity percentage depending on whether
-     * the motor controller is in power mode or velocity mode.
-     *
-     * @param value specifies the percentage power or velocity (range -1.0 to 1.0) to be set.
-     */
-    @Override
-    public void set(double value)
-    {
-        final String funcName = "set";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", value);
-        }
-
-        if (value < -1.0 || value > 1.0)
-        {
-            throw new IllegalArgumentException("Value must be in the range of -1.0 to 1.0.");
-        }
-
-        if (softLowerLimitEnabled && value < 0.0 && getPosition() <= softLowerLimit
-            || softUpperLimitEnabled && value > 0.0 && getPosition() >= softUpperLimit)
-        {
-            value = 0.0;
-        }
-
-        ControlMode controlMode;
-        if (maxVelocity == 0.0)
-        {
-            controlMode = ControlMode.PercentOutput;
-            prevPower = value;
-        }
-        else
-        {
-            controlMode = ControlMode.Velocity;
-            value *= maxVelocity;
-            value = TrcUtil.round(value); // Velocity mode is in sensor units/100ms, and sensor units are in integers.
-        }
-        motor.set(controlMode, value);
-        recordResponseCode(motor.getLastError());
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", value);
-        }
-    }   //set
+    }   //isFwdLimitSwitchActive
 
     /**
      * This method enables/disables motor brake mode. In motor brake mode, set power to 0 would stop the motor very
@@ -640,24 +499,16 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setBrakeModeEnabled
 
     /**
-     * This method inverts the motor direction.
+     * This method checks if the device is connected to the robot.
      *
-     * @param inverted specifies true to invert motor direction, false otherwise.
+     * @return True if the device is connected, false otherwise.
      */
     @Override
-    public void setInverted(boolean inverted)
+    public boolean isConnected()
     {
-        final String funcName = "setInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        motor.setInverted(inverted);
-        recordResponseCode(motor.getLastError());
-    }   //setInverted
+        // hacky, but should work
+        return motor.getBusVoltage() > 0.0;
+    } //isConnected
 
     /**
      * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
@@ -682,63 +533,4 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         recordResponseCode(motor.getLastError());
     }   //setPositionSensorInverted
 
-    /**
-     * This method enables/disables soft limit switches.
-     *
-     * @param lowerLimitEnabled specifies true to enable lower soft limit switch, false otherwise.
-     * @param upperLimitEnabled specifies true to enable upper soft limit switch, false otherwise.
-     */
-    @Override
-    public void setSoftLimitEnabled(boolean lowerLimitEnabled, boolean upperLimitEnabled)
-    {
-        final String funcName = "setSoftLimitEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "lowerEnabled=%s,upperEnabled=%s",
-                Boolean.toString(lowerLimitEnabled), Boolean.toString(upperLimitEnabled));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        softLowerLimitEnabled = lowerLimitEnabled;
-        softUpperLimitEnabled = upperLimitEnabled;
-    }   //setSoftLimitEnabled
-
-    /**
-     * This method sets the lower soft limit.
-     *
-     * @param position specifies the position of the lower limit.
-     */
-    @Override
-    public void setSoftLowerLimit(double position)
-    {
-        final String funcName = "setSoftLowerLimit";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "position=%f", position);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        softLowerLimit = position;
-    }   //setSoftLowerLimit
-
-    /**
-     * This method sets the upper soft limit.
-     *
-     * @param position specifies the position of the upper limit.
-     */
-    @Override
-    public void setSoftUpperLimit(double position)
-    {
-        final String funcName = "setSoftUpperLimit";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "position=%f", position);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        softUpperLimit = position;
-    }   //setSoftUpperLimit
-}
+}   //class FrcCANPhoenixController

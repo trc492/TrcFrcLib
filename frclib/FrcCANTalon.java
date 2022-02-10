@@ -26,7 +26,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 /**
  * This class implements a CANTalon motor controller. It extends the TrcMotor class and
- * implements the standard TrcMotorController interface to be compatible with the TRC library.
+ * implements the abstract methods required by TrcMotor to be compatible with the TRC library.
  */
 public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
 {

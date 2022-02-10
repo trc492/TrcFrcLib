@@ -34,30 +34,21 @@ import com.revrobotics.SparkMaxPIDController;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
-import TrcCommonLib.trclib.TrcUtil;
 
 /**
  * This class implements a SparkMAX motor controller by REV robototics. It extends the TrcMotor class and
- * implements the standard TrcMotorController interface to be compatible with the TRC library.
+ * implements the abstract methods required by TrcMotor to be compatible with the TRC library.
  * Reference manual of the motor controller can be found here:
  * http://www.revrobotics.com/sparkmax-users-manual/?mc_cid=a60a44dc08&mc_eid=1935741b98#section-2-3
  */
 public class FrcCANSparkMax extends TrcMotor
 {
-    public CANSparkMax motor;
     private boolean brushless;
+    public CANSparkMax motor;
     private RelativeEncoder encoder;
     private SparkMaxLimitSwitch fwdLimitSwitch, revLimitSwitch;
-    private double maxVelocity = 0.0;
-    // private boolean feedbackDeviceIsPot = false;
-    private boolean limitSwitchesSwapped = false;
-    private double zeroPosition = 0.0;
-    private double encoderSign = 1.0;
     private double currPower = 0.0;
-    private boolean softLowerLimitEnabled = false;
-    private boolean softUpperLimitEnabled = false;
-    private double softLowerLimit = 0.0;
-    private double softUpperLimit = 0.0;
+    // private boolean feedbackDeviceIsPot = false;
     // private FeedbackDevice feedbackDeviceType;
 
     /**
@@ -79,8 +70,14 @@ public class FrcCANSparkMax extends TrcMotor
         resetPosition(true);
     }   //FrcCANSparkMax
 
+    /**
+     * This method sets this motor to follow another motor. If the subclass is not capable of following another motor,
+     * it should throw an UnsupportedOperationException.
+     *
+     * @throws UnsupportedOperationException if hardware does not support it.
+     */
     @Override
-    public void follow(TrcMotor motor)
+    public void followMotor(TrcMotor motor)
     {
         if (motor instanceof FrcCANSparkMax)
         {
@@ -94,9 +91,11 @@ public class FrcCANSparkMax extends TrcMotor
         }
         else
         {
-            super.follow(motor);
+            // Unknown motor type, add this motor to the follow list of the other motor and let TrcMotor simulates
+            // motor following.
+            motor.addFollowingMotor(this);
         }
-    }
+    }   //follow
 
     /**
      * This method returns the motor type.
@@ -134,8 +133,6 @@ public class FrcCANSparkMax extends TrcMotor
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        this.maxVelocity = maxVelocity;
-
         if (pidCoefficients != null)
         {
             SparkMaxPIDController pidController = motor.getPIDController();
@@ -149,6 +146,7 @@ public class FrcCANSparkMax extends TrcMotor
     /**
      * This method disables velocity mode returning it to power mode.
      */
+    @Override
     public void disableVelocityMode()
     {
         final String funcName = "disableVelocityMode";
@@ -158,29 +156,7 @@ public class FrcCANSparkMax extends TrcMotor
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
-
-        this.maxVelocity = 0.0;
     }   //disableVelocityMode
-
-    /**
-     * This method swaps the forward and reverse limit switches. By default, the lower limit switch is associated
-     * with the reverse limit switch and the upper limit switch is associated with the forward limit switch. This
-     * method will swap the association.
-     *
-     * @param swapped specifies true to swap the limit switches, false otherwise.
-     */
-    public void setLimitSwitchesSwapped(boolean swapped)
-    {
-        final String funcName = "setLimitSwitchesSwapped";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "swapped=%s", swapped);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        limitSwitchesSwapped = swapped;
-    }   //setLimitSwitchesSwapped
 
     //
     // Overriding TrcMotor specific methods.
@@ -245,60 +221,67 @@ public class FrcCANSparkMax extends TrcMotor
     // }   //setFeedbackDevice
 
     //
-    // Implements TrcMotor abstract methods.
+    // Implements TrcMotor abstract methods and overrides some of its methods supported in hardware.
     //
 
     /**
-     * This method returns the motor position by reading the position sensor. The position sensor can be an encoder
-     * or a potentiometer.
+     * This method returns the state of the motor controller direction.
      *
-     * @return current motor position in native unit (number of motor rotations).
+     * @return true if the motor direction is inverted, false otherwise.
      */
     @Override
-    public double getMotorPosition()
+    public boolean isInverted()
     {
-        final String funcName = "getMotorPosition";
+        final String funcName = "getInverted";
+        boolean inverted = motor.getInverted();
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", inverted);
         }
 
-        double currPos = encoder.getPosition() * encoderSign;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", currPos);
-        }
-
-        return currPos;
-    }   //getMotorPosition
+        return inverted;
+    }   //getInverted
 
     /**
-     * This method returns the motor velocity from the platform dependent motor hardware. If the hardware does
-     * not support velocity info, it should throw an UnsupportedOperationException.
+     * This method inverts the motor direction.
      *
-     * @return current motor velocity in native unit per second (RPS).
+     * @param inverted specifies true to invert motor direction, false otherwise.
      */
     @Override
-    public double getMotorVelocity()
+    public void setInverted(boolean inverted)
     {
-        final String funcName = "getMotorVelocity";
+        final String funcName = "setInverted";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", inverted);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+        }
+
+        motor.setInverted(inverted);
+    }   //setInverted
+
+    /**
+     * This method gets the last set power.
+     *
+     * @return the last setPower value.
+     */
+    @Override
+    public double getMotorPower()
+    {
+        final String funcName = "getMotorPower";
+        double power = motor.getAppliedOutput();
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", power);
         }
 
-        double currVel = encoder.getVelocity() * encoderSign / 60.0;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", currVel);
-        }
-
-        return currVel;
-    }   //getMotorVelocity
+        return power;
+    }   //getMotorPower
 
     /**
      * This method sets the raw motor power.
@@ -327,29 +310,28 @@ public class FrcCANSparkMax extends TrcMotor
         }
     }   //setMotorPower
 
-    //
-    // Implements TrcMotorController interface.
-    //
-
     /**
-     * This method returns the state of the motor controller direction.
-     *
-     * @return true if the motor direction is inverted, false otherwise.
+     * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
+     * potentiometer.
      */
     @Override
-    public boolean getInverted()
+    public void resetMotorPosition()
     {
-        final String funcName = "getInverted";
-        boolean inverted = motor.getInverted();
+        final String funcName = "resetMotorPosition";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", inverted);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        return inverted;
-    }   //getInverted
+        REVLibError error = encoder.setPosition(0.0);
+        if (error != REVLibError.kOk)
+        {
+            TrcDbgTrace.getGlobalTracer().traceErr(funcName, "resetPosition() on SparkMax %d failed with error %s!", motor.getDeviceId(),
+                error.name());
+        }
+    }   //resetMotorPosition
 
     /**
      * This method returns the motor position by reading the position sensor. The position sensor can be an encoder
@@ -358,70 +340,56 @@ public class FrcCANSparkMax extends TrcMotor
      * @return current motor position.
      */
     @Override
-    public double getPosition()
+    public double getMotorPosition()
     {
-        final String funcName = "getPosition";
-        double pos = getMotorPosition() - zeroPosition;
+        final String funcName = "getMotorPosition";
+        double pos = encoder.getPosition();
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", pos);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.0f", pos);
         }
 
         return pos;
-    }   //getPosition
+    }   //getMotorPosition
 
     /**
-     * This method gets the last set power.
+     * This method returns the motor velocity from the platform dependent motor hardware. If the hardware does
+     * not support velocity info, it should throw an UnsupportedOperationException.
      *
-     * @return the last setPower value.
+     * @return current motor velocity in native unit per second (RPS).
      */
     @Override
-    public double getPower()
+    public double getMotorVelocity()
     {
-        final String funcName = "getPower";
-        double power = motor.getAppliedOutput();
+        final String funcName = "getMotorVelocity";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", power);
         }
 
-        return power;
-    }   //getPower
-
-    /**
-     * This method returns the velocity of the motor rotation in sensor unit per second.
-     *
-     * @return motor rotation velocity in sensor unit per second.
-     */
-    @Override
-    public double getVelocity()
-    {
-        final String funcName = "getVelocity";
-        double velocity = encoder.getVelocity() * encoderSign / 60.0;
+        double currVel = encoder.getVelocity() / 60.0;
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", velocity);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.0f", currVel);
         }
 
-        return velocity;
-    }   //getVelocity
+        return currVel;
+    }   //getMotorVelocity
 
     /**
-     * This method returns the state of the lower limit switch.
+     * This method returns the state of the reverse limit switch.
      *
-     * @return true if lower limit switch is active, false otherwise.
+     * @return true if reverse limit switch is active, false otherwise.
      */
     @Override
-    public boolean isLowerLimitSwitchActive()
+    public boolean isRevLimitSwitchActive()
     {
-        final String funcName = "isLowerLimitSwitchActive";
-        boolean isActive = limitSwitchesSwapped ? fwdLimitSwitch.isPressed() : revLimitSwitch.isPressed();
+        final String funcName = "isRevLimitSwitchActive";
+        boolean isActive = revLimitSwitch.isPressed();
 
         if (debugEnabled)
         {
@@ -430,18 +398,18 @@ public class FrcCANSparkMax extends TrcMotor
         }
 
         return isActive;
-    }   //isLowerLimitSwitchClosed
+    }   //isRevLimitSwitchClosed
 
     /**
-     * This method returns the state of the upper limit switch.
+     * This method returns the state of the forward limit switch.
      *
-     * @return true if upper limit switch is active, false otherwise.
+     * @return true if forward limit switch is active, false otherwise.
      */
     @Override
-    public boolean isUpperLimitSwitchActive()
+    public boolean isFwdLimitSwitchActive()
     {
-        final String funcName = "isUpperLimitSwitchActive";
-        boolean isActive = limitSwitchesSwapped ? revLimitSwitch.isPressed() : fwdLimitSwitch.isPressed();
+        final String funcName = "isFwdLimitSwitchActive";
+        boolean isActive = fwdLimitSwitch.isPressed();
 
         if (debugEnabled)
         {
@@ -450,107 +418,7 @@ public class FrcCANSparkMax extends TrcMotor
         }
 
         return isActive;
-    }   //isUpperLimitSwitchActive
-
-    /**
-     * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
-     * potentiometer.
-     *
-     * @param hardware specifies true for resetting hardware position, false for resetting software position.
-     */
-    @Override
-    public void resetPosition(boolean hardware)
-    {
-        final String funcName = "resetPosition";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "hardware=%s", hardware);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        if (hardware)
-        {
-            REVLibError error = encoder.setPosition(0.0);
-            if (error != REVLibError.kOk)
-            {
-                TrcDbgTrace.getGlobalTracer().traceErr(funcName, "resetPosition() on SparkMax %d failed with error %s!", motor.getDeviceId(),
-                    error.name());
-            }
-            zeroPosition = 0.0;
-        }
-        else
-        {
-            zeroPosition = getMotorPosition();
-        }
-    }   //resetPosition
-
-    /**
-     * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
-     * potentiometer.
-     */
-    public void resetPosition()
-    {
-        resetPosition(false);
-    }   //resetPosition
-
-    /**
-     * This method checks if the SparkMax is connected to the robot. This does NOT say anything about the connection
-     * status of the motor.
-     *
-     * @return True if the SparkMax is connected, false otherwise.
-     */
-    @Override
-    public boolean isConnected()
-    {
-        // hacky, but should work
-        return motor.getFirmwareString() != null;
-    }
-
-    /**
-     * This method sets the motor output value. The value can be power or velocity percentage depending on whether
-     * the motor controller is in power mode or velocity mode.
-     *
-     * @param value specifies the percentage power or velocity (range -1.0 to 1.0) to be set.
-     */
-    @Override
-    public void set(double value)
-    {
-        final String funcName = "set";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", value);
-        }
-
-        if (!TrcUtil.inRange(value, -1.0, 1.0))
-        {
-            throw new IllegalArgumentException("Value must be in the range of -1.0 to 1.0.");
-        }
-
-        if (softLowerLimitEnabled && value < 0.0 && getPosition() <= softLowerLimit
-            || softUpperLimitEnabled && value > 0.0 && getPosition() >= softUpperLimit)
-        {
-            value = 0.0;
-        }
-
-        if (maxVelocity == 0.0)
-        {
-            currPower = value;
-        }
-        // else
-        // {
-        //     controlMode = ControlMode.Velocity;
-        //     value *= maxVelocity;
-        //     value = TrcUtil.round(value); // Velocity mode is in sensor units/100ms, and sensor units are in integers.
-        // }
-        motor.set(value);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", value);
-        }
-    }   //set
+    }   //isFwdLimitSwitchActive
 
     /**
      * This method enables/disables motor brake mode. In motor brake mode, set power to 0 would stop the motor very
@@ -575,104 +443,16 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setBrakeModeEnabled
 
     /**
-     * This method inverts the motor direction.
+     * This method checks if the SparkMax is connected to the robot. This does NOT say anything about the connection
+     * status of the motor.
      *
-     * @param inverted specifies true to invert motor direction, false otherwise.
+     * @return True if the SparkMax is connected, false otherwise.
      */
     @Override
-    public void setInverted(boolean inverted)
+    public boolean isConnected()
     {
-        final String funcName = "setInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", inverted);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        motor.setInverted(inverted);
-    }   //setInverted
-
-    /**
-     * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
-     * encoder may be mounted somewhere in the power train that it rotates opposite to the motor rotation. This will
-     * cause the encoder reading to go down when the motor is receiving positive power. This method can correct this
-     * situation.
-     *
-     * @param inverted specifies true to invert position sensor direction, false otherwise.
-     */
-    @Override
-    public void setPositionSensorInverted(boolean inverted)
-    {
-        final String funcName = "setPositionSensorInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", inverted);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        encoderSign = inverted ? -1.0 : 1.0;
-    }   //setPositionSensorInverted
-
-    /**
-     * This method enables/disables soft limit switches.
-     *
-     * @param lowerLimitEnabled specifies true to enable lower soft limit switch, false otherwise.
-     * @param upperLimitEnabled specifies true to enable upper soft limit switch, false otherwise.
-     */
-    @Override
-    public void setSoftLimitEnabled(boolean lowerLimitEnabled, boolean upperLimitEnabled)
-    {
-        final String funcName = "setSoftLimitEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "lowerEnabled=%s,upperEnabled=%s",
-                Boolean.toString(lowerLimitEnabled), Boolean.toString(upperLimitEnabled));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        softLowerLimitEnabled = lowerLimitEnabled;
-        softUpperLimitEnabled = upperLimitEnabled;
-    }   //setSoftLimitEnabled
-
-    /**
-     * This method sets the lower soft limit.
-     *
-     * @param position specifies the position of the lower limit.
-     */
-    @Override
-    public void setSoftLowerLimit(double position)
-    {
-        final String funcName = "setSoftLowerLimit";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "position=%f", position);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        softLowerLimit = position;
-    }   //setSoftLowerLimit
-
-    /**
-     * This method sets the upper soft limit.
-     *
-     * @param position specifies the position of the upper limit.
-     */
-    @Override
-    public void setSoftUpperLimit(double position)
-    {
-        final String funcName = "setSoftUpperLimit";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "position=%f", position);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        softUpperLimit = position;
-    }   //setSoftUpperLimit
+        // hacky, but should work
+        return motor.getFirmwareString() != null;
+    }   //isConnected
 
 }   //class FrcCANSparkMax

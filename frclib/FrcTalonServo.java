@@ -68,7 +68,7 @@ public class FrcTalonServo extends TrcServo
     @Override
     public boolean isInverted()
     {
-        return talon.getInverted();
+        return talon.isInverted();
     }
 
     @Override
