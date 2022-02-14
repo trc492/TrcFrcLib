@@ -61,7 +61,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     private boolean revLimitSwitchNormalOpen = false;
     private boolean fwdLimitSwitchNormalOpen = false;
     private double motorPower = 0.0;
-    private FeedbackDevice feedbackDeviceType;
+    private FeedbackDevice feedbackDeviceType = FeedbackDevice.QuadEncoder;
 
     /**
      * The number of non-success error codes reported by the device after sending a command.
@@ -272,7 +272,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public boolean isInverted()
     {
-        final String funcName = "getInverted";
+        final String funcName = "isInverted";
         boolean inverted = motor.getInverted();
 
         if (debugEnabled)
@@ -282,7 +282,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         }
 
         return inverted;
-    }   //getInverted
+    }   //isInverted
 
     /**
      * This method inverts the motor direction.
@@ -375,11 +375,14 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        ErrorCode error = recordResponseCode(motor.setSelectedSensorPosition(0, 0, 10));
-        if (error != ErrorCode.OK)
+        if (feedbackDeviceType != FeedbackDevice.Analog)
         {
-            TrcDbgTrace.getGlobalTracer().traceErr(
-                funcName, "resetPosition() on device %d failed with error %s!", motor.getDeviceID(), error.name());
+            ErrorCode error = recordResponseCode(motor.setSelectedSensorPosition(0, 0, 10));
+            if (error != ErrorCode.OK)
+            {
+                TrcDbgTrace.getGlobalTracer().traceErr(
+                    funcName, "resetPosition() on device %d failed with error %s!", motor.getDeviceID(), error.name());
+            }
         }
     }   //resetMotorPosition
 
@@ -426,6 +429,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         }
 
         double currVel = motor.getSelectedSensorVelocity() / 0.1;
+        recordResponseCode(motor.getLastError());
 
         if (debugEnabled)
         {

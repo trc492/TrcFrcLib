@@ -48,8 +48,6 @@ public class FrcCANSparkMax extends TrcMotor
     private RelativeEncoder encoder;
     private SparkMaxLimitSwitch fwdLimitSwitch, revLimitSwitch;
     private double currPower = 0.0;
-    // private boolean feedbackDeviceIsPot = false;
-    // private FeedbackDevice feedbackDeviceType;
 
     /**
      * Constructor: Create an instance of the object.
