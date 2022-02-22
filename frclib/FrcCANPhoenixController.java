@@ -57,7 +57,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //class EncoderInfo
 
     public final T motor;
-    private double maxVelocity = 0.0;
     private boolean revLimitSwitchNormalOpen = false;
     private boolean fwdLimitSwitchNormalOpen = false;
     private double motorPower = 0.0;
@@ -153,7 +152,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        this.maxVelocity = maxVelocity;
+        this.maxMotorVelocity = maxVelocity;
 
         if (pidCoefficients != null)
         {
@@ -178,7 +177,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        this.maxVelocity = 0.0;
+        this.maxMotorVelocity = 0.0;
     }   //disableVelocityMode
 
     /**
@@ -328,35 +327,40 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     /**
      * This method sets the raw motor power.
      *
-     * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
+     * @param value specifies the percentage power (range -1.0 to 1.0) to be set or percentage of maxMotorVelocity if
+     *              velocity mode is enabled.
      */
     @Override
-    public void setMotorPower(double power)
+    public void setMotorPower(double value)
     {
         final String funcName = "setMotorPower";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", power);
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", value);
         }
 
-        if (power != motorPower)
+        if (value != motorPower)
         {
-            if (maxVelocity != 0.0)
+            if (maxMotorVelocity != 0.0)
             {
-                motor.set(ControlMode.Velocity, power);
+                // Velocity control mode.
+                // Note: value is in the unit of sensor units per second but CTRE controllers want sensor units
+                // per 100 msec so we need to divide value by 10.
+                motor.set(ControlMode.Velocity, value*maxMotorVelocity/10.0);
             }
             else
             {
-                motor.set(ControlMode.PercentOutput, TrcUtil.round(power*maxVelocity));
+                // PercentOutput control mode.
+                motor.set(ControlMode.PercentOutput, value);
             }
             recordResponseCode(motor.getLastError());
-            motorPower = power;
+            motorPower = value;
         }
 
         if (debugEnabled)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", power);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", value);
         }
     }   //setMotorPower
 
