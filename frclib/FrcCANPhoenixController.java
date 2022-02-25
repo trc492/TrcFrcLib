@@ -35,7 +35,6 @@ import edu.wpi.first.util.sendable.SendableRegistry;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
-import TrcCommonLib.trclib.TrcUtil;
 
 public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMotor
 {
