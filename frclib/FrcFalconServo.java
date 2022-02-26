@@ -29,8 +29,9 @@ import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcFalconServo extends TrcServo
 {
-    private FrcCANFalcon falcon;
-    private double degreesPerTick;
+    private final FrcCANFalcon falcon;
+    private final double degreesPerTick;
+    private final double zeroPos;
     private double lastSetPos = 0;
 
     /**
@@ -40,15 +41,17 @@ public class FrcFalconServo extends TrcServo
      * @param motor           the physical motor controller object.
      * @param pidCoefficients the pid coefficients used for motion magic. Don't forget kF!
      * @param degreesPerTick  degrees per native sensor unit measured by the talon.
+     * @param zeroPos         encoder vaue when motor is at zero angle.
      * @param maxSpeed        desired max speed of the motor, in degrees per second.
      * @param maxAccel        desired max acceleration of the motor, in degrees per second per second.
      */
     public FrcFalconServo(String instanceName, FrcCANFalcon falcon, TrcPidController.PidCoefficients pidCoefficients,
-        double degreesPerTick, double maxSpeed, double maxAccel)
+        double degreesPerTick, double zeroPos, double maxSpeed, double maxAccel)
     {
         super(instanceName);
         this.falcon = falcon;
         this.degreesPerTick = degreesPerTick;
+        this.zeroPos = zeroPos;
 
         falcon.motor.config_kP(0, pidCoefficients.kP);
         falcon.motor.config_kI(0, pidCoefficients.kI);
@@ -88,7 +91,7 @@ public class FrcFalconServo extends TrcServo
     @Override
     public double getEncoderPosition()
     {
-        return falcon.getPosition() * degreesPerTick;
+        return (falcon.getPosition() - zeroPos)*degreesPerTick;
     }
 
     /**
