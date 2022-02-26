@@ -22,17 +22,14 @@
 
 package TrcFrcLib.frclib;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcPidController;
 import TrcCommonLib.trclib.TrcServo;
 import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcFalconServo extends TrcServo
 {
-    private final String instanceName;
     private final FrcCANFalcon falcon;
     private final double degreesPerTick;
     private final double zeroPos;
@@ -53,7 +50,6 @@ public class FrcFalconServo extends TrcServo
         double degreesPerTick, double zeroPos, double maxSpeed, double maxAccel)
     {
         super(instanceName);
-        this.instanceName = instanceName;
         this.falcon = falcon;
         this.degreesPerTick = degreesPerTick;
         this.zeroPos = zeroPos;
@@ -84,12 +80,9 @@ public class FrcFalconServo extends TrcServo
     {
         lastSetPos = position;
         double angle = position * 360.0;
-        double encPos = angle / degreesPerTick;
+        double encPos = angle / degreesPerTick + zeroPos;
         // falcon.motor.set(ControlMode.MotionMagic, encPos);
         falcon.motor.set(TalonFXControlMode.Position, encPos);
-        TrcDbgTrace.getGlobalTracer().traceInfo(
-            "FrcFalconServo.setPosition", "%s: pos=%.2f, angle=%1f, targetPos=%.2f, currPos=%.2f",
-            instanceName, position, angle, encPos, getEncoderPosition());
     }
 
     /**
