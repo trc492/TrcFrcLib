@@ -309,6 +309,14 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setMotorPower
 
     /**
+     * This method stops the motor regardless of what control mode the motor is on.
+     */
+    public void stopMotor()
+    {
+        setMotorPower(0.0);
+    }   //stopMotor
+
+    /**
      * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
      * potentiometer.
      */

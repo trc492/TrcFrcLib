@@ -364,6 +364,31 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setMotorPower
 
     /**
+     * This method stops the motor regardless of what control mode the motor is on.
+     */
+    public void stopMotor()
+    {
+        final String funcName = "stopMotor";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
+        }
+
+        if (motorPower != 0.0)
+        {
+            motor.set(ControlMode.PercentOutput, 0.0);
+            recordResponseCode(motor.getLastError());
+            motorPower = 0.0;
+        }
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+        }
+    }   //stopMotor
+
+    /**
      * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
      * potentiometer.
      */
