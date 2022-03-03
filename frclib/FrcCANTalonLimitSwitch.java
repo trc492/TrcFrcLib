@@ -22,6 +22,9 @@
 
 package TrcFrcLib.frclib;
 
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
+import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
+
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcDigitalInput;
 
@@ -73,5 +76,35 @@ public class FrcCANTalonLimitSwitch extends TrcDigitalInput
 
         return state;
     }   //isActive
+
+    /**
+     * This method inverts the polarity of the limit switch by configuring it to be normally open (non-inverted) or
+     * normally close (inverted).
+     *
+     * @param inverted specifies true to invert and false otherwise.
+     */
+    public void setInverted(boolean inverted)
+    {
+        final String funcName = "setInverted";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", inverted);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+        }
+
+        if (upperLimitSwitch)
+        {
+            canTalon.motor.configForwardLimitSwitchSource(
+                LimitSwitchSource.FeedbackConnector,
+                inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen, 10);
+        }
+        else
+        {
+            canTalon.motor.configReverseLimitSwitchSource(
+                LimitSwitchSource.FeedbackConnector,
+                inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen, 10);
+        }
+    }   //setInverted
 
 }   //class FrcCANTalonLimitSwitch
