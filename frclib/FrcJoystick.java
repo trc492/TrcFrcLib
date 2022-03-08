@@ -575,13 +575,24 @@ public class FrcJoystick extends Joystick
     }   //getDirectionDegreesWithDeadband
 
     /**
+     * This method returns the state of the button.
+     *
+     * @param buttonID specifies the button to check its state.
+     * @return true if the button is pressed, false if released.
+     */
+    public boolean isButtonPressed(int buttonID)
+    {
+        return (DriverStation.getStickButtons(port) & buttonID) != 0;
+    }   //isButtonPressed
+
+    /**
      * This method runs periodically and checks for changes in the button states. If any button changed state,
      * the button handler is called if one exists.
      *
      * @param taskType specifies the type of task being run.
      * @param runMode  specifies the current robot run mode.
      */
-    public void buttonEventTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void buttonEventTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "buttonEventTask";
         double currTime = TrcUtil.getCurrentTime();
