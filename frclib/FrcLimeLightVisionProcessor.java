@@ -91,6 +91,11 @@ public class FrcLimeLightVisionProcessor extends FrcRemoteVisionProcessor
         return targetDetected() ? heading.getDouble(0.0) : 0.0;
     }
 
+    public double getElevation()
+    {
+        return targetDetected() ? get("ty") : 0.0;
+    }
+
     public double getTargetArea()
     {
         return get("ta");
