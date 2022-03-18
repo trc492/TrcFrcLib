@@ -30,6 +30,8 @@ import TrcCommonLib.trclib.TrcDbgTrace;
  */
 public class FrcDbgLog implements TrcDbgTrace.DbgLog
 {
+    public static final boolean useEscSeq       = false;
+
     public static final String ESC_PREFIX       = "\u001b[";
     public static final String ESC_SUFFIX       = "m";
     public static final String ESC_SEP          = ";";
@@ -250,7 +252,14 @@ public class FrcDbgLog implements TrcDbgTrace.DbgLog
                 break;
         }
 
-        System.out.print(color + msg + prefix);
+        if (useEscSeq)
+        {
+            System.out.print(color + msg + prefix);
+        }
+        else
+        {
+            System.out.print(msg + prefix);
+        }
     }   //msg
 
     @Override
