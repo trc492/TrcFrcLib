@@ -48,7 +48,7 @@ public class FrcMatchInfo
      */
     public static FrcMatchInfo getMatchInfo()
     {
-        if (matchInfo == null)
+        if (matchInfo == null || matchInfo.eventName == null)
         {
             matchInfo = new FrcMatchInfo();
         }
