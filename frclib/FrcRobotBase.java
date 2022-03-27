@@ -107,7 +107,7 @@ public abstract class FrcRobotBase extends RobotBase
     private double updatesTotalElapsedTime = 0.0;
     private double updatesMaxElapsedTime = 0.0;
 
-    private final String progName;
+    private final String robotName;
     private RobotMode teleOpMode = null;
     private RobotMode autoMode = null;
     private RobotMode testMode = null;
@@ -118,9 +118,9 @@ public abstract class FrcRobotBase extends RobotBase
     /**
      * Constructor: Create an instance of the object.
      *
-     * @param progName specifies the program name.
+     * @param robotName specifies the robot name.
      */
-    public FrcRobotBase(final String progName)
+    public FrcRobotBase(final String robotName)
     {
         if (FrcRobotBase.instance != null)
         {
@@ -140,7 +140,7 @@ public abstract class FrcRobotBase extends RobotBase
                 new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
         }
 
-        this.progName = progName;
+        this.robotName = robotName;
         FrcRobotBase.instance = this;
         // Initialize modeStartTime just in case somebody's calling TrcUtil.getModeElapsedTime before it's initialized.
         TrcUtil.recordModeStartTime();
@@ -158,6 +158,17 @@ public abstract class FrcRobotBase extends RobotBase
     {
         return instance;
     }   //getInstance
+
+    /**
+     * This method returns the robot name.
+     *
+     * @return robot name.
+     */
+    @Override
+    public String toString()
+    {
+        return robotName;
+    }   //toString
 
     /**
      * This method returns the continuous loop counter. This is very useful for code to determine if it is called
@@ -270,11 +281,11 @@ public abstract class FrcRobotBase extends RobotBase
             FrcDbgLog.ESC_SEP + FrcDbgLog.SGR_BG_WHITE +
             FrcDbgLog.ESC_SUFFIX +
             "\n****************************************\n" +
-            "Host Name: %s\n" +
-            "  Program: %s\n"+
+            " Host Name: %s\n" +
+            "Robot Name: %s\n"+
             "\n****************************************\n" +
             FrcDbgLog.ESC_NORMAL,
-            getHostName(), progName);
+            getHostName(), robotName);
 
         HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_Iterative);
 
@@ -718,8 +729,8 @@ public abstract class FrcRobotBase extends RobotBase
     public void printPerformanceMetrics(TrcDbgTrace tracer)
     {
         tracer.traceInfo(
-            moduleName, "%s Performance Metrics: ContinuousLoop=%d, PeriodicLoop=%d",
-            continuousLoopCounter, periodicLoopCounter);
+            moduleName, "%s Performance Metrics: ContinuousLoopCount=%d, PeriodicLoopCount=%d",
+            currMode, continuousLoopCounter, periodicLoopCounter);
         tracer.traceInfo(
             moduleName,
             "RobotInit=%.6f, PrevModeStopTask=%.6f, PrevStopMode=%.6f, PrevRobotStopMode=%.6f, " +
