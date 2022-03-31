@@ -719,7 +719,7 @@ public abstract class FrcRobotBase extends RobotBase
     public void endCompetition()
     {
         // empty
-    }
+    }   //endCompetition
 
     /**
      * This method prints the performance metrics of all loops and taska.
@@ -729,8 +729,8 @@ public abstract class FrcRobotBase extends RobotBase
     public void printPerformanceMetrics(TrcDbgTrace tracer)
     {
         tracer.traceInfo(
-            moduleName, "%s Performance Metrics: ContinuousLoopCount=%d, PeriodicLoopCount=%d",
-            currMode, continuousLoopCounter, periodicLoopCounter);
+            moduleName, "(%s->%s) Performance Metrics: ContinuousLoopCount=%d, PeriodicLoopCount=%d",
+            prevMode, currMode, continuousLoopCounter, periodicLoopCounter);
         tracer.traceInfo(
             moduleName,
             "RobotInit=%.6f, PrevModeStopTask=%.6f, PrevStopMode=%.6f, PrevRobotStopMode=%.6f, " +
