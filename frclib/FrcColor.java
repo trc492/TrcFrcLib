@@ -50,6 +50,13 @@ public class FrcColor extends TrcColor
     public static final FrcColor HALF_CYAN = new FrcColor(0, 127, 127);
     public static final FrcColor HALF_MAGENTA = new FrcColor(127, 0, 127);
     public static final FrcColor HALF_WHITE = new FrcColor(127, 127, 127);
+    public static final FrcColor QUARTER_RED = new FrcColor(63, 0, 0);
+    public static final FrcColor QUARTER_GREEN = new FrcColor(0, 63, 0);
+    public static final FrcColor QUARTER_BLUE = new FrcColor(0, 0, 63);
+    public static final FrcColor QUARTER_YELLOW = new FrcColor(63, 63, 0);
+    public static final FrcColor QUARTER_CYAN = new FrcColor(0, 63, 63);
+    public static final FrcColor QUARTER_MAGENTA = new FrcColor(63, 0, 63);
+    public static final FrcColor QUARTER_WHITE = new FrcColor(63, 63, 63);
 
     public final Color color;
 
