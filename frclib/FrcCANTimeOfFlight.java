@@ -21,12 +21,18 @@ public class FrcCANTimeOfFlight extends TimeOfFlight implements TrcDistanceSenso
     public FrcCANTimeOfFlight(String instanceName, int sensorId)
     {
         super(sensorId);
-    }
+    }   //FrcCANTimeOfFlight
 
+    /**
+     * This method returns the distance in inches.
+     *
+     * @return distance in inches.
+     */
     @Override
     public double getDistanceInches()
     {
         double distMeters = getRange() / 1000.0;
         return distMeters / TrcUtil.METERS_PER_INCH;
-    }
-}
+    }   //getDistanceInches
+
+}   //class FrcCANTimeOfFlight
