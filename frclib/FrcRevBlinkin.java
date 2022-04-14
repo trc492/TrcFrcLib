@@ -32,8 +32,10 @@ import TrcCommonLib.trclib.TrcRevBlinkin;
  */
 public class FrcRevBlinkin extends TrcRevBlinkin
 {
+    private static final Pattern offPattern = new Pattern("Off", RevLedPattern.SolidBlack);
+
     private PWM device;
-    private LEDPattern currPattern = LEDPattern.SolidBlack;
+    private Pattern currPattern = offPattern;
 
     /**
      * Constructor: Create an instance of the object.
@@ -62,7 +64,7 @@ public class FrcRevBlinkin extends TrcRevBlinkin
      * @return currently set LED pattern.
      */
     @Override
-    public LEDPattern getPattern()
+    public Pattern getPattern()
     {
         final String funcName = "getPattern";
 
@@ -81,11 +83,11 @@ public class FrcRevBlinkin extends TrcRevBlinkin
      * @param pattern specifies the color pattern.
      */
     @Override
-    public void setPattern(LEDPattern pattern)
+    public void setPattern(Pattern pattern)
     {
         final String funcName = "setPattern";
 
-        pattern = pattern == null ? LEDPattern.SolidBlack : pattern;
+        pattern = pattern == null ? offPattern : pattern;
 
         if (debugEnabled)
         {
@@ -93,7 +95,7 @@ public class FrcRevBlinkin extends TrcRevBlinkin
         }
 
         currPattern = pattern;
-        device.setPosition(pattern.value);
+        device.setPosition(pattern.ledPattern.value);
 
         if (debugEnabled)
         {
