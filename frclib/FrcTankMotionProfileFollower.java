@@ -422,11 +422,11 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
     {
         if (enabled)
         {
-            motionProfileTaskObject.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
+            motionProfileTaskObject.registerTask(TrcTaskMgr.TaskType.OUTPUT_TASK);
         }
         else
         {
-            motionProfileTaskObject.unregisterTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
+            motionProfileTaskObject.unregisterTask();
         }
     }
 

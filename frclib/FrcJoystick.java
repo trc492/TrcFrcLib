@@ -153,7 +153,7 @@ public class FrcJoystick extends Joystick
 
         TrcTaskMgr.TaskObject buttonEventTaskObj = TrcTaskMgr.createTask(
             instanceName + ".buttonEvent", this::buttonEventTask);
-        buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.PREPERIODIC_TASK);
+        buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.SLOW_PREPERIODIC_TASK);
     }   //FrcJoystick
 
     /**

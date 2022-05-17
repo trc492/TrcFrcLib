@@ -137,7 +137,7 @@ public class FrcPdp extends PowerDistribution
         }
         else
         {
-            energyUsedTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+            energyUsedTaskObj.unregisterTask();
         }
 
         if (debugEnabled)

@@ -82,7 +82,7 @@ public abstract class FrcRemoteVisionProcessor
         setRingLightEnabled(enabled);
         if (enabled)
         {
-            visionTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
+            visionTaskObj.registerTask(TrcTaskMgr.TaskType.INPUT_TASK);
         }
         else
         {

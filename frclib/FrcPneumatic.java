@@ -619,11 +619,11 @@ public class FrcPneumatic
 
         if (enabled)
         {
-            pneumaticTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
+            pneumaticTaskObj.registerTask(TrcTaskMgr.TaskType.OUTPUT_TASK);
         }
         else
         {
-            pneumaticTaskObj.unregisterTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
+            pneumaticTaskObj.unregisterTask();
         }
 
         if (debugEnabled)
