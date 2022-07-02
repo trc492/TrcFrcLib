@@ -54,7 +54,7 @@ public abstract class FrcRobotBase extends RobotBase
     protected TrcDbgTrace dbgTrace = null;
     protected boolean liveWindowEnabled = false;
     protected boolean debugPerformanceEnabled = false;
-    private static final boolean debugLoopTimeEnabled = true;
+    private static final boolean debugLoopTimeEnabled = false;
 
     private static final boolean dashboardEnabled = true;
 
