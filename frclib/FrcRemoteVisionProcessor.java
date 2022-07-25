@@ -39,9 +39,9 @@ import java.util.stream.Collectors;
 public abstract class FrcRemoteVisionProcessor
 {
     private final String instanceName;
+    protected final NetworkTable networkTable;
 
     private volatile RelativePose relativePose = null;
-    protected NetworkTable networkTable;
     private int maxCachedFrames = 10; // the last 10 frames
     private List<RelativePose> frames = new LinkedList<>();
     private final Object framesLock = new Object();
@@ -58,19 +58,20 @@ public abstract class FrcRemoteVisionProcessor
         networkTable = instance.getTable(networkTableName);
         instance.addConnectionListener(this::connectionListener, false);
         visionTaskObj = TrcTaskMgr.createTask(instanceName + ".visionTask", this::updateTargetInfo);
-    }
+    }   //FrcRemoteVisionProcessor
 
     public FrcRemoteVisionProcessor(String instanceName, String networkTableName, int relayPort)
     {
         this(instanceName, networkTableName);
         ringLight = new Relay(relayPort);
         ringLight.setDirection(Relay.Direction.kForward);
-    }
+    }   //FrcRemoteVisionProcessor
 
+    @Override
     public String toString()
     {
         return instanceName;
-    }
+    }   //toString
 
     /**
      * Enables or disables the remote vision processor. The ring light is also enabled or disabled accordingly.
@@ -88,7 +89,7 @@ public abstract class FrcRemoteVisionProcessor
         {
             visionTaskObj.unregisterTask();
         }
-    }
+    }   //setEnabled
 
     /**
      * Set the offset of the camera. This is the distance in the x and y axes from the camera to the robot perspective.
@@ -101,12 +102,12 @@ public abstract class FrcRemoteVisionProcessor
     {
         this.offsetX = x;
         this.offsetY = y;
-    }
+    }   //setOffsets
 
     public void setFreshnessTimeout(double timeout)
     {
         this.timeout = timeout;
-    }
+    }   //setFreshnessTimeout
 
     public void setRingLightEnabled(boolean enabled)
     {
@@ -114,14 +115,14 @@ public abstract class FrcRemoteVisionProcessor
         {
             ringLight.set(enabled ? Relay.Value.kOn : Relay.Value.kOff);
         }
-    }
+    }   //setRingLightEnabled
 
     private void connectionListener(ConnectionNotification notification)
     {
-        TrcDbgTrace.getGlobalTracer()
-            .traceErr("connectionListener", "Client %s connected=%b!", notification.conn.remote_ip,
-                notification.connected);
-    }
+        TrcDbgTrace.getGlobalTracer().traceInfo(
+            "connectionListener", "Client %s connected=%b!", notification.conn.remote_ip,
+            notification.connected);
+    }   //connectionListener
 
     /**
      * Process the latest data from network tables.
@@ -165,22 +166,22 @@ public abstract class FrcRemoteVisionProcessor
                 }
             }
         }
-    }
+    }   //updateTargetInfo
 
     private boolean isFresh(RelativePose pose)
     {
         return pose != null && (timeout == 0.0 || TrcUtil.getCurrentTime() - pose.time <= timeout);
-    }
+    }   //isFresh
 
     public double get(String key)
     {
         return networkTable.getEntry(key).getDouble(0.0);
-    }
+    }   //get
 
     public NetworkTableValue getValue(String key)
     {
         return networkTable.getEntry(key).getValue();
-    }
+    }   //getValue
 
     /**
      * Get the average pose of the last n frames where n=maxCachedFrames.
@@ -190,7 +191,7 @@ public abstract class FrcRemoteVisionProcessor
     public RelativePose getAveragePose()
     {
         return getAveragePose(maxCachedFrames);
-    }
+    }   //getAveragePose
 
     /**
      * Calculates the average pose of the last numFrames frames.
@@ -201,7 +202,7 @@ public abstract class FrcRemoteVisionProcessor
     public RelativePose getAveragePose(int numFrames)
     {
         return getAveragePose(numFrames, false);
-    }
+    }   //getAveragePose
 
     /**
      * Calculates the average pose of the last numFrames frames, optionally requiring numFrames frames.
@@ -248,7 +249,7 @@ public abstract class FrcRemoteVisionProcessor
             average.y /= (double) numFreshFrames;
         }
         return average;
-    }
+    }   //getAveragePose
 
     /**
      * Calculates the median pose of the last numFrames frames, optionally requiring numFrames frames.
@@ -282,7 +283,7 @@ public abstract class FrcRemoteVisionProcessor
             median.objectYaw = TrcUtil.median(frames.stream().mapToDouble(e -> e.objectYaw).toArray());
         }
         return median;
-    }
+    }   //getMedianPose
 
     /**
      * Set the max number of frames to keep. You will not be able to average more frames than this.
@@ -296,7 +297,7 @@ public abstract class FrcRemoteVisionProcessor
             throw new IllegalArgumentException("numFrames must be >= 0!");
         }
         this.maxCachedFrames = numFrames;
-    }
+    }   //getMaxCachedFrames
 
     /**
      * Gets the last calculated pose.
@@ -307,7 +308,7 @@ public abstract class FrcRemoteVisionProcessor
     {
         RelativePose pose = relativePose;
         return isFresh(pose) ? pose : null;
-    }
+    }   //getLastPose
 
     public static class RelativePose
     {
@@ -325,5 +326,6 @@ public abstract class FrcRemoteVisionProcessor
         {
             return String.format("RelativePose(x=%.1f,y=%.1f,r=%.1f,theta=%.1f)", x, y, r, theta);
         }
-    }
-}
+    }   //class RelativePose
+
+}   //class FrcRemoteVisionProcessor

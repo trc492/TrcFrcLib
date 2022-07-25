@@ -116,7 +116,7 @@ public class FrcPdp extends PowerDistribution
      *
      * @param enabled specifies true to enable the task, false to disable.
      */
-    public synchronized void setTaskEnabled(boolean enabled)
+    public void setTaskEnabled(boolean enabled)
     {
         final String funcName = "setTaskEnabled";
 
@@ -127,12 +127,15 @@ public class FrcPdp extends PowerDistribution
 
         if (enabled)
         {
-            for (int i = 0; i < kPDPChannels; i++)
+            synchronized (this)
             {
-                channelEnergyUsed[i] = 0.0;
-            }
+                for (int i = 0; i < kPDPChannels; i++)
+                {
+                    channelEnergyUsed[i] = 0.0;
+                }
 
-            lastTimestamp = TrcUtil.getCurrentTime();
+                lastTimestamp = TrcUtil.getCurrentTime();
+            }
             energyUsedTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
         }
         else
@@ -153,20 +156,24 @@ public class FrcPdp extends PowerDistribution
      * @param name specifies the channel name.
      * @return true if registered successfully, false if channel is invalid or already registered.
      */
-    public synchronized boolean registerEnergyUsed(int channel, String name)
+    public boolean registerEnergyUsed(int channel, String name)
     {
         final String funcName = "registerEnergyUsed";
+        boolean success;
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "channel=%d,name=%s", channel, name);
         }
 
-        boolean success = channel >= 0 && channel < kPDPChannels && channelNames[channel] == null;
-        if (success)
+        synchronized (this)
         {
-            channelNames[channel] = name;
-            channelEnergyUsed[channel] = 0.0;
+            success = channel >= 0 && channel < kPDPChannels && channelNames[channel] == null;
+            if (success)
+            {
+                channelNames[channel] = name;
+                channelEnergyUsed[channel] = 0.0;
+            }
         }
 
         if (debugEnabled)
@@ -183,7 +190,7 @@ public class FrcPdp extends PowerDistribution
      * @param channelInfo specifies the array of channels to be registered.
      * @return true if registered successfully, false if channel is invalid or already registered.
      */
-    public synchronized boolean registerEnergyUsed(Channel... channels)
+    public boolean registerEnergyUsed(Channel... channels)
     {
         final String funcName = "registerEnergyUsed";
         boolean success = true;
@@ -193,12 +200,15 @@ public class FrcPdp extends PowerDistribution
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "channels=%s", Arrays.toString(channels));
         }
 
-        for (Channel ch: channels)
+        synchronized (this)
         {
-            success = registerEnergyUsed(ch.channel, ch.name);
-            if (!success)
+            for (Channel ch: channels)
             {
-                break;
+                success = registerEnergyUsed(ch.channel, ch.name);
+                if (!success)
+                {
+                    break;
+                }
             }
         }
 
@@ -214,7 +224,7 @@ public class FrcPdp extends PowerDistribution
      * This method registers all currently unregistered PDP channels for monitoring its energy used
      * with a default name based on the channel number.
      */
-    public synchronized void registerEnergyUsedForAllUnregisteredChannels()
+    public void registerEnergyUsedForAllUnregisteredChannels()
     {
         final String funcName = "registerEnergyUsedForAllUnregisteredChannels";
 
@@ -223,12 +233,15 @@ public class FrcPdp extends PowerDistribution
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        for (int i = 0; i < kPDPChannels; i++)
+        synchronized (this)
         {
-            if (channelNames[i] == null)
+            for (int i = 0; i < kPDPChannels; i++)
             {
-                channelNames[i] = "Channel_" + i;
-                channelEnergyUsed[i] = 0.0;
+                if (channelNames[i] == null)
+                {
+                    channelNames[i] = "Channel_" + i;
+                    channelEnergyUsed[i] = 0.0;
+                }
             }
         }
 
@@ -244,20 +257,24 @@ public class FrcPdp extends PowerDistribution
      * @param channel specifies the channel to be unregistered.
      * @return true if unregistered successfully, false if channel is not registered.
      */
-    public synchronized boolean unregisterEnergyUsed(int channel)
+    public boolean unregisterEnergyUsed(int channel)
     {
         final String funcName = "unregisterEnergyUsed";
+        boolean success;
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "channel=%d", channel);
         }
 
-        boolean success = channelNames[channel] != null;
-        if (success)
+        synchronized (this)
         {
-            channelNames[channel] = null;
-            channelEnergyUsed[channel] = 0.0;
+            success = channelNames[channel] != null;
+            if (success)
+            {
+                channelNames[channel] = null;
+                channelEnergyUsed[channel] = 0.0;
+            }
         }
 
         if (debugEnabled)
@@ -273,7 +290,7 @@ public class FrcPdp extends PowerDistribution
      *
      * @return true if unregistered successfully, false if channel is not registered.
      */
-    public synchronized void unregisterAllEnergyUsed()
+    public void unregisterAllEnergyUsed()
     {
         final String funcName = "unregisterAllEnergyUsed";
 
@@ -283,11 +300,14 @@ public class FrcPdp extends PowerDistribution
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        for (int i = 0; i < kPDPChannels; i++)
+        synchronized (this)
         {
-            if (channelNames[i] != null)
+            for (int i = 0; i < kPDPChannels; i++)
             {
-                unregisterEnergyUsed(i);
+                if (channelNames[i] != null)
+                {
+                    unregisterEnergyUsed(i);
+                }
             }
         }
     }   //unregisterAllEnergyUsed
@@ -298,10 +318,15 @@ public class FrcPdp extends PowerDistribution
      * @param channel specifies the PDP channel.
      * @return energy consumed by the channel in Watt-Hour if registered, null if not registered.
      */
-    public synchronized double getEnergyUsed(int channel)
+    public double getEnergyUsed(int channel)
     {
         final String funcName = "getEnergyUsed";
-        double energyUsed = channelNames[channel] != null? channelEnergyUsed[channel]: 0.0;
+        double energyUsed;
+
+        synchronized (this)
+        {
+            energyUsed = channelNames[channel] != null? channelEnergyUsed[channel]: 0.0;
+        }
 
         if (debugEnabled)
         {
@@ -337,7 +362,7 @@ public class FrcPdp extends PowerDistribution
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is running.
      */
-    public synchronized void energyUsedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    public void energyUsedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "energyUsedTask";
         double currTime = TrcUtil.getCurrentTime();
@@ -348,15 +373,17 @@ public class FrcPdp extends PowerDistribution
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
         }
 
-        for (int i = 0; i < kPDPChannels; i++)
+        synchronized (this)
         {
-            if (channelNames[i] != null)
+            for (int i = 0; i < kPDPChannels; i++)
             {
-                channelEnergyUsed[i] += voltage*getCurrent(i)*(currTime - lastTimestamp)/3600.0;
+                if (channelNames[i] != null)
+                {
+                    channelEnergyUsed[i] += voltage*getCurrent(i)*(currTime - lastTimestamp)/3600.0;
+                }
             }
+            lastTimestamp = currTime;
         }
-
-        lastTimestamp = currTime;
 
         if (debugEnabled)
         {

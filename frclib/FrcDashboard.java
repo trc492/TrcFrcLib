@@ -343,7 +343,7 @@ public class FrcDashboard extends TrcDashboard
      * @return the value
      * @throws IllegalArgumentException if the key is null
      */
-    public synchronized Sendable getData(String key)
+    public Sendable getData(String key)
     {
         return SmartDashboard.getData(key);
     }   //getData
@@ -357,7 +357,7 @@ public class FrcDashboard extends TrcDashboard
      * @param data the value
      * @throws IllegalArgumentException If key is null
      */
-    public synchronized void putData(String key, Sendable data)
+    public void putData(String key, Sendable data)
     {
         SmartDashboard.putData(key, data);
     }   //putData
@@ -570,7 +570,7 @@ public class FrcDashboard extends TrcDashboard
     /**
      * Puts all sendable data to the dashboard.
      */
-    public synchronized void updateValues()
+    public void updateValues()
     {
         SmartDashboard.updateValues();
     }   //updateValues
