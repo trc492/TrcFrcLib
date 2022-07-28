@@ -36,6 +36,7 @@ import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcRobot.*;
 import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcWatchdogMgr;
 
 /**
  * This class defines and implements the FrcRobotBase object. The FrcRobotBase object implements a cooperative
@@ -81,6 +82,7 @@ public abstract class FrcRobotBase extends RobotBase
 
     public TrcDbgTrace globalTracer;
     private FrcDashboard dashboard;
+    private TrcWatchdogMgr.Watchdog mainThreadWatchdog;
 
     private static FrcRobotBase instance = null;
 
@@ -136,6 +138,7 @@ public abstract class FrcRobotBase extends RobotBase
         TrcDbgTrace.setDbgLog(new FrcDbgLog());
         globalTracer = TrcDbgTrace.getGlobalTracer();
         dashboard = FrcDashboard.getInstance();
+        TrcWatchdogMgr.getInstance();   // Create the Watchdog Manager singleton here.
 
         if (debugEnabled)
         {
@@ -307,6 +310,7 @@ public abstract class FrcRobotBase extends RobotBase
             getHostName(), robotName);
 
         HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_Iterative);
+        mainThreadWatchdog = TrcWatchdogMgr.registerWatchdog("MainThread");
 
         startTime = TrcUtil.getCurrentTime();
         robotInit();
@@ -340,6 +344,7 @@ public abstract class FrcRobotBase extends RobotBase
                 }
             }
             prevTimeSliceStartTime = timeSliceStartTime;
+            mainThreadWatchdog.sendHeartBeat();
 
             //
             // Determine the current run mode.
@@ -763,12 +768,13 @@ public abstract class FrcRobotBase extends RobotBase
     }   //startCompetition
 
     /**
-     * Called to end the competition loop. I don't think we need to implement this.
+     * Called to end the competition loop.
      */
     @Override
     public void endCompetition()
     {
-        // empty
+        mainThreadWatchdog.unregister();
+        mainThreadWatchdog = null;
     }   //endCompetition
 
     /**
