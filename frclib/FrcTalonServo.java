@@ -71,12 +71,16 @@ public class FrcTalonServo extends TrcServo
         return talon.isInverted();
     }
 
+    /**
+     * This method sets the servo motor's physical position in degrees.
+     *
+     * @param position specifies the physical position of the servo motor in degrees.
+     */
     @Override
     public void setPosition(double position)
     {
         lastSetPos = position;
-        double angle = position * 360.0;
-        int ticks = TrcUtil.round(angle / degreesPerTick);
+        int ticks = TrcUtil.round(position / degreesPerTick);
         talon.motor.set(ControlMode.MotionMagic, ticks);
     }
 
