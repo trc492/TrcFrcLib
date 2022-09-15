@@ -94,22 +94,14 @@ import TrcCommonLib.trclib.TrcServo;
     }   //isInverted
 
     /**
-     * This method sets the servo motor position. By default, the servo maps its physical position the same as its
-     * logical position [0.0, 1.0]. However, if setPhysicalRange was called, it could map a real world physical
-     * range (e.g. [0.0, 180.0] degrees) to the logical range of [0.0, 1.0].
-     * <p>
-     * Servo motor operates on logical position. On a 180-degree servo, 0.0 is at 0-degree and 1.0 is at 180-degree.
-     * For a 90-degree servo, 0->0deg, 1->90deg. If servo direction is inverted, then 0.0 is at 180-degree and 1.0 is
-     * at 0-degree. On a continuous servo, 0.0 is rotating full speed in reverse, 0.5 is to stop the motor and 1.0 is
-     * rotating the motor full speed forward. Again, motor direction can be inverted if setInverted is called.
+     * This method sets the logical position of the servo motor.
      *
-     * @param position specifies the physical position of the servo motor. This value may be in degrees if
-     *                 setPhysicalRange is called with the degree range.
+     * @param position specifies the logical position of the servo motor in the range of [0.0, 1.0].
      */
     @Override
-    public void setPosition(double position)
+    public void setLogicalPosition(double position)
     {
-        final String funcName = "setPosition";
+        final String funcName = "setLogicalPosition";
 
         if (debugEnabled)
         {
@@ -117,30 +109,30 @@ import TrcCommonLib.trclib.TrcServo;
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        position = toLogicalPosition(position);
         this.prevLogicalPos = inverted? 1.0 - position: position;
         servo.set(prevLogicalPos);
-    }   //setPosition
+    }   //setLogicalPosition
 
     /**
-     * This method returns the physical position value set by the last setPosition call. Note that servo motors do not
-     * provide real time position feedback. So getPosition doesn't actually return the current position.
+     * This method returns the logical position value set by the last setLogicalPosition call. Note that servo motors
+     * do not provide real time position feedback. Therefore, getLogicalPosition doesn't actually return the current
+     * position.
      *
-     * @return motor position value set by the last setPosition call.
+     * @return motor position value set by the last setLogicalPosition call in the range of [0.0, 1.0].
      */
     @Override
-    public double getPosition()
+    public double getLogicalPosition()
     {
-        final String funcName = "getPosition";
+        final String funcName = "getLogicalPosition";
+        double position = inverted? 1.0 - prevLogicalPos: prevLogicalPos;
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", prevLogicalPos);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", position);
         }
 
-        double position = inverted? 1.0 - prevLogicalPos: prevLogicalPos;
-        return toPhysicalPosition(position);
-    }   //getPosition
+        return position;
+    }   //getLogicalPosition
 
 }   //class FrcServo

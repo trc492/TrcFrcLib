@@ -57,53 +57,65 @@ public class FrcTalonServo extends TrcServo
         talon.motor.config_IntegralZone(0, TrcUtil.round(pidCoefficients.iZone));
         talon.motor.configMotionCruiseVelocity(TrcUtil.round((maxSpeed / degreesPerTick) / 10));
         talon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerTick) / 10));
-    }
+    }   //FrcTalonServo
 
+    /**
+     * This method inverts the servo motor direction.
+     *
+     * @param inverted specifies the servo direction is inverted if true.
+     */
     @Override
     public void setInverted(boolean inverted)
     {
         talon.setInverted(inverted);
-    }
+    }   //setInverted
 
+    /**
+     * This method checks if the servo motor direction is inverted.
+     *
+     * @return true if the servo direction is inverted, false otherwise.
+     */
     @Override
     public boolean isInverted()
     {
         return talon.isInverted();
-    }
+    }   //isInverted
 
     /**
-     * This method sets the servo motor's physical position in degrees.
+     * This method sets the logical position of the servo motor.
      *
-     * @param position specifies the physical position of the servo motor in degrees.
+     * @param position specifies the logical position of the servo motor in the range of [0.0, 1.0].
      */
     @Override
-    public void setPosition(double position)
+    public void setLogicalPosition(double position)
     {
         lastSetPos = position;
-        int ticks = TrcUtil.round(position / degreesPerTick);
+        int ticks = TrcUtil.round(position*360.0 / degreesPerTick);
         talon.motor.set(ControlMode.MotionMagic, ticks);
-    }
+    }   //setLogicalPosition
+
+    /**
+     * This method returns the logical position value set by the last setLogicalPosition call. Note that servo motors
+     * do not provide real time position feedback. Therefore, getLogicalPosition doesn't actually return the current
+     * position.
+     *
+     * @return motor position value set by the last setLogicalPosition call in the range of [0.0, 1.0].
+     */
+    @Override
+    public double getLogicalPosition()
+    {
+        return lastSetPos;
+    }   //getLogicalPosition
 
     /**
      * Get the physical position of the motor, in degrees.
      *
-     * @return Position in degrees.
+     * @return physical position in degrees.
      */
     @Override
     public double getEncoderPosition()
     {
         return talon.getPosition() * degreesPerTick;
-    }
+    }   //getEncoderPosition
 
-    /**
-     * Get the last set logical position of the motor. [0,1] => [0,360].
-     * The position returned may not necessarily be in the range [0,1].
-     *
-     * @return The last set logical position.
-     */
-    @Override
-    public double getPosition()
-    {
-        return lastSetPos;
-    }
-}
+}   //class FrcTalonServo

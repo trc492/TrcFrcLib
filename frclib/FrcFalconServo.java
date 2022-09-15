@@ -63,27 +63,53 @@ public class FrcFalconServo extends TrcServo
         falcon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerTick) / 10));
     }   //FrcFalconServo
 
+    /**
+     * This method inverts the servo motor direction.
+     *
+     * @param inverted specifies the servo direction is inverted if true.
+     */
     @Override
     public void setInverted(boolean inverted)
     {
         falcon.setInverted(inverted);
-    }
+    }   //setInverted
 
+    /**
+     * This method checks if the servo motor direction is inverted.
+     *
+     * @return true if the servo direction is inverted, false otherwise.
+     */
     @Override
     public boolean isInverted()
     {
         return falcon.isInverted();
-    }
+    }   //isInverted
 
+    /**
+     * This method sets the logical position of the servo motor.
+     *
+     * @param position specifies the logical position of the servo motor in the range of [0.0, 1.0].
+     */
     @Override
-    public void setPosition(double position)
+    public void setLogicalPosition(double position)
     {
         lastSetPos = position;
-        double angle = position * 360.0;
-        double encPos = angle / degreesPerTick + zeroPos;
+        double encPos = position * 360.0 / degreesPerTick + zeroPos;
         // falcon.motor.set(ControlMode.MotionMagic, encPos);
         falcon.motor.set(TalonFXControlMode.Position, encPos);
-    }
+    }   //setLogicalPosition
+
+    /**
+     * Get the last set logical position of the motor. [0,1] => [0,360].
+     * The position returned may not necessarily be in the range [0,1].
+     *
+     * @return The last set logical position.
+     */
+    @Override
+    public double getLogicalPosition()
+    {
+        return lastSetPos;
+    }   //getLogicalPosition
 
     /**
      * Get the physical position of the motor, in degrees.
@@ -94,18 +120,6 @@ public class FrcFalconServo extends TrcServo
     public double getEncoderPosition()
     {
         return (falcon.getPosition() - zeroPos)*degreesPerTick;
-    }
-
-    /**
-     * Get the last set logical position of the motor. [0,1] => [0,360].
-     * The position returned may not necessarily be in the range [0,1].
-     *
-     * @return The last set logical position.
-     */
-    @Override
-    public double getPosition()
-    {
-        return lastSetPos;
-    }
+    }   //getEncoderPosition
 
 }   //class FrcFalconServo
