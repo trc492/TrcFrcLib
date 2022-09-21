@@ -31,7 +31,6 @@ public class FrcTalonServo extends TrcServo
 {
     private FrcCANTalon talon;
     private double degreesPerTick;
-    private double lastSetPos = 0;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -89,33 +88,28 @@ public class FrcTalonServo extends TrcServo
     @Override
     public void setLogicalPosition(double position)
     {
-        lastSetPos = position;
         int ticks = TrcUtil.round(position*360.0 / degreesPerTick);
         talon.motor.set(ControlMode.MotionMagic, ticks);
     }   //setLogicalPosition
 
     /**
-     * This method returns the logical position value set by the last setLogicalPosition call. Note that servo motors
-     * do not provide real time position feedback. Therefore, getLogicalPosition doesn't actually return the current
-     * position.
+     * Get the current logical position of the motor. [0,1] => [0,360].
      *
-     * @return motor position value set by the last setLogicalPosition call in the range of [0.0, 1.0].
+     * @return current logical position.
      */
     @Override
     public double getLogicalPosition()
     {
-        return lastSetPos;
+        double physicalPos = (talon.getPosition()*degreesPerTick) % 360.0;
+        return physicalPos/360.0;
     }   //getLogicalPosition
 
     /**
-     * Get the physical position of the motor, in degrees.
-     *
-     * @return physical position in degrees.
+     * This method stops a continuous servo. It doesn't do anything if the servo is not continuous.
      */
-    @Override
-    public double getEncoderPosition()
+    public void stopContinuous()
     {
-        return talon.getPosition() * degreesPerTick;
-    }   //getEncoderPosition
+        throw new RuntimeException("FrcTalonServo does not support continuous mode.");
+    }   //stopContinuous
 
 }   //class FrcTalonServo

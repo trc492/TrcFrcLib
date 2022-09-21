@@ -33,7 +33,6 @@ public class FrcFalconServo extends TrcServo
     private final FrcCANFalcon falcon;
     private final double degreesPerTick;
     private final double zeroPos;
-    private double lastSetPos = 0;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -93,33 +92,29 @@ public class FrcFalconServo extends TrcServo
     @Override
     public void setLogicalPosition(double position)
     {
-        lastSetPos = position;
         double encPos = position * 360.0 / degreesPerTick + zeroPos;
         // falcon.motor.set(ControlMode.MotionMagic, encPos);
         falcon.motor.set(TalonFXControlMode.Position, encPos);
     }   //setLogicalPosition
 
     /**
-     * Get the last set logical position of the motor. [0,1] => [0,360].
-     * The position returned may not necessarily be in the range [0,1].
+     * Get the current logical position of the motor. [0,1] => [0,360].
      *
-     * @return The last set logical position.
+     * @return current logical position.
      */
     @Override
     public double getLogicalPosition()
     {
-        return lastSetPos;
+        double physicalPos = ((falcon.getPosition() - zeroPos)*degreesPerTick) % 360.0;
+        return physicalPos/360.0;
     }   //getLogicalPosition
 
     /**
-     * Get the physical position of the motor, in degrees.
-     *
-     * @return Position in degrees.
+     * This method stops a continuous servo. It doesn't do anything if the servo is not continuous.
      */
-    @Override
-    public double getEncoderPosition()
+    public void stopContinuous()
     {
-        return (falcon.getPosition() - zeroPos)*degreesPerTick;
-    }   //getEncoderPosition
+        throw new RuntimeException("FrcFalconServo does not support continuous mode.");
+    }   //stopContinuous
 
 }   //class FrcFalconServo

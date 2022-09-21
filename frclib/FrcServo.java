@@ -135,4 +135,15 @@ import TrcCommonLib.trclib.TrcServo;
         return position;
     }   //getLogicalPosition
 
+    /**
+     * This method stops a continuous servo. It doesn't do anything if the servo is not continuous.
+     */
+    public void stopContinuous()
+    {
+        if (isContinuous())
+        {
+            setLogicalPosition(SERVO_CONTINUOUS_STOP);
+        }
+    }   //stopContinuous
+
 }   //class FrcServo
