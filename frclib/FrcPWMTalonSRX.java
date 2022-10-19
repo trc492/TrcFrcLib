@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2022 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,21 +22,24 @@
 
 package TrcFrcLib.frclib;
 
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.motorcontrol.PWMTalonSRX;
 
-public class FrcCANFalcon extends FrcCANPhoenixController<TalonFX>
+public class FrcPWMTalonSRX extends FrcPWMMotorController<PWMTalonSRX>
 {
     /**
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param deviceNumber specifies the CAN ID of the device.
+     * @param pwmChannel specifies the PWM channel number of the motor.
+     * @param encoder specifies the encoder object, can be null if not provided.
+     * @param revLimitSw specifies the reverse limit switch, can be null if not provided.
+     * @param fwdLimitSw specifies the forward limit switch, can be null if not provided.
      */
-    public FrcCANFalcon(final String instanceName, int deviceNumber)
+    public FrcPWMTalonSRX(
+        String instanceName, int pwmChannel, Encoder encoder, FrcDigitalInput revLimitSw, FrcDigitalInput fwdLimitSw)
     {
-        super(instanceName, new TalonFX(deviceNumber));
-        setFeedbackDevice(FeedbackDevice.IntegratedSensor);
-    }   //FrcCANFalcon
+        super(instanceName, new PWMTalonSRX(pwmChannel), encoder, revLimitSw, fwdLimitSw);
+    }   //FrcPWMTalonSRX
 
-}   //class FrcCANFalcon
+}   //class FrcPWMTalonSRX
