@@ -25,7 +25,6 @@ package TrcFrcLib.frclib;
 import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.SPI;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcSerialBusDevice;
 
 /**
@@ -66,16 +65,11 @@ public class FrcSpiDevice extends TrcSerialBusDevice
         final String funcName = "readData";
         byte[] buffer = new byte[length];
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK, "addr=%d,len=%d", address, length);
-        }
-
         spi.read(true, buffer, length);
 
         if (debugEnabled)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.CALLBK, "=%s", Arrays.toString(buffer));
+            globalTracer.traceInfo(funcName, "addr=%d,len=%d,data=%s", address, length, Arrays.toString(buffer));
         }
 
         return buffer;
@@ -96,16 +90,10 @@ public class FrcSpiDevice extends TrcSerialBusDevice
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK, "addr=%d,data=%s,len=%d",
-                address, Arrays.toString(buffer), length);
+            globalTracer.traceInfo(funcName, "addr=%d,data=%s,len=%d", address, Arrays.toString(buffer), length);
         }
 
         spi.write(buffer, length);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.CALLBK, "=%d", length);
-        }
 
         return length;
     }   //writeData

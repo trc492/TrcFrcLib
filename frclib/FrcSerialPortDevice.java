@@ -26,7 +26,6 @@ import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.SerialPort.*;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcSerialBusDevice;
 
 /**
@@ -102,11 +101,6 @@ public class FrcSerialPortDevice extends TrcSerialBusDevice
     {
         final String funcName = "readData";
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK, "addr=%d,len=%d", address, length);
-        }
-
         if (length == 0)
         {
             length = device.getBytesReceived();
@@ -115,7 +109,7 @@ public class FrcSerialPortDevice extends TrcSerialBusDevice
 
         if (debugEnabled)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.CALLBK, "=%s", Arrays.toString(data));
+            globalTracer.traceInfo(funcName, "addr=%d,len=%d,data=%s", address, length, Arrays.toString(data));
         }
 
         return data;
@@ -137,9 +131,9 @@ public class FrcSerialPortDevice extends TrcSerialBusDevice
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK, "addr=%d,data=%s,len=%d",
-                address, Arrays.toString(buffer), length);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.CALLBK, "=%d", bytesWritten);
+            globalTracer.traceInfo(
+                funcName, "addr=%d,data=%s,len=%d,bytesWritten=%d",
+                address, Arrays.toString(buffer), length, bytesWritten);
         }
 
         return bytesWritten;

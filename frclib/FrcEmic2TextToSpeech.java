@@ -147,7 +147,7 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        tts.asyncRead(requestId, 0, null, this::notify);
+        tts.asyncRead(requestId, -1, 0, false, this::notify, null);
 
         if (debugEnabled)
         {
@@ -179,7 +179,7 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
         }
         else
         {
-            tts.asyncWrite(null, data, data.length, null, null);
+            tts.asyncWrite(null, data, data.length, null);
         }
 
         if (debugEnabled)

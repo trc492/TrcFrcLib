@@ -27,7 +27,6 @@ import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.I2C.Port;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcSerialBusDevice;
 
 /**
@@ -81,11 +80,6 @@ public class FrcI2cDevice extends TrcSerialBusDevice
         final String funcName = "readData";
         byte[] buffer = new byte[length];
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK, "addr=%d,len=%d", address, length);
-        }
-
         if (address == -1 && device.readOnly(buffer, length) || address != -1 && device.read(address, length, buffer))
         {
             buffer = null;
@@ -93,7 +87,7 @@ public class FrcI2cDevice extends TrcSerialBusDevice
 
         if (debugEnabled)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.CALLBK, "=%s", Arrays.toString(buffer));
+            globalTracer.traceInfo(funcName, "addr=%d,len=%d,buffer=%s", address, length, Arrays.toString(buffer));
         }
 
         return buffer;
@@ -113,12 +107,7 @@ public class FrcI2cDevice extends TrcSerialBusDevice
         final String funcName = "writeData";
         int buffLen = address == -1? length: length + 1;
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(buffLen);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK, "addr=%d,data=%s,len=%d",
-                address, Arrays.toString(buffer), length);
-        }
+        int bytesWritten = length;
 
         if (address != -1)
         {
@@ -128,15 +117,17 @@ public class FrcI2cDevice extends TrcSerialBusDevice
 
         if (device.writeBulk(byteBuffer, length))
         {
-            length = 0;
+            bytesWritten = 0;
         }
 
         if (debugEnabled)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.CALLBK, "=%d", length);
+            globalTracer.traceInfo(
+                funcName, "addr=%d,data=%s,len=%d,bytesWritten=%d",
+                address, Arrays.toString(buffer), length, bytesWritten);
         }
 
-        return length;
+        return bytesWritten;
     }   //writeData
 
 }   //class FrcI2cDevice

@@ -119,6 +119,17 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     }   //setMotorPower
 
     /**
+     * This method returns the motor current.
+     *
+     * @return motor current.
+     */
+    @Override
+    public double getMotorCurrent()
+    {
+        throw new UnsupportedOperationException("PWM motor controllers does not support getMotorCurrent.");
+    }   //getMotorCurrent
+
+    /**
      * This method stops the motor regardless of what control mode the motor is on.
      */
     public void stopMotor()

@@ -22,12 +22,9 @@
 
 package TrcFrcLib.frclib;
 
-import java.util.Arrays;
-
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SerialPort;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcSerialBusDevice;
 import TrcCommonLib.trclib.TrcPixyCam1;
 
@@ -76,12 +73,6 @@ public class FrcPixyCam1 extends TrcPixyCam1
     public FrcPixyCam1(final String instanceName, I2C.Port port, int devAddress)
     {
         super(instanceName, false);
-
-        if (debugEnabled)
-        {
-            dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
         pixyCam = new FrcI2cDevice(instanceName, port, devAddress, true);
     }   //FrcPixyCam1
 
@@ -111,12 +102,6 @@ public class FrcPixyCam1 extends TrcPixyCam1
         SerialPort.StopBits stopBits)
     {
         super(instanceName, false);
-
-        if (debugEnabled)
-        {
-            dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
         pixyCam = new FrcSerialPortDevice(instanceName, port, baudRate, dataBits, parity, stopBits, true);
     }   //FrcPixyCam1
 
@@ -150,14 +135,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
      */
     public boolean isEnabled()
     {
-        final String funcName = "isEnabled";
         boolean enabled = pixyCam.isEnabled();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%b", enabled);
-        }
 
         return enabled;
     }   //isEnable
@@ -169,13 +147,6 @@ public class FrcPixyCam1 extends TrcPixyCam1
      */
     public void setEnabled(boolean enabled)
     {
-        final String funcName = "setEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enanbled=%b", enabled);
-        }
-
         pixyCam.setEnabled(enabled);
         if (enabled)
         {
@@ -184,11 +155,6 @@ public class FrcPixyCam1 extends TrcPixyCam1
         else
         {
             end();
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //setEnabled
 
@@ -205,20 +171,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
     @Override
     public void asyncReadData(RequestId requestId, int length)
     {
-        final String funcName = "asyncReadData";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "Id=%s,length=%d",
-                requestId != null? requestId: "null", length);
-        }
-
-        pixyCam.asyncRead(requestId, length, null, this::requestHandler);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
+        pixyCam.asyncRead(requestId, -1, length, false, this::requestHandler, null);
     }   //asyncReadData
 
     /**
@@ -230,20 +183,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
     @Override
     public void asyncWriteData(RequestId requestId, byte[] data)
     {
-        final String funcName = "asyncWriteData";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "Id=%s,data=%s,length=%d",
-                requestId != null? requestId: "null", Arrays.toString(data), data.length);
-        }
-
-        pixyCam.asyncWrite(requestId, data, data.length, null, null);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
+        pixyCam.asyncWrite(requestId, data, data.length, null);
     }   //asyncWriteData
 
 }   //class FrcPixyCam1

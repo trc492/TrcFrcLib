@@ -31,7 +31,6 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
 
@@ -102,14 +101,6 @@ public class FrcCANSparkMax extends TrcMotor
      */
     public boolean isBrushless()
     {
-        final String funcName = "isBrushless";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", brushless);
-        }
-
         return brushless;
     }   //isBrushless
 
@@ -122,15 +113,6 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void enableVelocityMode(double maxVelocity, TrcPidController.PidCoefficients pidCoefficients)
     {
-        final String funcName = "enableVelocityMode";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "maxVel=%f,pidCoefficients=%s", maxVelocity,
-                pidCoefficients == null ? "N/A" : pidCoefficients.toString());
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         if (pidCoefficients != null)
         {
             SparkMaxPIDController pidController = motor.getPIDController();
@@ -147,13 +129,6 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void disableVelocityMode()
     {
-        final String funcName = "disableVelocityMode";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //disableVelocityMode
 
     //
@@ -167,16 +142,7 @@ public class FrcCANSparkMax extends TrcMotor
      */
     public void configFwdLimitSwitchNormallyOpen(boolean normalOpen)
     {
-        final String funcName = "configFwdLimitSwitchNormallyOpen";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "normalOpen=%s", normalOpen);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        fwdLimitSwitch = motor.getForwardLimitSwitch(
-            normalOpen ? Type.kNormallyOpen : Type.kNormallyClosed);
+        fwdLimitSwitch = motor.getForwardLimitSwitch(normalOpen ? Type.kNormallyOpen : Type.kNormallyClosed);
     }   //configFwdLimitSwitchNormallyOpen
 
     /**
@@ -186,16 +152,7 @@ public class FrcCANSparkMax extends TrcMotor
      */
     public void configRevLimitSwitchNormallyOpen(boolean normalOpen)
     {
-        final String funcName = "configRevLimitSwitchNormallyOpen";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "normalOpen=%s", normalOpen);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        revLimitSwitch = motor.getReverseLimitSwitch(
-            normalOpen ? Type.kNormallyOpen : Type.kNormallyClosed);
+        revLimitSwitch = motor.getReverseLimitSwitch(normalOpen ? Type.kNormallyOpen : Type.kNormallyClosed);
     }   //configRevLimitSwitchNormallyOpen
 
     // /**
@@ -230,16 +187,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isInverted()
     {
-        final String funcName = "getInverted";
-        boolean inverted = motor.getInverted();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", inverted);
-        }
-
-        return inverted;
+        return motor.getInverted();
     }   //getInverted
 
     /**
@@ -250,14 +198,6 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setInverted(boolean inverted)
     {
-        final String funcName = "setInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", inverted);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         motor.setInverted(inverted);
     }   //setInverted
 
@@ -269,16 +209,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public double getMotorPower()
     {
-        final String funcName = "getMotorPower";
-        double power = motor.getAppliedOutput();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", power);
-        }
-
-        return power;
+        return motor.getAppliedOutput();
     }   //getMotorPower
 
     /**
@@ -293,7 +224,7 @@ public class FrcCANSparkMax extends TrcMotor
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", power);
+            globalTracer.traceInfo(funcName, "prevPower=%.2f, power=%.2f", currPower, power);
         }
 
         if (power != currPower)
@@ -301,18 +232,29 @@ public class FrcCANSparkMax extends TrcMotor
             motor.set(power);
             currPower = power;
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", power);
-        }
     }   //setMotorPower
+
+    /**
+     * This method returns the motor current.
+     *
+     * @return motor current.
+     */
+    @Override
+    public double getMotorCurrent()
+    {
+        return motor.getOutputCurrent();
+    }   //getMotorCurrent
 
     /**
      * This method stops the motor regardless of what control mode the motor is on.
      */
     public void stopMotor()
     {
+        if (debugEnabled)
+        {
+            globalTracer.traceInfo("stopMotor", "prevPower=%.2f", currPower);
+        }
+
         setMotorPower(0.0);
     }   //stopMotor
 
@@ -325,17 +267,11 @@ public class FrcCANSparkMax extends TrcMotor
     {
         final String funcName = "resetMotorPosition";
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         REVLibError error = encoder.setPosition(0.0);
         if (error != REVLibError.kOk)
         {
-            TrcDbgTrace.getGlobalTracer().traceErr(funcName, "resetPosition() on SparkMax %d failed with error %s!", motor.getDeviceId(),
-                error.name());
+            globalTracer.traceErr(
+                funcName, "resetPosition() on SparkMax %d failed with error %s!", motor.getDeviceId(), error.name());
         }
     }   //resetMotorPosition
 
@@ -348,16 +284,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public double getMotorPosition()
     {
-        final String funcName = "getMotorPosition";
-        double pos = encoder.getPosition();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.0f", pos);
-        }
-
-        return pos;
+        return encoder.getPosition();
     }   //getMotorPosition
 
     /**
@@ -369,21 +296,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public double getMotorVelocity()
     {
-        final String funcName = "getMotorVelocity";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        double currVel = encoder.getVelocity() / 60.0;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.0f", currVel);
-        }
-
-        return currVel;
+        return encoder.getVelocity() / 60.0;
     }   //getMotorVelocity
 
     /**
@@ -394,16 +307,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isRevLimitSwitchActive()
     {
-        final String funcName = "isRevLimitSwitchActive";
-        boolean isActive = revLimitSwitch.isPressed();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", isActive);
-        }
-
-        return isActive;
+        return revLimitSwitch.isPressed();
     }   //isRevLimitSwitchClosed
 
     /**
@@ -414,16 +318,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isFwdLimitSwitchActive()
     {
-        final String funcName = "isFwdLimitSwitchActive";
-        boolean isActive = fwdLimitSwitch.isPressed();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", isActive);
-        }
-
-        return isActive;
+        return fwdLimitSwitch.isPressed();
     }   //isFwdLimitSwitchActive
 
     /**
@@ -437,14 +332,6 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setBrakeModeEnabled(boolean enabled)
     {
-        final String funcName = "setBrakeModeEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%s", enabled);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         motor.setIdleMode(enabled ? IdleMode.kBrake : IdleMode.kCoast);
     }   //setBrakeModeEnabled
 

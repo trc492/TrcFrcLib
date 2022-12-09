@@ -32,6 +32,7 @@ import edu.wpi.first.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcEvent;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcRobot.*;
 import TrcCommonLib.trclib.TrcTaskMgr;
@@ -82,7 +83,8 @@ public abstract class FrcRobotBase extends RobotBase
 
     public TrcDbgTrace globalTracer;
     private FrcDashboard dashboard;
-    private TrcWatchdogMgr.Watchdog mainThreadWatchdog;
+    private Thread robotThread;
+    private TrcWatchdogMgr.Watchdog robotThreadWatchdog;
 
     private static FrcRobotBase instance = null;
 
@@ -138,7 +140,6 @@ public abstract class FrcRobotBase extends RobotBase
         TrcDbgTrace.setDbgLog(new FrcDbgLog());
         globalTracer = TrcDbgTrace.getGlobalTracer();
         dashboard = FrcDashboard.getInstance();
-        TrcWatchdogMgr.getInstance();   // Create the Watchdog Manager singleton here.
 
         if (debugEnabled)
         {
@@ -270,6 +271,35 @@ public abstract class FrcRobotBase extends RobotBase
     }   //getDisabledMode
 
     /**
+     * This method sends a heart beat to the main robot thread watchdog. This is important if during robot init time
+     * that the user code decided to synchronously busy wait for something, it must periodically call this method to
+     * prevent the watchdog from complaining.
+     */
+    public void sendWatchdogHeartBeat()
+    {
+        final String funcName = "sendWatchdogHeartBeat";
+
+        if (Thread.currentThread() == robotThread)
+        {
+            if (robotThreadWatchdog != null)
+            {
+                TrcEvent.performEventCallback();
+                robotThreadWatchdog.sendHeartBeat();
+            }
+            else
+            {
+                TrcDbgTrace.globalTraceWarn(funcName, "Robot thread watchdog has not been created yet.");
+                TrcDbgTrace.printThreadStack();
+            }
+        }
+        else
+        {
+            TrcDbgTrace.globalTraceWarn(funcName, "Caller must be on the OpMode thread to call this.");
+            TrcDbgTrace.printThreadStack();
+        }
+    }   //sendWatchdogHeartBeat
+
+    /**
      * Start the competition match. This specific startCompetition() implements "main loop" behavior like that of the
      * FRC TimedRobot, with a primary "fast loop" running at a fast periodic rate (default 50 Hz). In addition, it
      * also runs a "slow loop" running at a slow periodic rate (default to 20 Hz). This code needs to track the order
@@ -310,7 +340,10 @@ public abstract class FrcRobotBase extends RobotBase
             getHostName(), robotName);
 
         HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_Iterative);
-        mainThreadWatchdog = TrcWatchdogMgr.registerWatchdog("MainThread");
+
+        robotThread = Thread.currentThread();
+        robotThreadWatchdog = TrcWatchdogMgr.registerWatchdog(Thread.currentThread().getName() + ".watchdog");
+        TrcEvent.registerEventCallback();
 
         startTime = TrcUtil.getCurrentTime();
         robotInit();
@@ -344,7 +377,6 @@ public abstract class FrcRobotBase extends RobotBase
                 }
             }
             prevTimeSliceStartTime = timeSliceStartTime;
-            mainThreadWatchdog.sendHeartBeat();
 
             //
             // Determine the current run mode.
@@ -749,6 +781,8 @@ public abstract class FrcRobotBase extends RobotBase
                     currMode, elapsedTime);
             }
 
+            TrcEvent.performEventCallback();
+            robotThreadWatchdog.sendHeartBeat();
             //
             // Do house keeping statistics and keep fast loop timeslice timing.
             //
@@ -773,8 +807,9 @@ public abstract class FrcRobotBase extends RobotBase
     @Override
     public void endCompetition()
     {
-        mainThreadWatchdog.unregister();
-        mainThreadWatchdog = null;
+        TrcEvent.unregisterEventCallback();
+        robotThreadWatchdog.unregister();
+        robotThreadWatchdog = null;
     }   //endCompetition
 
     /**

@@ -120,7 +120,7 @@ public class FrcI2cLEDPanel extends TrcI2cLEDPanel
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        device.asyncWrite(null, data, data.length, null, null);
+        device.asyncWrite(null, data, data.length, null);
     }   //asyncWriteData
 
 }   //class FrcI2cLEDPanel

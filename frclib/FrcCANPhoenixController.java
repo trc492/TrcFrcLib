@@ -32,7 +32,6 @@ import com.ctre.phoenix.motorcontrol.can.BaseTalon;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
 
@@ -125,10 +124,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         if (errorCode != null && !errorCode.equals(ErrorCode.OK))
         {
             errorCount++;
-            if (debugEnabled)
-            {
-                dbgTrace.traceErr("recordResponseCode", "ErrorCode=%s", errorCode);
-            }
+            globalTracer.traceErr("recordResponseCode", "ErrorCode=%s", errorCode);
         }
         return errorCode;
     }   //recordResponseCode
@@ -142,15 +138,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void enableVelocityMode(double maxVelocity, TrcPidController.PidCoefficients pidCoefficients)
     {
-        final String funcName = "enableVelocityMode";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "maxVel=%f,pidCoefficients=%s", maxVelocity,
-                pidCoefficients == null ? "N/A" : pidCoefficients.toString());
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         this.maxMotorVelocity = maxVelocity;
 
         if (pidCoefficients != null)
@@ -168,14 +155,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void disableVelocityMode()
     {
-        final String funcName = "disableVelocityMode";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         this.maxMotorVelocity = 0.0;
     }   //disableVelocityMode
 
@@ -206,14 +185,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      */
     public void configFwdLimitSwitchNormallyOpen(boolean normalOpen)
     {
-        final String funcName = "configFwdLimitSwitchNormallyOpen";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "normalOpen=%s", Boolean.toString(normalOpen));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         recordResponseCode(motor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
             normalOpen ? LimitSwitchNormal.NormallyOpen : LimitSwitchNormal.NormallyClosed, 0));
         fwdLimitSwitchNormalOpen = normalOpen;
@@ -226,14 +197,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      */
     public void configRevLimitSwitchNormallyOpen(boolean normalOpen)
     {
-        final String funcName = "configRevLimitSwitchNormallyOpen";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "normalOpen=%s", Boolean.toString(normalOpen));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         recordResponseCode(motor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
             normalOpen ? LimitSwitchNormal.NormallyOpen : LimitSwitchNormal.NormallyClosed, 0));
         revLimitSwitchNormalOpen = normalOpen;
@@ -246,14 +209,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      */
     public void setFeedbackDevice(FeedbackDevice devType)
     {
-        final String funcName = "setFeedbackDevice";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "devType=%s", devType.toString());
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         this.feedbackDeviceType = devType;
         recordResponseCode(motor.configSelectedFeedbackSensor(devType, 0, 10));
     }   //setFeedbackDevice
@@ -270,16 +225,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public boolean isInverted()
     {
-        final String funcName = "isInverted";
-        boolean inverted = motor.getInverted();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(inverted));
-        }
-
-        return inverted;
+        return motor.getInverted();
     }   //isInverted
 
     /**
@@ -290,14 +236,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void setInverted(boolean inverted)
     {
-        final String funcName = "setInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         motor.setInverted(inverted);
         recordResponseCode(motor.getLastError());
     }   //setInverted
@@ -310,15 +248,8 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public double getMotorPower()
     {
-        final String funcName = "getMotorPower";
         double power = motor.getMotorOutputPercent();
         recordResponseCode(motor.getLastError());
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", power);
-        }
 
         return power;
     }   //getMotorPower
@@ -336,7 +267,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", value);
+            globalTracer.traceInfo(funcName, "prevPower=%.2f, power=%.2f", motorPower, value);
         }
 
         if (value != motorPower)
@@ -356,23 +287,30 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             recordResponseCode(motor.getLastError());
             motorPower = value;
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", value);
-        }
     }   //setMotorPower
+
+    /**
+     * This method returns the motor current.
+     *
+     * @return motor current.
+     */
+    @Override
+    public double getMotorCurrent()
+    {
+        return motor.getStatorCurrent();
+    }   //getMotorCurrent
 
     /**
      * This method stops the motor regardless of what control mode the motor is on.
      */
+    @Override
     public void stopMotor()
     {
         final String funcName = "stopMotor";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
+            globalTracer.traceInfo(funcName, "prevPower=%.2f", motorPower);
         }
 
         if (motorPower != 0.0)
@@ -380,11 +318,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             motor.set(ControlMode.PercentOutput, 0.0);
             recordResponseCode(motor.getLastError());
             motorPower = 0.0;
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //stopMotor
 
@@ -397,18 +330,12 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         final String funcName = "resetMotorPosition";
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         if (feedbackDeviceType != FeedbackDevice.Analog)
         {
             ErrorCode error = recordResponseCode(motor.setSelectedSensorPosition(0, 0, 10));
             if (error != ErrorCode.OK)
             {
-                TrcDbgTrace.getGlobalTracer().traceErr(
+                globalTracer.traceErr(
                     funcName, "resetPosition() on device %d failed with error %s!", motor.getDeviceID(), error.name());
             }
         }
@@ -423,21 +350,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public double getMotorPosition()
     {
-        final String funcName = "getMotorPosition";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        double currPos = motor.getSelectedSensorPosition(0);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", currPos);
-        }
-
-        return currPos;
+        return motor.getSelectedSensorPosition(0);
     }   //getMotorPosition
 
     /**
@@ -449,20 +362,8 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public double getMotorVelocity()
     {
-        final String funcName = "getMotorVelocity";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         double currVel = motor.getSelectedSensorVelocity() / 0.1;
         recordResponseCode(motor.getLastError());
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", currVel);
-        }
 
         return currVel;
     }   //getMotorVelocity
@@ -475,16 +376,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public boolean isRevLimitSwitchActive()
     {
-        final String funcName = "isRevLimitSwitchActive";
-        boolean isActive = revLimitSwitchNormalOpen == (motor.isRevLimitSwitchClosed() == 1);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", isActive);
-        }
-
-        return isActive;
+        return revLimitSwitchNormalOpen == (motor.isRevLimitSwitchClosed() == 1);
     }   //isRevLimitSwitchActive
 
     /**
@@ -495,16 +387,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public boolean isFwdLimitSwitchActive()
     {
-        final String funcName = "isFwdLimitSwitchActive";
-        boolean isActive = fwdLimitSwitchNormalOpen == (motor.isFwdLimitSwitchClosed() == 1);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", isActive);
-        }
-
-        return isActive;
+        return fwdLimitSwitchNormalOpen == (motor.isFwdLimitSwitchClosed() == 1);
     }   //isFwdLimitSwitchActive
 
     /**
@@ -518,14 +401,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void setBrakeModeEnabled(boolean enabled)
     {
-        final String funcName = "setBrakeModeEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%s", Boolean.toString(enabled));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         motor.setNeutralMode(enabled ? NeutralMode.Brake : NeutralMode.Coast);
         recordResponseCode(motor.getLastError());
     }   //setBrakeModeEnabled
@@ -553,14 +428,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void setPositionSensorInverted(boolean inverted)
     {
-        final String funcName = "setPositionSensorInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         motor.setSensorPhase(inverted);
         recordResponseCode(motor.getLastError());
     }   //setPositionSensorInverted
