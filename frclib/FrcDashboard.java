@@ -22,7 +22,6 @@
 
 package TrcFrcLib.frclib;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -377,39 +376,6 @@ public class FrcDashboard extends TrcDashboard
     }   //putData
 
     /**
-     * Returns the flags for the specified key.
-     *
-     * @param key the key name
-     * @return the flags, or 0 if the key is not defined
-     */
-    public int getFlags(String key)
-    {
-        return getEntry(key).getFlags();
-    }   //getFlags
-
-    /**
-     * Sets flags on the specified key in this table. The key can not be null.
-     *
-     * @param key   the key name
-     * @param flags the flags to set (bitmask)
-     */
-    public void setFlags(String key, int flags)
-    {
-        getEntry(key).setFlags(flags);
-    }   //setFlags
-
-    /**
-     * Clears flags on the specified key in this table. The key can not be null.
-     *
-     * @param key   the key name
-     * @param flags the flags to clear (bitmask)
-     */
-    public void clearFlags(String key, int flags)
-    {
-        getEntry(key).clearFlags(flags);
-    }   //clearFlags
-
-    /**
      * Gets the entry for the specified key.
      *
      * @param key the key name
@@ -493,22 +459,6 @@ public class FrcDashboard extends TrcDashboard
     }   //putRaw
 
     /**
-     * Put a raw value (bytes from a byte buffer) in the table.
-     *
-     * @param key   the key to be assigned to
-     * @param value the value that will be assigned
-     * @param len   the length of the value
-     * @throws RuntimeException if key already exists with a different type.
-     */
-    public void putRaw(String key, ByteBuffer value, int len)
-    {
-        if (!getEntry(key).setRaw(value, len))
-        {
-            throw new RuntimeException("Key already exists with a different type.");
-        }
-    }   //setRaw
-
-    /**
      * Gets the current value in the table, setting it if it does not exist.
      *
      * @param key          the key
@@ -556,16 +506,6 @@ public class FrcDashboard extends TrcDashboard
     {
         return getEntry(key).isPersistent();
     }   //isPersistent
-
-    /**
-     * Deletes the specified key in this table. The key can not be null.
-     *
-     * @param key the key name
-     */
-    public void delete(String key)
-    {
-        SmartDashboard.delete(key);
-    }   //delete
 
     /**
      * Puts all sendable data to the dashboard.

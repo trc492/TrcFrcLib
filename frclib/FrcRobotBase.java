@@ -25,10 +25,11 @@ package TrcFrcLib.frclib;
 import java.io.InputStream;
 import java.io.IOException;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.hal.FRCNetComm.tInstances;
-import edu.wpi.first.hal.FRCNetComm.tResourceType; 
-import edu.wpi.first.hal.HAL;
+import edu.wpi.first.wpilibj.internal.DriverStationModeThread;
+import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.hal.DriverStationJNI;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import TrcCommonLib.trclib.TrcDbgTrace;
@@ -87,6 +88,7 @@ public abstract class FrcRobotBase extends RobotBase
     private TrcWatchdogMgr.Watchdog robotThreadWatchdog;
 
     private static FrcRobotBase instance = null;
+    private volatile boolean m_exit = false;
 
     private Double prevTimeSliceStartTime = null;
     private static long fastLoopCounter = 0;
@@ -339,8 +341,6 @@ public abstract class FrcRobotBase extends RobotBase
             bannerSuffix,
             getHostName(), robotName);
 
-        HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_Iterative);
-
         robotThread = Thread.currentThread();
         robotThreadWatchdog = TrcWatchdogMgr.registerWatchdog(Thread.currentThread().getName() + ".watchdog");
         TrcEvent.registerEventCallback();
@@ -353,10 +353,13 @@ public abstract class FrcRobotBase extends RobotBase
             globalTracer.traceInfo(funcName, "robotInitElapsedTime=%.6fs", robotInitElapsedTime);
         }
 
+        DriverStationModeThread modeThread = new DriverStationModeThread();
+        int event = WPIUtilJNI.createEvent(false, false);
+        DriverStation.provideRefreshedDataEventHandle(event);
         //
         // Tell the DS that the robot is ready to be enabled.
         //
-        HAL.observeUserProgramStarting();
+        DriverStationJNI.observeUserProgramStarting();
 
         liveWindowEnabled = false;
         LiveWindow.setEnabled(liveWindowEnabled);
@@ -364,7 +367,7 @@ public abstract class FrcRobotBase extends RobotBase
         //
         // loop forever, calling the appropriate mode-dependent function
         //
-        while (true)
+        while (!Thread.currentThread().isInterrupted() && !m_exit)
         {
             double timeSliceStartTime = TrcUtil.getCurrentTime();
 
@@ -377,7 +380,6 @@ public abstract class FrcRobotBase extends RobotBase
                 }
             }
             prevTimeSliceStartTime = timeSliceStartTime;
-
             //
             // Determine the current run mode.
             //
@@ -621,19 +623,27 @@ public abstract class FrcRobotBase extends RobotBase
             startTime = TrcUtil.getCurrentTime();
             if (currMode == RunMode.DISABLED_MODE && disabledMode != null)
             {
+                modeThread.inDisabled(true);
                 disabledMode.fastPeriodic(modeElapsedTime);
+                modeThread.inDisabled(false);
             }
             else if (currMode == RunMode.TEST_MODE && testMode != null)
             {
+                modeThread.inTest(true);
                 testMode.fastPeriodic(modeElapsedTime);
+                modeThread.inTest(false);
             }
             else if (currMode == RunMode.AUTO_MODE && autoMode != null)
             {
+                modeThread.inAutonomous(true);
                 autoMode.fastPeriodic(modeElapsedTime);
+                modeThread.inAutonomous(false);
             }
             else if (currMode == RunMode.TELEOP_MODE && teleOpMode != null)
             {
+                modeThread.inTeleop(true);
                 teleOpMode.fastPeriodic(modeElapsedTime);
+                modeThread.inTeleop(false);
             }
             elapsedTime = TrcUtil.getCurrentTime() - startTime;
             fastPeriodicTotalElapsedTime += elapsedTime;
@@ -658,34 +668,42 @@ public abstract class FrcRobotBase extends RobotBase
                 startTime = TrcUtil.getCurrentTime();
                 if (currMode == RunMode.DISABLED_MODE)
                 {
-                    HAL.observeUserProgramDisabled();
+                    DriverStationJNI.observeUserProgramDisabled();
                     if (disabledMode != null)
                     {
+                        modeThread.inDisabled(true);
                         disabledMode.slowPeriodic(modeElapsedTime);
+                        modeThread.inDisabled(false);
                     }
                 }
                 else if (currMode == RunMode.TEST_MODE)
                 {
-                    HAL.observeUserProgramTest();
+                    DriverStationJNI.observeUserProgramTest();
                     if (testMode != null)
                     {
+                        modeThread.inTest(true);
                         testMode.slowPeriodic(modeElapsedTime);
+                        modeThread.inTest(false);
                     }
                 }
                 else if (currMode == RunMode.AUTO_MODE)
                 {
-                    HAL.observeUserProgramAutonomous();
+                    DriverStationJNI.observeUserProgramAutonomous();
                     if (autoMode != null)
                     {
+                        modeThread.inAutonomous(true);
                         autoMode.slowPeriodic(modeElapsedTime);
+                        modeThread.inAutonomous(false);
                     }
                 }
                 else if (currMode == RunMode.TELEOP_MODE)
                 {
-                    HAL.observeUserProgramTeleop();
+                    DriverStationJNI.observeUserProgramTeleop();
                     if (teleOpMode != null)
                     {
+                        modeThread.inTeleop(true);
                         teleOpMode.slowPeriodic(modeElapsedTime);
+                        modeThread.inTeleop(false);
                     }
                 }
                 elapsedTime = TrcUtil.getCurrentTime() - startTime;
@@ -799,6 +817,9 @@ public abstract class FrcRobotBase extends RobotBase
                 }
             }
         }
+
+        DriverStation.removeRefreshedDataEventHandle(event);
+        modeThread.close();
     }   //startCompetition
 
     /**
@@ -810,6 +831,7 @@ public abstract class FrcRobotBase extends RobotBase
         TrcEvent.unregisterEventCallback();
         robotThreadWatchdog.unregister();
         robotThreadWatchdog = null;
+        m_exit = true;
     }   //endCompetition
 
     /**

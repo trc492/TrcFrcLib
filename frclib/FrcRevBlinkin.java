@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.PWM;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRevBlinkin;
 
 /**
@@ -66,14 +65,6 @@ public class FrcRevBlinkin extends TrcRevBlinkin
     @Override
     public Pattern getPattern()
     {
-        final String funcName = "getPattern";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", currPattern);
-        }
-
         return currPattern;
     }   //getPattern
 
@@ -85,22 +76,10 @@ public class FrcRevBlinkin extends TrcRevBlinkin
     @Override
     public void setPattern(Pattern pattern)
     {
-        final String funcName = "setPattern";
-
         pattern = pattern == null ? offPattern : pattern;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "pattern=%s", pattern);
-        }
 
         currPattern = pattern;
         device.setPosition(pattern.ledPattern.value);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //setPattern
 
 }   //class FrcRevBlinkin

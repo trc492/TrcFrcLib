@@ -22,10 +22,11 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.first.networktables.ConnectionNotification;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NetworkTableValue;
+import edu.wpi.first.networktables.NetworkTableEvent.Kind;
 import edu.wpi.first.wpilibj.Relay;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobot;
@@ -56,7 +57,7 @@ public abstract class FrcRemoteVisionProcessor
         this.instanceName = instanceName;
         NetworkTableInstance instance = NetworkTableInstance.getDefault();
         networkTable = instance.getTable(networkTableName);
-        instance.addConnectionListener(this::connectionListener, false);
+        instance.addConnectionListener(false, this::connectionListener);
         visionTaskObj = TrcTaskMgr.createTask(instanceName + ".visionTask", this::updateTargetInfo);
     }   //FrcRemoteVisionProcessor
 
@@ -117,11 +118,11 @@ public abstract class FrcRemoteVisionProcessor
         }
     }   //setRingLightEnabled
 
-    private void connectionListener(ConnectionNotification notification)
+    private void connectionListener(NetworkTableEvent event)
     {
         TrcDbgTrace.getGlobalTracer().traceInfo(
-            "connectionListener", "Client %s connected=%b!", notification.conn.remote_ip,
-            notification.connected);
+            "connectionListener", "TableEvent(remoteIp=%s, connected=%s",
+            event.connInfo.remote_ip, event.is(Kind.kConnected));
     }   //connectionListener
 
     /**
@@ -256,7 +257,8 @@ public abstract class FrcRemoteVisionProcessor
      *
      * @param numFrames  How many frames to calculate with.
      * @param requireAll If true, require at least numFrames frames.
-     * @return Median of last numFrames frames, or null if not enough frames and requireAll is true, or if all data is stale.
+     * @return Median of last numFrames frames, or null if not enough frames and requireAll is true, or if all data
+     *         is stale.
      */
     public RelativePose getMedianPose(int numFrames, boolean requireAll)
     {

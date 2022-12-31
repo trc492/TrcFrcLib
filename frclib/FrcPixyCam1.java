@@ -55,9 +55,6 @@ public class FrcPixyCam1 extends TrcPixyCam1
     {
         super(instanceName, true);
         SPI spi = new SPI(port);
-        spi.setMSBFirst();
-        spi.setClockActiveHigh();
-        // spi.setSampleDataOnRising();
         spi.setChipSelectActiveLow();
 
         pixyCam = new FrcSpiDevice(instanceName, spi, true);

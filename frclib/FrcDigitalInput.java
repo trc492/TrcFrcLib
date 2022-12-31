@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.DigitalInput;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcDigitalInput;
 
 /**
@@ -71,17 +70,9 @@ public class FrcDigitalInput extends TrcDigitalInput
     @Override
     public boolean isActive()
     {
-        final String funcName = "isActive";
-
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordStartTime();
         state = digitalInput.get() ^ inverted;
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordEndTime();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(state));
-        }
 
         return state;
     }   //isActive

@@ -25,7 +25,6 @@ package TrcFrcLib.frclib;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcDigitalInput;
 
 /**
@@ -65,16 +64,7 @@ public class FrcCANTalonLimitSwitch extends TrcDigitalInput
     @Override
     public boolean isActive()
     {
-        final String funcName = "isActive";
-        boolean state = upperLimitSwitch? canTalon.isUpperLimitSwitchActive(): canTalon.isLowerLimitSwitchActive();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(state));
-        }
-
-        return state;
+        return upperLimitSwitch? canTalon.isUpperLimitSwitchActive(): canTalon.isLowerLimitSwitchActive();
     }   //isActive
 
     /**
@@ -85,14 +75,6 @@ public class FrcCANTalonLimitSwitch extends TrcDigitalInput
      */
     public void setInverted(boolean inverted)
     {
-        final String funcName = "setInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", inverted);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         if (upperLimitSwitch)
         {
             canTalon.motor.configForwardLimitSwitchSource(
