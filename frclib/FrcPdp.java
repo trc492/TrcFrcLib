@@ -32,7 +32,7 @@ import edu.wpi.first.wpilibj.SensorUtil;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
-import TrcCommonLib.trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcTimer;
 
 /**
  * This class extends the WPI PowerDistricbutonPanel class to provide monitoring of energy consumption of registered
@@ -134,7 +134,7 @@ public class FrcPdp extends PowerDistribution
                     channelEnergyUsed[i] = 0.0;
                 }
 
-                lastTimestamp = TrcUtil.getCurrentTime();
+                lastTimestamp = TrcTimer.getCurrentTime();
             }
             energyUsedTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
         }
@@ -365,7 +365,7 @@ public class FrcPdp extends PowerDistribution
     public void energyUsedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "energyUsedTask";
-        double currTime = TrcUtil.getCurrentTime();
+        double currTime = TrcTimer.getCurrentTime();
         double voltage = getVoltage();
 
         if (debugEnabled)

@@ -39,6 +39,7 @@ import TrcCommonLib.trclib.TrcPose2D;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcSwerveDriveBase;
 import TrcCommonLib.trclib.TrcTaskMgr;
+import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcUtil;
 
 import java.util.Arrays;
@@ -123,7 +124,7 @@ public class FrcSwervePathFollower
         {
             event.clear();
         }
-        timeoutTime = timeout == 0 ? Double.POSITIVE_INFINITY : TrcUtil.getCurrentTime() + timeout;
+        timeoutTime = timeout == 0 ? Double.POSITIVE_INFINITY : TrcTimer.getCurrentTime() + timeout;
         PIDController xPid = new PIDController(posPidCoeff.kP, posPidCoeff.kI, posPidCoeff.kD);
         PIDController yPid = new PIDController(posPidCoeff.kP, posPidCoeff.kI, posPidCoeff.kD);
         // wpilib uses radians
@@ -176,7 +177,7 @@ public class FrcSwervePathFollower
 
     private void driveTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
-        if (TrcUtil.getCurrentTime() < timeoutTime)
+        if (TrcTimer.getCurrentTime() < timeoutTime)
         {
             swerveCommand.execute();
         }

@@ -37,7 +37,7 @@ import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcStateMachine;
 import TrcCommonLib.trclib.TrcTankMotionProfileFollower;
 import TrcCommonLib.trclib.TrcTaskMgr;
-import TrcCommonLib.trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcTimer;
 
 /**
  * This class implements the platform dependent motion profiling. It streams the profiles to the buffer of the CAN
@@ -190,7 +190,7 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
         this.timedOutTime = -1;
         if (timeout > 0.0)
         {
-            this.timedOutTime = TrcUtil.getCurrentTime() + timeout;
+            this.timedOutTime = TrcTimer.getCurrentTime() + timeout;
         }
 
         this.profile = profile.copy();
@@ -435,7 +435,7 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
         if (!sm.isEnabled())
             return;
 
-        if (timedOutTime != -1 && TrcUtil.getCurrentTime() >= timedOutTime)
+        if (timedOutTime != -1 && TrcTimer.getCurrentTime() >= timedOutTime)
         {
             sm.setState(State.DONE);
         }

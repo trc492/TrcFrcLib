@@ -26,7 +26,7 @@ import com.kauailabs.navx.frc.AHRS;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcGyro;
-import TrcCommonLib.trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcTimer;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
@@ -96,7 +96,7 @@ public class FrcAHRSGyro extends TrcGyro
         {
             throw new UnsupportedOperationException("Gyro does not support x-axis heading.");
         }
-        SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
+        SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
 
         if (debugEnabled)
         {
@@ -131,7 +131,7 @@ public class FrcAHRSGyro extends TrcGyro
         {
             throw new UnsupportedOperationException("Gyro does not support y-axis heading.");
         }
-        SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
+        SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
 
         if (debugEnabled)
         {
@@ -166,7 +166,7 @@ public class FrcAHRSGyro extends TrcGyro
         {
             value = ahrs.getAngle();
         }
-        SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
+        SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
 
         if (debugEnabled)
         {
@@ -217,7 +217,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getXRotationRate()
     {
-        return new SensorData<>(TrcUtil.getCurrentTime(), xSign*ahrs.getRawGyroX());
+        return new SensorData<>(TrcTimer.getCurrentTime(), xSign*ahrs.getRawGyroX());
     }   //getXRotationRate
 
     /**
@@ -227,7 +227,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getYRotationRate()
     {
-        return new SensorData<>(TrcUtil.getCurrentTime(), ySign*ahrs.getRawGyroY());
+        return new SensorData<>(TrcTimer.getCurrentTime(), ySign*ahrs.getRawGyroY());
     }   //getYRotationRate
 
     /**
@@ -237,7 +237,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getZRotationRate()
     {
-        return new SensorData<>(TrcUtil.getCurrentTime(), zSign*ahrs.getRate());
+        return new SensorData<>(TrcTimer.getCurrentTime(), zSign*ahrs.getRate());
     }   //getZRotationRate
 
     /**
@@ -273,7 +273,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getZHeading()
     {
-        return new SensorData<>(TrcUtil.getCurrentTime(), zSign*ahrs.getAngle());
+        return new SensorData<>(TrcTimer.getCurrentTime(), zSign*ahrs.getAngle());
     }   //getZHeading
 
     /**

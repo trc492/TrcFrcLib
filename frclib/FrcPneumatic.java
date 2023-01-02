@@ -30,7 +30,6 @@ import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcStateMachine;
 import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcTimer;
-import TrcCommonLib.trclib.TrcUtil;
 
 /**
  * This class implements a platform dependent pneumatic object. A pneumatic object consists of multiple pneumatic
@@ -692,7 +691,7 @@ public class FrcPneumatic
                             dbgTrace.traceInfo(
                                     funcName,
                                     "[%f] Executing action %d/%d",
-                                    TrcUtil.getCurrentTime(),
+                                    TrcTimer.getCurrentTime(),
                                     actionIndex, numActions);
                         }
 

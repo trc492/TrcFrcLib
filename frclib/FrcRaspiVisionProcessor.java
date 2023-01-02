@@ -24,7 +24,7 @@ package TrcFrcLib.frclib;
 
 import com.google.gson.Gson;
 import edu.wpi.first.networktables.NetworkTableEntry;
-import TrcCommonLib.trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcTimer;
 
 public class FrcRaspiVisionProcessor extends FrcRemoteVisionProcessor
 {
@@ -46,7 +46,7 @@ public class FrcRaspiVisionProcessor extends FrcRemoteVisionProcessor
             return null;
         }
         RelativePose pose = gson.fromJson(dataString, RelativePose.class);
-        pose.time = TrcUtil.getCurrentTime();
+        pose.time = TrcTimer.getCurrentTime();
         return pose;
     }
 }

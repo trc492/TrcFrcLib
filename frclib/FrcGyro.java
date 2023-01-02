@@ -25,7 +25,7 @@ package TrcFrcLib.frclib;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcGyro;
-import TrcCommonLib.trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcTimer;
 
 public class FrcGyro extends TrcGyro
 {
@@ -100,7 +100,7 @@ public class FrcGyro extends TrcGyro
         {
             value = gyro.getAngle();
         }
-        SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
+        SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
 
         if (debugEnabled)
         {
@@ -172,7 +172,7 @@ public class FrcGyro extends TrcGyro
      */
     public SensorData<Double> getZRotationRate()
     {
-        return new SensorData<>(TrcUtil.getCurrentTime(), zSign*gyro.getRate());
+        return new SensorData<>(TrcTimer.getCurrentTime(), zSign*gyro.getRate());
     }   //getZRotationRate
 
     /**
@@ -208,7 +208,7 @@ public class FrcGyro extends TrcGyro
      */
     public SensorData<Double> getZHeading()
     {
-        return new SensorData<>(TrcUtil.getCurrentTime(), zSign*gyro.getAngle());
+        return new SensorData<>(TrcTimer.getCurrentTime(), zSign*gyro.getAngle());
     }   //getZHeading
 
     /**

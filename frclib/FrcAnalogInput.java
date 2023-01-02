@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import TrcCommonLib.trclib.TrcAnalogInput;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcFilter;
-import TrcCommonLib.trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcTimer;
 
 /**
  * This class implements a platform dependent AnalogInput sensor extending TrcAnalogInput. It provides implementation
@@ -107,7 +107,7 @@ public class FrcAnalogInput extends TrcAnalogInput
                     "AnalogInput sensor only support INPUT_DATA/NORMALIZED_DATA types.");
         }
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordEndTime();
-        data = new SensorData<>(TrcUtil.getCurrentTime(), sensorData);
+        data = new SensorData<>(TrcTimer.getCurrentTime(), sensorData);
 
         if (debugEnabled)
         {

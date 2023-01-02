@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.Relay;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
+import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcUtil;
 
 import java.util.LinkedList;
@@ -171,7 +172,7 @@ public abstract class FrcRemoteVisionProcessor
 
     private boolean isFresh(RelativePose pose)
     {
-        return pose != null && (timeout == 0.0 || TrcUtil.getCurrentTime() - pose.time <= timeout);
+        return pose != null && (timeout == 0.0 || TrcTimer.getCurrentTime() - pose.time <= timeout);
     }   //isFresh
 
     public double get(String key)

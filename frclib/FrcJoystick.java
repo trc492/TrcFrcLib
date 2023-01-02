@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
+import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcUtil;
 
 /**
@@ -595,7 +596,7 @@ public class FrcJoystick extends Joystick
     private void buttonEventTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "buttonEventTask";
-        double currTime = TrcUtil.getCurrentTime();
+        double currTime = TrcTimer.getCurrentTime();
 
         if (debugEnabled)
         {

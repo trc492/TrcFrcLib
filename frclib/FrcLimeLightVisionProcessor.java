@@ -23,7 +23,7 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
-import TrcCommonLib.trclib.TrcUtil;
+import TrcCommonLib.trclib.TrcTimer;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
@@ -126,7 +126,7 @@ public class FrcLimeLightVisionProcessor extends FrcRemoteVisionProcessor
         }
 
         RelativePose pose = new RelativePose();
-        pose.time = TrcUtil.getCurrentTime();
+        pose.time = TrcTimer.getCurrentTime();
         pose.theta = getHeading();
         pose.r = depthSupplier.getAsDouble();
         pose.x = Math.sin(Math.toRadians(pose.theta)) * pose.r;
