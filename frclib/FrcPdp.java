@@ -361,8 +361,10 @@ public class FrcPdp extends PowerDistribution
      *
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is running.
+     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
+     *        false otherwise.
      */
-    public void energyUsedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    public void energyUsedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
         final String funcName = "energyUsedTask";
         double currTime = TrcTimer.getCurrentTime();

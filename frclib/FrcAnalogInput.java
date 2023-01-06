@@ -24,7 +24,6 @@ package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.AnalogInput;
 import TrcCommonLib.trclib.TrcAnalogInput;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcFilter;
 import TrcCommonLib.trclib.TrcTimer;
 
@@ -85,7 +84,6 @@ public class FrcAnalogInput extends TrcAnalogInput
     @Override
     public SensorData<Double> getRawData(int index, DataType dataType)
     {
-        final String funcName = "getRawData";
         SensorData<Double> data;
 
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordStartTime();
@@ -108,13 +106,6 @@ public class FrcAnalogInput extends TrcAnalogInput
         }
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordEndTime();
         data = new SensorData<>(TrcTimer.getCurrentTime(), sensorData);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API,
-                               "=(timestamp:%.3f,value=%f)", data.timestamp, data.value);
-        }
 
         return data;
     }   //getRawData

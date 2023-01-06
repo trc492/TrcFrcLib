@@ -32,11 +32,15 @@ import com.ctre.phoenix.motorcontrol.can.BaseTalon;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
+import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
 
 public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMotor
 {
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
+    private static final boolean debugEnabled = false;
+
     private class EncoderInfo implements Sendable
     {
         @Override

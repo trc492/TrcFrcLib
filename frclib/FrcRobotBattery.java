@@ -22,7 +22,6 @@
 
 package TrcFrcLib.frclib;
 
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobotBattery;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 
@@ -67,16 +66,7 @@ public class FrcRobotBattery extends TrcRobotBattery
     @Override
     public double getVoltage()
     {
-        final String funcName = "getVoltage";
-        double voltage = pdp.getVoltage();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", voltage);
-        }
-
-        return voltage;
+        return pdp.getVoltage();
     }   //getVoltage
 
     /**
@@ -87,16 +77,7 @@ public class FrcRobotBattery extends TrcRobotBattery
     @Override
     public double getCurrent()
     {
-        final String funcName = "getCurrent";
-        double totalCurrent = pdp.getTotalCurrent();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", totalCurrent);
-        }
-
-        return totalCurrent;
+        return pdp.getTotalCurrent();
     }   //getCurrent
 
     /**
@@ -107,16 +88,7 @@ public class FrcRobotBattery extends TrcRobotBattery
     @Override
     public double getPower()
     {
-        final String funcName = "getPower";
-        double totalPower = pdp.getTotalPower();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", totalPower);
-        }
-
-        return totalPower;
+        return pdp.getTotalPower();
     }   //getPower
 
 }   //class FrcRobotBattery

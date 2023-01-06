@@ -133,7 +133,7 @@ public abstract class FrcRemoteVisionProcessor
      */
     protected abstract RelativePose processData();
 
-    private void updateTargetInfo(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void updateTargetInfo(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
         // Deserialize the latest calculated pose
         RelativePose relativePose = processData();

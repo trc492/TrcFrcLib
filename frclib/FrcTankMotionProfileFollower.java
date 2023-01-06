@@ -430,7 +430,7 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
         }
     }
 
-    private void motionProfileTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void motionProfileTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
         if (!sm.isEnabled())
             return;

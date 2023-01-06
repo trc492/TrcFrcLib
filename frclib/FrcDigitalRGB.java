@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRGBLight;
 
 public class FrcDigitalRGB extends TrcRGBLight
@@ -50,84 +49,33 @@ public class FrcDigitalRGB extends TrcRGBLight
 
     public boolean getRed()
     {
-        final String funcName = "getRed";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API,
-                    "=%s", Boolean.toString(redState));
-        }
         return redState;
     }   //getRed
 
     public boolean getGreen()
     {
-        final String funcName = "getGreen";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API,
-                    "=%s", Boolean.toString(greenState));
-        }
         return greenState;
     }   //getGreen
 
     public boolean getBlue()
     {
-        final String funcName = "getBlue";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API,
-                    "=%s", Boolean.toString(blueState));
-        }
         return blueState;
     }   //getBlue
 
     public void setRed(boolean enabled)
     {
-        final String funcName = "setRed";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API,
-                    "=%s", Boolean.toString(enabled));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         redState = enabled;
         redLight.set(enabled);
     }   //setRed
 
     public void setGreen(boolean enabled)
     {
-        final String funcName = "setGreen";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API,
-                    "=%s", Boolean.toString(enabled));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         greenState = enabled;
         greenLight.set(enabled);
     }   //setGreen
 
     public void setBlue(boolean enabled)
     {
-        final String funcName = "setBlue";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API,
-                    "=%s", Boolean.toString(enabled));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         blueState = enabled;
         blueLight.set(enabled);
     }   //setBlue

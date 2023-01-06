@@ -32,13 +32,8 @@ import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcXboxController extends XboxController
 {
-    private static final String moduleName = "FrcXboxController";
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     private static final boolean debugEnabled = false;
-    private static final boolean tracingEnabled = false;
-    private static final boolean useGlobalTracer = false;
-    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
-    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    private TrcDbgTrace dbgTrace = null;
 
     public static final int BUTTON_A = 1;
     public static final int BUTTON_B = 2;
@@ -75,20 +70,13 @@ public class FrcXboxController extends XboxController
     {
         super(port);
 
-        if (debugEnabled)
-        {
-            dbgTrace = useGlobalTracer ?
-                TrcDbgTrace.getGlobalTracer() :
-                new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
         this.port = port;
         this.instanceName = instanceName;
         prevButtons = DriverStation.getStickButtons(port);
 
         TrcTaskMgr.TaskObject buttonEventTaskObj = TrcTaskMgr.createTask(
             instanceName + ".buttonEvent", this::buttonEventTask);
-        buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.SLOW_PREPERIODIC_TASK);
+        buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.PRE_PERIODIC_TASK);
     }
 
     /**
@@ -109,15 +97,6 @@ public class FrcXboxController extends XboxController
      */
     public void setButtonEventTracer(TrcDbgTrace buttonEventTracer)
     {
-        final String funcName = "setButtonEventTracer";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "buttonTracing=%s",
-                buttonEventTracer != null ? "enabled" : "disabled");
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         this.buttonEventTracer = buttonEventTracer;
     }   //setButtonEventTracer
 
@@ -130,14 +109,6 @@ public class FrcXboxController extends XboxController
      */
     public void setButtonHandler(FrcButtonHandler buttonHandler)
     {
-        final String funcName = "setButtonHandler";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "buttonHandler=%s", buttonHandler);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         this.buttonHandler = buttonHandler;
     }   //setButtonHandler
 
@@ -159,14 +130,6 @@ public class FrcXboxController extends XboxController
      */
     public void setSamplingPeriod(double period)
     {
-        final String funcName = "setSamplingPeriod";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "period=%.3f", period);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         samplingPeriod = period;
     }   //setSamplingPeriod
 
@@ -177,19 +140,7 @@ public class FrcXboxController extends XboxController
      */
     public void setLeftYInverted(boolean inverted)
     {
-        final String funcName = "setLeftYInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
-        }
-
         leftYSign = inverted ? -1 : 1;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //setYInverted
 
     /**
@@ -199,19 +150,7 @@ public class FrcXboxController extends XboxController
      */
     public void setRightYInverted(boolean inverted)
     {
-        final String funcName = "setRightYInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
-        }
-
         rightYSign = inverted ? -1 : 1;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //setYInverted
 
     /**
@@ -222,22 +161,7 @@ public class FrcXboxController extends XboxController
      */
     public double getLeftXWithDeadband(boolean squared)
     {
-        final String funcName = "getLeftXWithDeadband";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "squared=%s,dbThreshold=%f",
-                Boolean.toString(squared), deadbandThreshold);
-        }
-
-        double value = adjustValueWithDeadband(getLeftX(), squared, deadbandThreshold);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", value);
-        }
-
-        return value;
+        return adjustValueWithDeadband(getLeftX(), squared, deadbandThreshold);
     }
 
     /**
@@ -248,22 +172,7 @@ public class FrcXboxController extends XboxController
      */
     public double getRightXWithDeadband(boolean squared)
     {
-        final String funcName = "getRightXWithDeadband";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "squared=%s,dbThreshold=%f",
-                Boolean.toString(squared), deadbandThreshold);
-        }
-
-        double value = adjustValueWithDeadband(getRightX(), squared, deadbandThreshold);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", value);
-        }
-
-        return value;
+        return adjustValueWithDeadband(getRightX(), squared, deadbandThreshold);
     }
 
     /**
@@ -274,22 +183,7 @@ public class FrcXboxController extends XboxController
      */
     public double getLeftYWithDeadband(boolean squared)
     {
-        final String funcName = "getLeftYWithDeadband";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "squared=%s,dbThreshold=%f",
-                Boolean.toString(squared), deadbandThreshold);
-        }
-
-        double value = leftYSign * adjustValueWithDeadband(getLeftY(), squared, deadbandThreshold);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", value);
-        }
-
-        return value;
+        return leftYSign * adjustValueWithDeadband(getLeftY(), squared, deadbandThreshold);
     }
 
     /**
@@ -300,22 +194,7 @@ public class FrcXboxController extends XboxController
      */
     public double getRightYWithDeadband(boolean squared)
     {
-        final String funcName = "getRightYWithDeadband";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "squared=%s,dbThreshold=%f",
-                Boolean.toString(squared), deadbandThreshold);
-        }
-
-        double value = rightYSign * adjustValueWithDeadband(getRightY(), squared, deadbandThreshold);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", value);
-        }
-
-        return value;
+        return rightYSign * adjustValueWithDeadband(getRightY(), squared, deadbandThreshold);
     }
 
     /**
@@ -326,22 +205,7 @@ public class FrcXboxController extends XboxController
      */
     public double getLeftTriggerWithDeadband(boolean squared)
     {
-        final String funcName = "getLeftTriggerWithDeadband";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "squared=%s,dbThreshold=%f",
-                Boolean.toString(squared), deadbandThreshold);
-        }
-
-        double value = adjustValueWithDeadband(getLeftTriggerAxis(), squared, deadbandThreshold);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", value);
-        }
-
-        return value;
+        return adjustValueWithDeadband(getLeftTriggerAxis(), squared, deadbandThreshold);
     }
 
     /**
@@ -352,22 +216,7 @@ public class FrcXboxController extends XboxController
      */
     public double getRightTriggerWithDeadband(boolean squared)
     {
-        final String funcName = "getRightTriggerWithDeadband";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "squared=%s,dbThreshold=%f",
-                Boolean.toString(squared), deadbandThreshold);
-        }
-
-        double value = adjustValueWithDeadband(getRightTriggerAxis(), squared, deadbandThreshold);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", value);
-        }
-
-        return value;
+        return adjustValueWithDeadband(getRightTriggerAxis(), squared, deadbandThreshold);
     }
 
     /**
@@ -376,76 +225,71 @@ public class FrcXboxController extends XboxController
      *
      * @param taskType specifies the type of task being run.
      * @param runMode  specifies the current robot run mode.
+     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
+     *        false otherwise.
      */
-    private void buttonEventTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void buttonEventTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
-        final String funcName = "buttonEventTask";
-        double currTime = TrcTimer.getCurrentTime();
-
-        if (debugEnabled)
+        if (slowPeriodicLoop)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
-        }
+            final String funcName = "buttonEventTask";
+            double currTime = TrcTimer.getCurrentTime();
 
-        if (currTime >= nextPeriod)
-        {
-            nextPeriod = currTime + samplingPeriod;
-
-            int currButtons = DriverStation.getStickButtons(port);
-            if (buttonHandler != null && runMode != TrcRobot.RunMode.DISABLED_MODE)
+            if (currTime >= nextPeriod)
             {
-                int changedButtons = prevButtons ^ currButtons;
+                nextPeriod = currTime + samplingPeriod;
 
-                while (changedButtons != 0)
+                int currButtons = DriverStation.getStickButtons(port);
+                if (buttonHandler != null && runMode != TrcRobot.RunMode.DISABLED_MODE)
                 {
-                    //
-                    // buttonMask contains the least significant set bit.
-                    //
-                    int buttonMask = changedButtons & ~(changedButtons ^ -changedButtons);
-                    boolean pressed = (currButtons & buttonMask) != 0;
-                    int buttonNum = TrcUtil.leastSignificantSetBitPosition(buttonMask) + 1;
+                    int changedButtons = prevButtons ^ currButtons;
 
-                    if (buttonEventTracer != null)
+                    while (changedButtons != 0)
                     {
-                        buttonEventTracer
-                            .traceInfo(funcName, "[%.3f] controller=%s, button=%d, pressed=%b", currTime, instanceName,
-                                buttonNum, pressed);
-                    }
+                        //
+                        // buttonMask contains the least significant set bit.
+                        //
+                        int buttonMask = changedButtons & ~(changedButtons ^ -changedButtons);
+                        boolean pressed = (currButtons & buttonMask) != 0;
+                        int buttonNum = TrcUtil.leastSignificantSetBitPosition(buttonMask) + 1;
 
-                    if (pressed)
-                    {
-                        //
-                        // Button is pressed.
-                        //
-                        if (debugEnabled)
+                        if (buttonEventTracer != null)
                         {
-                            dbgTrace.traceInfo(funcName, "Button %x pressed", buttonNum);
+                            buttonEventTracer
+                                .traceInfo(funcName, "[%.3f] controller=%s, button=%d, pressed=%b", currTime, instanceName,
+                                    buttonNum, pressed);
                         }
-                        buttonHandler.buttonEvent(buttonNum, true);
-                    }
-                    else
-                    {
-                        //
-                        // Button is released.
-                        //
-                        if (debugEnabled)
+
+                        if (pressed)
                         {
-                            dbgTrace.traceInfo(funcName, "Button %x released", buttonNum);
+                            //
+                            // Button is pressed.
+                            //
+                            if (debugEnabled)
+                            {
+                                globalTracer.traceInfo(funcName, "Button %x pressed", buttonNum);
+                            }
+                            buttonHandler.buttonEvent(buttonNum, true);
                         }
-                        buttonHandler.buttonEvent(buttonNum, false);
+                        else
+                        {
+                            //
+                            // Button is released.
+                            //
+                            if (debugEnabled)
+                            {
+                                globalTracer.traceInfo(funcName, "Button %x released", buttonNum);
+                            }
+                            buttonHandler.buttonEvent(buttonNum, false);
+                        }
+                        //
+                        // Clear the least significant set bit.
+                        //
+                        changedButtons &= ~buttonMask;
                     }
-                    //
-                    // Clear the least significant set bit.
-                    //
-                    changedButtons &= ~buttonMask;
                 }
+                prevButtons = currButtons;
             }
-            prevButtons = currButtons;
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
         }
     }   //buttonEventTask
 

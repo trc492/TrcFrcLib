@@ -31,6 +31,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 
+import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
 
@@ -42,6 +43,9 @@ import TrcCommonLib.trclib.TrcPidController;
  */
 public class FrcCANSparkMax extends TrcMotor
 {
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
+    private static final boolean debugEnabled = false;
+
     private boolean brushless;
     public CANSparkMax motor;
     private RelativeEncoder encoder;

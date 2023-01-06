@@ -175,7 +175,7 @@ public class FrcSwervePathFollower
         return instanceName;
     }
 
-    private void driveTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void driveTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
         if (TrcTimer.getCurrentTime() < timeoutTime)
         {
