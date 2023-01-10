@@ -41,7 +41,7 @@ import edu.wpi.first.apriltag.AprilTagPoseEstimator;
 /**
  * This class implements an AprilTag pipeline using OpenCV.
  */
- public class FrcAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<AprilTagDetection>>
+ public class FrcAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>
 {
     /**
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
@@ -120,6 +120,7 @@ import edu.wpi.first.apriltag.AprilTagPoseEstimator;
     private final AprilTagDetector aprilTagDetector;
     private final AprilTagPoseEstimator poseEstimator;
     private final Mat grayMat;
+    private final Mat[] intermediateMats;
 
     private AtomicReference<AprilTagDetection[]> detectionsUpdate = new AtomicReference<>();
     
@@ -157,7 +158,11 @@ import edu.wpi.first.apriltag.AprilTagPoseEstimator;
         {
             poseEstimator = null;
         }
+
         grayMat = new Mat();
+        intermediateMats = new Mat[2];
+        intermediateMats[0] = null;
+        intermediateMats[1] = grayMat;
     }   //FrcAprilTagPipeline
 
     /**
@@ -201,7 +206,7 @@ import edu.wpi.first.apriltag.AprilTagPoseEstimator;
 
         performanceMetrics.logProcessingTime(startTime);
         performanceMetrics.printMetrics(tracer);
-}   //process
+    }   //process
 
     /**
      * This method returns the array of detected objects.
@@ -225,6 +230,27 @@ import edu.wpi.first.apriltag.AprilTagPoseEstimator;
 
         return objects;
     }   //getDetectedObjects
+
+    /**
+     * This method returns an intermediate processed frame. Typically, a pipeline processes a frame in a number of
+     * steps. It may be useful to see an intermediate frame for a step in the pipeline for tuning or debugging
+     * purposes.
+     *
+     * @param step specifies the intermediate step (step 0 is the original input frame).
+     * @return processed frame of the specified step.
+     */
+    @Override
+    public Mat getIntermediateOutput(int step)
+    {
+        Mat mat = null;
+
+        if (step < intermediateMats.length)
+        {
+            mat = intermediateMats[step];
+        }
+
+        return mat;
+    }   //getIntermediateOutput
 
     // /**
     //  * This method is called by OpenCvPipeline to process an image frame.
