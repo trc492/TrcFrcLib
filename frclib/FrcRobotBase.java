@@ -84,7 +84,7 @@ public abstract class FrcRobotBase extends RobotBase
     private static FrcRobotBase instance;
     private Thread robotThread;
     private TrcWatchdogMgr.Watchdog robotThreadWatchdog;
-    private volatile boolean m_exit = false;
+    private volatile boolean terminate = false;
 
     private Double prevLoopStartTime = null;
     private double robotInitElapsedTime = 0.0;
@@ -120,6 +120,8 @@ public abstract class FrcRobotBase extends RobotBase
      */
     public FrcRobotBase(final String robotName)
     {
+        super();
+
         if (FrcRobotBase.instance != null)
         {
             throw new RuntimeException("FrcRobotBase has already been instantiated.");
@@ -295,7 +297,7 @@ public abstract class FrcRobotBase extends RobotBase
     {
         final String funcName = "startCompetition";
         final double periodicInterval = TrcTaskMgr.PERIODIC_INTERVAL_MS/1000.0;
-        final double slowPeriodicInterval = 0.05;   // 50 msec.
+        final double slowPeriodicInterval = 0.05;   // 50 msec (20 Hz).
         final double taskTimeThreshold = TrcTaskMgr.TASKTIME_THRESHOLD_MS/1000.0;
         String bannerPrefix, bannerSuffix;
         double startTime, elapsedTime;
@@ -351,7 +353,7 @@ public abstract class FrcRobotBase extends RobotBase
         //
         // Loop forever, calling the appropriate mode-dependent functions.
         //
-        while (!Thread.currentThread().isInterrupted() && !m_exit)
+        while (!Thread.currentThread().isInterrupted() && !terminate)
         {
             double loopStartTime = TrcTimer.getCurrentTime();
 
@@ -755,7 +757,7 @@ public abstract class FrcRobotBase extends RobotBase
         TrcEvent.unregisterEventCallback();
         robotThreadWatchdog.unregister();
         robotThreadWatchdog = null;
-        m_exit = true;
+        terminate = true;
     }   //endCompetition
 
     /**

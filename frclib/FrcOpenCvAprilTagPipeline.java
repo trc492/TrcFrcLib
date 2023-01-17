@@ -69,14 +69,14 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         public static Rect getDetectedRect(AprilTagDetection at)
         {
             double[] corners = at.getCorners();
-            Point upperLeftCorner = new Point(corners[0], corners[1]);
-            Point lowerLeftCorner = new Point(corners[2], corners[3]);
-            Point lowerRightCorner = new Point(corners[4], corners[5]);
-            Point upperRightCorner = new Point(corners[6], corners[7]);
+            Point lowerLeftCorner = new Point(corners[0], corners[1]);
+            Point lowerRightCorner = new Point(corners[2], corners[3]);
+            Point upperRightCorner = new Point(corners[4], corners[5]);
+            Point upperLeftCorner = new Point(corners[6], corners[7]);
             double width = ((upperRightCorner.x - upperLeftCorner.x) + (lowerRightCorner.x - lowerLeftCorner.x))/2.0;
             double height = ((lowerLeftCorner.y - upperLeftCorner.y) + (lowerRightCorner.y - upperRightCorner.y))/2.0;
 
-            return new Rect((int)at.getCenterX(), (int)at.getCenterY(), (int) width, (int) height);
+            return new Rect((int)(at.getCenterX() - width/2.0), (int)(at.getCenterY() - height/2.0), (int) width, (int) height);
         }   //getDetectedRect
 
         /**
