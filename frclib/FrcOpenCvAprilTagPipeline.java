@@ -209,6 +209,7 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     @Override
     public DetectedObject[] process(Mat input)
     {
+        final String funcName = "process";
         DetectedObject[] detectedObjects;
         double startTime = TrcTimer.getCurrentTime();
 
@@ -223,6 +224,11 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         for (int i = 0; i < detectedObjects.length; i++)
         {
             detectedObjects[i] = new DetectedObject(detections[i]);
+            if (tracer != null)
+            {
+                tracer.traceInfo(
+                    funcName, "[%d: %.3f] DetectedObj=%s", i, TrcTimer.getModeElapsedTime(), detectedObjects[i]);
+            }
         }
 
         if (annotate)
