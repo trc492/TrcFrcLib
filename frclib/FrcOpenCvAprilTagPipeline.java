@@ -35,6 +35,7 @@ import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcOpenCvDetector;
 import TrcCommonLib.trclib.TrcOpenCvPipeline;
 import TrcCommonLib.trclib.TrcTimer;
+import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import edu.wpi.first.apriltag.AprilTagDetection;
 import edu.wpi.first.apriltag.AprilTagDetector;
 import edu.wpi.first.apriltag.AprilTagPoseEstimator;
@@ -132,6 +133,7 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     private final Mat grayMat;
     private final Mat[] intermediateMats;
 
+    private final TrcVisionPerformanceMetrics performanceMetrics = new TrcVisionPerformanceMetrics();
     private final AtomicReference<DetectedObject[]> detectedObjsUpdate = new AtomicReference<>();
     private int intermediateStep = 0;
     private boolean annotate = false;
