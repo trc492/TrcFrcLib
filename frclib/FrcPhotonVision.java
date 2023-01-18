@@ -32,6 +32,7 @@ import java.util.List;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcTimer;
+import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
 
 /**
@@ -100,6 +101,7 @@ public class FrcPhotonVision
 
     }   //class DetectedObject
 
+    private final TrcVisionPerformanceMetrics performanceMetrics = new TrcVisionPerformanceMetrics();
     public final PhotonCamera camera;
     private final TrcDbgTrace tracer;
 
@@ -135,7 +137,10 @@ public class FrcPhotonVision
     {
         final String funcName = "getDetectedObjects";
         DetectedObject[] detectedObjs = null;
+        double startTime = TrcTimer.getCurrentTime();
         PhotonPipelineResult result = camera.getLatestResult();
+        performanceMetrics.logProcessingTime(startTime);
+        performanceMetrics.printMetrics(tracer);
 
         if (result.hasTargets())
         {
