@@ -23,13 +23,72 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
+import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcTimer;
+import TrcCommonLib.trclib.TrcVisionTargetInfo;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 
-public class FrcLimeLightVisionProcessor extends FrcRemoteVisionProcessor
+import org.opencv.core.Rect;
+
+public class FrcLimeLightVision extends FrcRemoteVisionProcessor
 {
+    /**
+     * This class encapsulates info of the detected object. It extends TrcVisionTargetInfo.ObjectInfo that requires
+     * it to provide a method to return the detected object rect.
+     */
+    public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
+    {
+        public RelativePose relativePose;
+        public double area;
+
+        /**
+         * Constructor: Creates an instance of the object.
+         *
+         * @param object specifies the contour of the object.
+         */
+        public DetectedObject(RelativePose relPose, double area)
+        {
+            this.relativePose = relPose;
+            this.area = area;
+        }   //DetectedObject
+
+        /**
+         * This method returns the string form of the target info.
+         *
+         * @return string form of the target info.
+         */
+        @Override
+        public String toString()
+        {
+            return "{relPose=" + relativePose + ",area=" + area + "}";
+        }   //toString
+
+        /**
+         * This method returns the rect of the detected object.
+         *
+         * @return rect of the detected object.
+         */
+        @Override
+        public Rect getRect()
+        {
+            throw new UnsupportedOperationException("LimeLight vision does not provide object rectangle.");
+        }   //getRect
+
+        /**
+         * This method returns the area of the detected object.
+         *
+         * @return area of the detected object.
+         */
+        @Override
+        public double getArea()
+        {
+            return area;
+        }   //getArea
+
+    }   //class DetectedObject
+
     public enum RingLightMode
     {
         AUTO(0), OFF(1), BLINK(2), ON(3);
@@ -47,24 +106,63 @@ public class FrcLimeLightVisionProcessor extends FrcRemoteVisionProcessor
         }
     }
 
+    private final TrcDbgTrace tracer;
     private NetworkTableEntry tv, heading;
     private NetworkTableEntry ledMode, pipeline;
     private DoubleSupplier depthSupplier = () -> 0.0;
 
-    public FrcLimeLightVisionProcessor(String instanceName, String depthInput, DoubleUnaryOperator depthApproximator)
+    public FrcLimeLightVision(String instanceName, String depthInput, DoubleUnaryOperator depthApproximator, TrcDbgTrace tracer)
     {
-        this(instanceName);
+        this(instanceName, tracer);
         setDepthApproximator(depthInput, depthApproximator);
     }
 
-    public FrcLimeLightVisionProcessor(String instanceName)
+    public FrcLimeLightVision(String instanceName, TrcDbgTrace tracer)
     {
-        super(instanceName, "limelight");
-        tv = super.networkTable.getEntry("tv");
-        ledMode = super.networkTable.getEntry("ledMode");
-        pipeline = super.networkTable.getEntry("pipeline");
-        heading = super.networkTable.getEntry("tx");
-    }
+        super(instanceName, instanceName);
+        this.tracer = tracer;
+        tv = networkTable.getEntry("tv");
+        heading = networkTable.getEntry("tx");
+        ledMode = networkTable.getEntry("ledMode");
+        pipeline = networkTable.getEntry("pipeline");
+    }   //FrcLimeLightVision
+
+    /**
+     * This method returns the detected object.
+     *
+     * @return detected object.
+     */
+    public DetectedObject getDetectedObject()
+    {
+        final String funcName = "getDetectedObject";
+        DetectedObject detectedObj = null;
+
+        RelativePose pose = getLastPose();
+        if (pose != null)
+        {
+            detectedObj = new DetectedObject(pose, getTargetArea());
+            if (tracer != null)
+            {
+                tracer.traceInfo(funcName, "DetectedObj=%s", detectedObj);
+            }
+        }
+
+        return detectedObj;
+    }   //getDetectedObject
+
+    /**
+     * This method returns the selected LimeLight pipeline.
+     */
+    public int getSelectedPipeline()
+    {
+        return (int) pipeline.getDouble(0.0);
+    }   //getSelectedPipeline
+
+    public void selectPipeline(int pipeline)
+    {
+        this.pipeline.setDouble(pipeline);
+    }   //selectPipeline
+
 
     public double getTargetDepth()
     {
@@ -79,11 +177,6 @@ public class FrcLimeLightVisionProcessor extends FrcRemoteVisionProcessor
     public boolean targetDetected()
     {
         return tv.getDouble(0.0) == 1.0;
-    }
-
-    public void selectPipeline(int pipeline)
-    {
-        this.pipeline.setDouble(pipeline);
     }
 
     public double getHeading()
@@ -134,4 +227,5 @@ public class FrcLimeLightVisionProcessor extends FrcRemoteVisionProcessor
         pose.objectYaw = 0.0;
         return pose;
     }
-}
+
+}   //class FrcLimeLightVision
