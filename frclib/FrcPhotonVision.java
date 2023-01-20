@@ -29,11 +29,16 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
 
 import java.util.List;
+import java.util.Locale;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcTimer;
+import TrcCommonLib.trclib.TrcUtil;
 import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 
 /**
  * This class implements vision detection using PhotonLib.
@@ -46,7 +51,8 @@ public class FrcPhotonVision
      */
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
-        public PhotonTrackedTarget target;
+        public final PhotonTrackedTarget target;
+        public final Pose3d targetPose3D;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -56,6 +62,11 @@ public class FrcPhotonVision
         public DetectedObject(PhotonTrackedTarget target)
         {
             this.target = target;
+            Transform3d targetLoc = target.getBestCameraToTarget();
+            targetPose3D = new Pose3d(
+                -targetLoc.getY() * TrcUtil.INCHES_PER_METER, targetLoc.getX() * TrcUtil.INCHES_PER_METER,
+                targetLoc.getZ() * TrcUtil.INCHES_PER_METER,
+                new Rotation3d(0.0, target.getPitch(), target.getYaw()));
         }   //DetectedObject
 
         /**
@@ -66,7 +77,10 @@ public class FrcPhotonVision
         @Override
         public String toString()
         {
-            return "(" + target + ",Rect=" + getRect() + ",Area=" + getArea() + ")";
+            return String.format(
+                Locale.US, "{pose=(x=%.1f,y=%.1f,z=%.1f,pitch=%.1f,yaw=%.1f,skew=%.1f),rect=%s,area=%.1f}",
+                targetPose3D.getX(), targetPose3D.getY(), targetPose3D.getZ(), target.getPitch(), target.getYaw(),
+                target.getSkew(), getRect(), target.getArea());
         }   //toString
 
         /**
