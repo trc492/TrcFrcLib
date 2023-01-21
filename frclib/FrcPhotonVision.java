@@ -51,21 +51,25 @@ public class FrcPhotonVision
      */
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
+        public final double timestamp;
         public final PhotonTrackedTarget target;
+        public final Transform3d targetTransform;
         public final Pose3d targetPose3D;
 
         /**
          * Constructor: Creates an instance of the object.
          *
-         * @param targeet specifies the photon detected target.
+         * @param timestamp specifies the time stamp of the frame it was taken.
+         * @param target specifies the photon detected target.
          */
-        public DetectedObject(PhotonTrackedTarget target)
+        public DetectedObject(double timestamp, PhotonTrackedTarget target)
         {
+            this.timestamp = timestamp;
             this.target = target;
-            Transform3d targetLoc = target.getBestCameraToTarget();
+            targetTransform = target.getBestCameraToTarget();
             targetPose3D = new Pose3d(
-                -targetLoc.getY() * TrcUtil.INCHES_PER_METER, targetLoc.getX() * TrcUtil.INCHES_PER_METER,
-                targetLoc.getZ() * TrcUtil.INCHES_PER_METER,
+                -targetTransform.getY() * TrcUtil.INCHES_PER_METER, targetTransform.getX() * TrcUtil.INCHES_PER_METER,
+                targetTransform.getZ() * TrcUtil.INCHES_PER_METER,
                 new Rotation3d(0.0, target.getPitch(), target.getYaw()));
         }   //DetectedObject
 
@@ -78,8 +82,9 @@ public class FrcPhotonVision
         public String toString()
         {
             return String.format(
-                Locale.US, "{pose=(x=%.1f,y=%.1f,z=%.1f,pitch=%.1f,yaw=%.1f,skew=%.1f),rect=%s,area=%.1f}",
-                targetPose3D.getX(), targetPose3D.getY(), targetPose3D.getZ(), target.getPitch(), target.getYaw(),
+                Locale.US,
+                "{timestamp=%.3f,pose=(x=%.1f,y=%.1f,z=%.1f,pitch=%.1f,yaw=%.1f,skew=%.1f),rect=%s,area=%.1f}",
+                timestamp, targetPose3D.getX(), targetPose3D.getY(), targetPose3D.getZ(), target.getPitch(), target.getYaw(),
                 target.getSkew(), getRect(), target.getArea());
         }   //toString
 
@@ -159,11 +164,12 @@ public class FrcPhotonVision
         if (result.hasTargets())
         {
             List<PhotonTrackedTarget> targets = result.getTargets();
+            double timestamp = result.getTimestampSeconds();
             detectedObjs = new DetectedObject[targets.size()];
 
             for (int i = 0; i < targets.size(); i++)
             {
-                detectedObjs[i] = new DetectedObject(targets.get(i));
+                detectedObjs[i] = new DetectedObject(timestamp, targets.get(i));
                 if (tracer != null)
                 {
                     tracer.traceInfo(
@@ -189,7 +195,7 @@ public class FrcPhotonVision
         if (result.hasTargets())
         {
             PhotonTrackedTarget target = result.getBestTarget();
-            bestDetectedObj = new DetectedObject(target);
+            bestDetectedObj = new DetectedObject(result.getTimestampSeconds(), target);
             if (tracer != null)
             {
                 tracer.traceInfo(
