@@ -35,16 +35,23 @@ import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcOpenCvDetector;
 import TrcCommonLib.trclib.TrcOpenCvPipeline;
 import TrcCommonLib.trclib.TrcTimer;
+import TrcCommonLib.trclib.TrcUtil;
 import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import edu.wpi.first.apriltag.AprilTagDetection;
 import edu.wpi.first.apriltag.AprilTagDetector;
 import edu.wpi.first.apriltag.AprilTagPoseEstimator;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 
 /**
  * This class implements an AprilTag pipeline using OpenCV.
  */
 public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>
 {
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
+    private static final boolean debugEnabled = true;
+
     /**
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
      * it to provide a method to return the detected object rect and area.
@@ -120,11 +127,6 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     private static final Scalar ANNOTATE_RECT_COLOR = new Scalar(0, 255, 0, 255);
     private static final Scalar ANNOTATE_RECT_WHITE = new Scalar(255, 255, 255, 255);
     private static final int ANNOTATE_RECT_THICKNESS = 3;
-    // private static final float DEF_DECIMATION = 3.0f;
-    // private static final int NUM_THREADS = 3;
-    // private static final Scalar RED = new Scalar(255,0,0,255);
-    // private static final Scalar BLUE = new Scalar(7, 197, 235, 255);
-    // private static final Scalar WHITE = new Scalar(255,255,255,255);
 
     private final String tagFamily;
     private final TrcDbgTrace tracer;
@@ -187,6 +189,33 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     {
         return tagFamily;
     }   //toString
+
+    /**
+     * This method calculates the target position by using camera calibrated Homography.
+     *
+     * @param aprilTagObj specifies the detected AprilTag object.
+     * @return target 3D position relative to the camera.
+     */
+    public Pose3d getTargetPosition(DetectedObject aprilTagObj)
+    {
+        final String funcName = "getTargetPosition";
+        Transform3d targetTransform = poseEstimator.estimate(aprilTagObj.object);
+        Rotation3d targetRotation = targetTransform.getRotation();
+
+        if (debugEnabled)
+        {
+            globalTracer.traceInfo(
+                funcName, "[%.3f] TargetTransform=%s", TrcTimer.getModeElapsedTime(), targetTransform);
+        }
+
+        return new Pose3d(
+            -targetTransform.getY() * TrcUtil.INCHES_PER_METER,
+            targetTransform.getX() * TrcUtil.INCHES_PER_METER,
+            targetTransform.getZ() * TrcUtil.INCHES_PER_METER,
+            new Rotation3d(
+                Math.toDegrees(targetRotation.getX()), Math.toDegrees(targetRotation.getY()),
+                Math.toDegrees(targetRotation.getZ())));
+    }   //getTargetPosition
 
     //
     // Implements TrcOpenCvPipeline interface.
