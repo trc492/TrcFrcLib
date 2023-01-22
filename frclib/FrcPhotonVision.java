@@ -84,8 +84,8 @@ public class FrcPhotonVision
             return String.format(
                 Locale.US,
                 "{timestamp=%.3f,pose=(x=%.1f,y=%.1f,z=%.1f,pitch=%.1f,yaw=%.1f,skew=%.1f),rect=%s,area=%.1f}",
-                timestamp, targetPose3D.getX(), targetPose3D.getY(), targetPose3D.getZ(), target.getPitch(), target.getYaw(),
-                target.getSkew(), getRect(), target.getArea());
+                timestamp, targetPose3D.getX(), targetPose3D.getY(), targetPose3D.getZ(),
+                target.getPitch(), target.getYaw(), target.getSkew(), getRect(), target.getArea());
         }   //toString
 
         /**
