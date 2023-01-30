@@ -33,9 +33,26 @@ import TrcCommonLib.trclib.TrcTimer;
  */
 public class FrcAnalogInput extends TrcAnalogInput
 {
-    private static final double maxVoltage = 5.0;
+    private static final double DEF_MAX_VOLTAGE = 5.0;
+    private final double maxVoltage;
     private AnalogInput sensor;
     private double sensorData;
+
+    /**
+     * Constructor: Creates an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param channel specifies the analog input channel.
+     * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
+     *                is used, this can be set to null.
+     * @param maxVoltage specifies the maximum voltage of the analog channel.
+     */
+    public FrcAnalogInput(String instanceName, int channel, TrcFilter[] filters, double maxVoltage)
+    {
+        super(instanceName, 1, 0, filters);
+        this.maxVoltage = maxVoltage;
+        sensor = new AnalogInput(channel);
+    }   //FrcAnalogInput
 
     /**
      * Constructor: Creates an instance of the object.
@@ -47,8 +64,7 @@ public class FrcAnalogInput extends TrcAnalogInput
      */
     public FrcAnalogInput(String instanceName, int channel, TrcFilter[] filters)
     {
-        super(instanceName, 1, 0, filters);
-        sensor = new AnalogInput(channel);
+        this(instanceName, channel, filters, DEF_MAX_VOLTAGE);
     }   //FrcAnalogInput
 
     /**

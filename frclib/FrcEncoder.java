@@ -23,12 +23,37 @@
 package TrcFrcLib.frclib;
 
 /**
- * This class implements a platform dependent AnalogInput sensor extending TrcAnalogInput. It provides implementation
- * of the abstract methods in TrcAnalogInput.
+ * This interface specifies a common implementation of a generic encoder with which makes different tpes of encoders
+ * compatible with each other.
  */
 public interface FrcEncoder
 {
+    /**
+     * This method reads the absolute position of the encoder.
+     *
+     * @return absolute position of the encoder.
+     */
     double getRawPosition();
+
+    /**
+     * This method returns the encoder position adjusted by scale and offset.
+     *
+     * @return encoder position adjusted by scale and offset.
+     */
     double getPosition();
+
+    /**
+     * This method reverses the direction of the encoder.
+     *
+     * @param inverted specifies true to reverse the encoder direction, false otherwise.
+     */
+    void setInverted(boolean inverted);
+
+    /**
+     * This method sets the encoder scale and offset.
+     *
+     * @param scale specifies the scale value.
+     * @param offset specifies the offset value.
+     */
     void setScaleAndOffset(double scale, double offset);
 }   //interface FrcEncoder

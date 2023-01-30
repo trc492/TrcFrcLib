@@ -28,18 +28,34 @@ package TrcFrcLib.frclib;
  */
 public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
 {
+    private static final double DEF_MAX_VOLTAGE = 5.0;
+    private double maxVoltage;
+    private boolean inverted = false;
     private double scale = 1.0;
     private double offset = 0.0;
 
     /**
-     * Constructor: Create an instance of the object.
+     * Constructor: Creates an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param channel specifies the analog channel for the encoder.
+     * @param maxVoltage specifies the maximum voltage of the analog channel.
+     */
+    public FrcAnalogEncoder(String instanceName, int channel, double maxVoltage)
+    {
+        super(instanceName, channel);
+        this.maxVoltage = maxVoltage;
+    }   //FrcAnalogEncoder
+
+    /**
+     * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
      * @param channel specifies the analog channel for the encoder.
      */
     public FrcAnalogEncoder(String instanceName, int channel)
     {
-        super(instanceName, channel);
+        this(instanceName, channel, DEF_MAX_VOLTAGE);
     }   //FrcAnalogEncoder
 
     //
@@ -54,7 +70,14 @@ public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
     @Override
     public double getRawPosition()
     {
-        return super.getRawData(0, DataType.RAW_DATA).value;
+        double rawPos = super.getRawData(0, DataType.RAW_DATA).value;
+
+        if (inverted)
+        {
+            rawPos = maxVoltage - rawPos;
+        }
+
+        return rawPos;
     }   //getRawPosition
 
     /**
@@ -67,6 +90,17 @@ public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
     {
         return (getRawPosition() - offset) * scale;
     }   //getPosition
+
+    /**
+     * This method reverses the direction of the encoder.
+     *
+     * @param inverted specifies true to reverse the encoder direction, false otherwise.
+     */
+    @Override
+    public void setInverted(boolean inverted)
+    {
+        this.inverted = inverted;
+    }   //setInverted
 
     /**
      * This method sets the encoder scale and offset.

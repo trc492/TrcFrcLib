@@ -22,7 +22,10 @@
 
 package TrcFrcLib.frclib;
 
+import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.sensors.CANCoder;
+
+import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class extends CANCoder and implements the FrcEncoder interface to allow compatibility to other types of
@@ -35,7 +38,7 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
     private double offset = 0.0;
  
     /**
-     * Constructor: Create an instance of the object.
+     * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the CANCoder.
@@ -82,6 +85,25 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
     {
         return (super.getAbsolutePosition() - offset) * scale;
     }   //getPosition
+
+    /**
+     * This method reverses the direction of the encoder.
+     *
+     * @param inverted specifies true to reverse the encoder direction, false otherwise.
+     */
+    @Override
+    public void setInverted(boolean inverted)
+    {
+        final String funcName = "setInverted";
+        // Configure the sensor direction to match the steering motor direction.
+        ErrorCode errCode = super.configSensorDirection(inverted, 10);
+
+        if (errCode != ErrorCode.OK)
+        {
+            TrcDbgTrace.globalTraceWarn(
+                funcName, "%s: CANcoder.configSensorDirection failed (code=%s).", instanceName, errCode);
+        }
+    }   //setInverted
 
     /**
      * This method sets the encoder scale and offset.
