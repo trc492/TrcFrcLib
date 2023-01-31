@@ -87,6 +87,15 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
     }   //getPosition
 
     /**
+     * This method resets the encoder position.
+     */
+    @Override
+    public void reset()
+    {
+        // No-op. CANCoder does not support reset.
+    }   //reset
+
+    /**
      * This method reverses the direction of the encoder.
      *
      * @param inverted specifies true to reverse the encoder direction, false otherwise.

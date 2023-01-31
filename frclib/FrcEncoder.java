@@ -43,6 +43,11 @@ public interface FrcEncoder
     double getPosition();
 
     /**
+     * This method resets the encoder position.
+     */
+    void reset();
+
+    /**
      * This method reverses the direction of the encoder.
      *
      * @param inverted specifies true to reverse the encoder direction, false otherwise.

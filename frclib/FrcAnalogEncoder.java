@@ -22,30 +22,16 @@
 
 package TrcFrcLib.frclib;
 
-/**
- * This class implements an Analog Encoders by extending FrcAnalogInput and also implements the FrcEncoder interface
- * to allow compatibility to other types of encoders.
- */
-public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
-{
-    private static final double DEF_MAX_VOLTAGE = 5.0;
-    private double maxVoltage;
-    private boolean inverted = false;
-    private double scale = 1.0;
-    private double offset = 0.0;
+import edu.wpi.first.wpilibj.AnalogEncoder;
 
-    /**
-     * Constructor: Creates an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param channel specifies the analog channel for the encoder.
-     * @param maxVoltage specifies the maximum voltage of the analog channel.
-     */
-    public FrcAnalogEncoder(String instanceName, int channel, double maxVoltage)
-    {
-        super(instanceName, channel);
-        this.maxVoltage = maxVoltage;
-    }   //FrcAnalogEncoder
+/**
+ * This class implements an Analog Encoders by extending WPILib AnalogEncoder and also implements the FrcEncoder
+ * interface to allow compatibility to other types of encoders.
+ */
+public class FrcAnalogEncoder extends AnalogEncoder implements FrcEncoder
+{
+    private final String instanceName;
+    private double sign = 1.0;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -55,8 +41,20 @@ public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
      */
     public FrcAnalogEncoder(String instanceName, int channel)
     {
-        this(instanceName, channel, DEF_MAX_VOLTAGE);
+        super(channel);
+        this.instanceName = instanceName;
     }   //FrcAnalogEncoder
+
+    /**
+     * This method returns the instance name.
+     *
+     * @return instance name.
+     */
+    @Override
+    public String toString()
+    {
+        return instanceName;
+    }   //toString
 
     //
     // Implements the FrcEncoder interface.
@@ -65,19 +63,12 @@ public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
     /**
      * This method reads the raw analog input of the encoder.
      *
-     * @return raw input of the encoder.
+     * @return raw input of the encoder in the unit of percent rotation (0 to 1).
      */
     @Override
     public double getRawPosition()
     {
-        double rawPos = super.getRawData(0, DataType.RAW_DATA).value;
-
-        if (inverted)
-        {
-            rawPos = maxVoltage - rawPos;
-        }
-
-        return rawPos;
+        return super.getAbsolutePosition();
     }   //getRawPosition
 
     /**
@@ -88,7 +79,7 @@ public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
     @Override
     public double getPosition()
     {
-        return (getRawPosition() - offset) * scale;
+        return sign * super.getDistance();
     }   //getPosition
 
     /**
@@ -99,7 +90,7 @@ public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
     @Override
     public void setInverted(boolean inverted)
     {
-        this.inverted = inverted;
+        sign = inverted ? -1.0 : 1.0;
     }   //setInverted
 
     /**
@@ -111,8 +102,8 @@ public class FrcAnalogEncoder extends FrcAnalogInput implements FrcEncoder
     @Override
     public void setScaleAndOffset(double scale, double offset)
     {
-        this.scale = scale;
-        this.offset = offset;
+        super.setDistancePerRotation(scale);
+        super.setPositionOffset(offset);
     }   //setScaleAndOffset
 
 }   //class FrcAnalogEncoder
