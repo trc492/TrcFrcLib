@@ -65,6 +65,15 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
     //
 
     /**
+     * This method resets the encoder position.
+     */
+    @Override
+    public void reset()
+    {
+        throw new UnsupportedOperationException("CANCoder does not support reset.");
+    }   //reset
+
+    /**
      * This method reads the absolute position of the encoder.
      *
      * @return absolute position of the encoder.
@@ -85,15 +94,6 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
     {
         return (super.getAbsolutePosition() - offset) * scale;
     }   //getPosition
-
-    /**
-     * This method resets the encoder position.
-     */
-    @Override
-    public void reset()
-    {
-        // No-op. CANCoder does not support reset.
-    }   //reset
 
     /**
      * This method reverses the direction of the encoder.

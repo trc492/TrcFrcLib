@@ -29,6 +29,11 @@ package TrcFrcLib.frclib;
 public interface FrcEncoder
 {
     /**
+     * This method resets the encoder position.
+     */
+    void reset();
+
+    /**
      * This method reads the absolute position of the encoder.
      *
      * @return absolute position of the encoder.
@@ -41,11 +46,6 @@ public interface FrcEncoder
      * @return encoder position adjusted by scale and offset.
      */
     double getPosition();
-
-    /**
-     * This method resets the encoder position.
-     */
-    void reset();
 
     /**
      * This method reverses the direction of the encoder.
