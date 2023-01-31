@@ -76,7 +76,9 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
     /**
      * This method reads the absolute position of the encoder.
      *
-     * @return absolute position of the encoder.
+     * @return absolute position of the encoder. The absolute position may be unsigned (for example: [0,360) deg),
+     *         or signed (for example: [-180,+180) deg). This is determined by a configuration. The default selection
+     *         is unsigned.
      */
     @Override
     public double getRawPosition()
