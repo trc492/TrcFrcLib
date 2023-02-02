@@ -23,6 +23,7 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.RobotController;
 import TrcCommonLib.trclib.TrcAnalogInput;
 import TrcCommonLib.trclib.TrcFilter;
 import TrcCommonLib.trclib.TrcTimer;
@@ -33,8 +34,7 @@ import TrcCommonLib.trclib.TrcTimer;
  */
 public class FrcAnalogInput extends TrcAnalogInput
 {
-    private static final double DEF_MAX_VOLTAGE = 5.0;
-    private final double maxVoltage;
+    private final boolean powerRail3V3;
     private AnalogInput sensor;
     private double sensorData;
 
@@ -45,12 +45,12 @@ public class FrcAnalogInput extends TrcAnalogInput
      * @param channel specifies the analog input channel.
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
      *                is used, this can be set to null.
-     * @param maxVoltage specifies the maximum voltage of the analog channel.
+     * @param powerRail3V3 specifies true if analog power rail is 3.3V instead of 5V, false if 5V.
      */
-    public FrcAnalogInput(String instanceName, int channel, TrcFilter[] filters, double maxVoltage)
+    public FrcAnalogInput(String instanceName, int channel, TrcFilter[] filters, boolean powerRail3V3)
     {
         super(instanceName, 1, 0, filters);
-        this.maxVoltage = maxVoltage;
+        this.powerRail3V3 = powerRail3V3;
         sensor = new AnalogInput(channel);
     }   //FrcAnalogInput
 
@@ -64,7 +64,7 @@ public class FrcAnalogInput extends TrcAnalogInput
      */
     public FrcAnalogInput(String instanceName, int channel, TrcFilter[] filters)
     {
-        this(instanceName, channel, filters, DEF_MAX_VOLTAGE);
+        this(instanceName, channel, filters, false);
     }   //FrcAnalogInput
 
     /**
@@ -75,7 +75,7 @@ public class FrcAnalogInput extends TrcAnalogInput
      */
     public FrcAnalogInput(String instanceName, int channel)
     {
-        this(instanceName, channel, null);
+        this(instanceName, channel, null, false);
     }   //FrcAnalogInput
 
     /**
@@ -112,6 +112,7 @@ public class FrcAnalogInput extends TrcAnalogInput
             sensorData = sensor.getVoltage();
             if (dataType == DataType.NORMALIZED_DATA)
             {
+                double maxVoltage = powerRail3V3? RobotController.getCurrent3V3(): RobotController.getCurrent5V();
                 sensorData /= maxVoltage;
             }
         }
