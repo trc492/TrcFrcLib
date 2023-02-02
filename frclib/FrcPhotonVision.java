@@ -41,9 +41,9 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 /**
- * This class implements vision detection using PhotonLib.
+ * This class implements vision detection using PhotonLib extending PhotonCamera.
  */
-public class FrcPhotonVision
+public class FrcPhotonVision extends PhotonCamera
 {
     /**
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
@@ -121,7 +121,6 @@ public class FrcPhotonVision
     }   //class DetectedObject
 
     private final TrcVisionPerformanceMetrics performanceMetrics = new TrcVisionPerformanceMetrics();
-    public final PhotonCamera camera;
     private final TrcDbgTrace tracer;
 
     /**
@@ -132,7 +131,7 @@ public class FrcPhotonVision
      */
     public FrcPhotonVision(String cameraName, TrcDbgTrace tracer)
     {
-        camera = new PhotonCamera(cameraName);
+        super(cameraName);
         this.tracer = tracer;
     }   //FrcPhotonVision
 
@@ -144,7 +143,7 @@ public class FrcPhotonVision
     @Override
     public String toString()
     {
-        return camera.getName();
+        return getName();
     }   //toString
 
     /**
@@ -157,7 +156,7 @@ public class FrcPhotonVision
         final String funcName = "getDetectedObjects";
         DetectedObject[] detectedObjs = null;
         double startTime = TrcTimer.getCurrentTime();
-        PhotonPipelineResult result = camera.getLatestResult();
+        PhotonPipelineResult result = getLatestResult();
         performanceMetrics.logProcessingTime(startTime);
         performanceMetrics.printMetrics(tracer);
 
@@ -190,7 +189,7 @@ public class FrcPhotonVision
     {
         final String funcName = "getBestDetectedObject";
         DetectedObject bestDetectedObj = null;
-        PhotonPipelineResult result = camera.getLatestResult();
+        PhotonPipelineResult result = getLatestResult();
 
         if (result.hasTargets())
         {
@@ -205,45 +204,5 @@ public class FrcPhotonVision
 
         return bestDetectedObj;
     }   //getBestDetectedObject
-
-    /**
-     * This method returns the latest photon pipeline detection result.
-     *
-     * @return latest pipeline result.
-     */
-    public PhotonPipelineResult getLatestResult()
-    {
-        return camera.getLatestResult();
-    }   //getLatestResult
-
-    /**
-     * This method checks if photon has the latest detected targets.
-     *
-     * @return true if has the latest targets, false otherwise.
-     */
-    public boolean hasLatestTarget()
-    {
-        return camera.getLatestResult().hasTargets();
-    }   //hasLatestTarget
-
-    /**
-     * This method returns a list of the latest detected targets.
-     *
-     * @return list of the latest detected targets.
-     */
-    public List<PhotonTrackedTarget> getLatestTargets()
-    {
-        return camera.getLatestResult().getTargets();
-    }   //getLatestTargets
-
-    /**
-     * This method returns the best of the latest detected targets.
-     *
-     * @return best of the latest detected targets.
-     */
-    public PhotonTrackedTarget getLatestBestTarget()
-    {
-        return camera.getLatestResult().getBestTarget();
-    }   //getLatestBestTarget
 
 }   //class PhotonVision
