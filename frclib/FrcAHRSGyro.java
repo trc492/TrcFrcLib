@@ -94,7 +94,7 @@ public class FrcAHRSGyro extends TrcGyro
         }
         else if (dataType == DataType.HEADING)
         {
-            throw new UnsupportedOperationException("Gyro does not support x-axis heading.");
+            value = ahrs.getPitch();
         }
         SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
 
@@ -129,7 +129,7 @@ public class FrcAHRSGyro extends TrcGyro
         }
         else if (dataType == DataType.HEADING)
         {
-            throw new UnsupportedOperationException("Gyro does not support y-axis heading.");
+            value = ahrs.getRoll();
         }
         SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
 
