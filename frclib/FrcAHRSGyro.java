@@ -76,7 +76,7 @@ public class FrcAHRSGyro extends TrcGyro
      * This method returns the raw data of the specified type for the x-axis which is not supported.
      *
      * @param dataType specifies the data type.
-     * @return throws UnsupportedOperation exception.
+     * @return raw data of the specified type for the x-axis.
      */
     public SensorData<Double> getRawXData(DataType dataType)
     {
@@ -111,7 +111,7 @@ public class FrcAHRSGyro extends TrcGyro
      * This method returns the raw data of the specified type for the y-axis which is not supported.
      *
      * @param dataType specifies the data type.
-     * @return throws UnsupportedOperation exception.
+     * @return raw data of the specified type for the y-axis.
      */
     public SensorData<Double> getRawYData(DataType dataType)
     {
@@ -146,7 +146,7 @@ public class FrcAHRSGyro extends TrcGyro
      * This method returns the raw data of the specified type for the z-axis.
      *
      * @param dataType specifies the data type.
-     * @return raw data of the specified type for the z-axis in degrees per second.
+     * @return raw data of the specified type for the z-axis.
      */
     public SensorData<Double> getRawZData(DataType dataType)
     {
@@ -249,7 +249,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getXHeading()
     {
-        throw new UnsupportedOperationException("Gyro does not support x-axis heading.");
+        return new SensorData<>(TrcTimer.getCurrentTime(), xSign*ahrs.getPitch());
     }   //getXHeading
 
     /**
@@ -261,7 +261,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getYHeading()
     {
-        throw new UnsupportedOperationException("Gyro does not support y-axis heading.");
+        return new SensorData<>(TrcTimer.getCurrentTime(), ySign*ahrs.getRoll());
     }   //getYHeading
 
     /**
