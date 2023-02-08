@@ -205,4 +205,4 @@ public class FrcPhotonVision extends PhotonCamera
         return bestDetectedObj;
     }   //getBestDetectedObject
 
-}   //class PhotonVision
+}   //class FrcPhotonVision
