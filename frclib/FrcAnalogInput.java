@@ -34,8 +34,8 @@ import TrcCommonLib.trclib.TrcTimer;
  */
 public class FrcAnalogInput extends TrcAnalogInput
 {
-    private final boolean powerRail3V3;
-    private AnalogInput sensor;
+    private final boolean powerRailIs3V3;
+    private final AnalogInput sensor;
     private double sensorData;
 
     /**
@@ -45,12 +45,12 @@ public class FrcAnalogInput extends TrcAnalogInput
      * @param channel specifies the analog input channel.
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
      *                is used, this can be set to null.
-     * @param powerRail3V3 specifies true if analog power rail is 3.3V instead of 5V, false if 5V.
+     * @param powerRailIs3V3 specifies true if analog power rail is 3.3V, false if 5V.
      */
-    public FrcAnalogInput(String instanceName, int channel, TrcFilter[] filters, boolean powerRail3V3)
+    public FrcAnalogInput(String instanceName, int channel, TrcFilter[] filters, boolean powerRailIs3V3)
     {
         super(instanceName, 1, 0, filters);
-        this.powerRail3V3 = powerRail3V3;
+        this.powerRailIs3V3 = powerRailIs3V3;
         sensor = new AnalogInput(channel);
     }   //FrcAnalogInput
 
@@ -103,23 +103,19 @@ public class FrcAnalogInput extends TrcAnalogInput
         SensorData<Double> data;
 
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordStartTime();
-        if (dataType == DataType.RAW_DATA)
+        if (dataType == DataType.RAW_DATA || dataType == DataType.INPUT_DATA)
         {
             sensorData = sensor.getVoltage();
         }
-        else if (dataType == DataType.INPUT_DATA || dataType == DataType.NORMALIZED_DATA)
+        else if (dataType == DataType.NORMALIZED_DATA)
         {
-            sensorData = sensor.getVoltage();
-            if (dataType == DataType.NORMALIZED_DATA)
-            {
-                double maxVoltage = powerRail3V3? RobotController.getCurrent3V3(): RobotController.getCurrent5V();
-                sensorData /= maxVoltage;
-            }
+            double maxVoltage = powerRailIs3V3? RobotController.getVoltage3V3(): RobotController.getVoltage5V();
+            sensorData = sensor.getVoltage()/maxVoltage;
         }
         else
         {
             throw new UnsupportedOperationException(
-                    "AnalogInput sensor only support INPUT_DATA/NORMALIZED_DATA types.");
+                "AnalogInput sensor only support RAW_DATA/INPUT_DATA/NORMALIZED_DATA types.");
         }
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordEndTime();
         data = new SensorData<>(TrcTimer.getCurrentTime(), sensorData);

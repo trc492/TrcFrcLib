@@ -22,16 +22,40 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.first.wpilibj.AnalogEncoder;
+import TrcCommonLib.trclib.TrcAnalogInput;
+import TrcCommonLib.trclib.TrcCardinalConverter;
+import TrcCommonLib.trclib.TrcAnalogInput.DataType;
 
 /**
- * This class implements an Analog Encoders by extending WPILib AnalogEncoder and also implements the FrcEncoder
- * interface to allow compatibility to other types of encoders.
+ * This class implements an Analog Absolute Encoders that implements the FrcEncoder interface to allow compatibility
+ * to other types of encoders.
  */
-public class FrcAnalogEncoder extends AnalogEncoder implements FrcEncoder
+public class FrcAnalogEncoder implements FrcEncoder
 {
     private final String instanceName;
+    private final FrcAnalogInput analogInput;
+    private final TrcCardinalConverter<TrcAnalogInput.DataType> cardinalConverter;
     private double sign = 1.0;
+    private double scale = 1.0;
+    private double offset = 0.0;
+
+    /**
+     * Constructor: Creates an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param channel specifies the analog channel for the encoder.
+     * @param powerRailIs3V3 specifies true if analog power rail is 3.3V, false if 5V.
+     */
+    public FrcAnalogEncoder(String instanceName, int channel, boolean powerRailIs3V3)
+    {
+        this.instanceName = instanceName;
+        analogInput = new FrcAnalogInput(instanceName, channel, null, powerRailIs3V3);
+        cardinalConverter = new TrcCardinalConverter<TrcAnalogInput.DataType>(
+            instanceName, analogInput, TrcAnalogInput.DataType.NORMALIZED_DATA);
+        // Data provided to the Cardinal Converter is normalized to the range of 0.0 to 1.0 regardless of the analog
+        // power rail being 3.3V or 5V.
+        cardinalConverter.setCardinalRange(0, 0.0, 1.0);
+    }   //FrcAnalogEncoder
 
     /**
      * Constructor: Creates an instance of the object.
@@ -41,8 +65,7 @@ public class FrcAnalogEncoder extends AnalogEncoder implements FrcEncoder
      */
     public FrcAnalogEncoder(String instanceName, int channel)
     {
-        super(channel);
-        this.instanceName = instanceName;
+        this(instanceName, channel, false);
     }   //FrcAnalogEncoder
 
     /**
@@ -56,9 +79,38 @@ public class FrcAnalogEncoder extends AnalogEncoder implements FrcEncoder
         return instanceName;
     }   //toString
 
+    /**
+     * This method enables/disables the Cardinal Converter task.
+     *
+     * @param enabled specifies true to enable cardinal converter, false to disable.
+     */
+    public void setEnabled(boolean enabled)
+    {
+        cardinalConverter.setEnabled(enabled);
+    }   //setEnabled
+
+    /**
+     * This method checks if the Cardinal Converter task is enabled.
+     *
+     * @return true if cardinal converter is enabled, false if disabled.
+     */
+    public boolean isEnabled()
+    {
+        return cardinalConverter.isEnabled();
+    }   //isEnabled
+
     //
     // Implements the FrcEncoder interface.
     //
+
+    /**
+     * This method resets the encoder revolution counter (Cardinal Converter).
+     */
+    @Override
+    public void reset()
+    {
+        cardinalConverter.reset(0);
+    }   //reset
 
     /**
      * This method reads the raw analog input of the encoder.
@@ -68,7 +120,7 @@ public class FrcAnalogEncoder extends AnalogEncoder implements FrcEncoder
     @Override
     public double getRawPosition()
     {
-        return super.getAbsolutePosition();
+        return analogInput.getRawData(0, DataType.RAW_DATA).value;
     }   //getRawPosition
 
     /**
@@ -79,7 +131,7 @@ public class FrcAnalogEncoder extends AnalogEncoder implements FrcEncoder
     @Override
     public double getPosition()
     {
-        return sign * super.getDistance();
+        return sign * (cardinalConverter.getCartesianData(0).value - offset) * scale;
     }   //getPosition
 
     /**
@@ -102,8 +154,8 @@ public class FrcAnalogEncoder extends AnalogEncoder implements FrcEncoder
     @Override
     public void setScaleAndOffset(double scale, double offset)
     {
-        super.setDistancePerRotation(scale);
-        super.setPositionOffset(offset);
+        this.scale = scale;
+        this.offset = offset;
     }   //setScaleAndOffset
 
 }   //class FrcAnalogEncoder
