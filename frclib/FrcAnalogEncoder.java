@@ -113,14 +113,14 @@ public class FrcAnalogEncoder implements FrcEncoder
     }   //reset
 
     /**
-     * This method reads the raw analog input of the encoder.
+     * This method reads the normalized analog input of the encoder.
      *
-     * @return raw input of the encoder in the unit of percent rotation (0 to 1).
+     * @return normalized input of the encoder in the unit of percent rotation (0 to 1).
      */
     @Override
     public double getRawPosition()
     {
-        return analogInput.getRawData(0, DataType.RAW_DATA).value;
+        return analogInput.getRawData(0, DataType.NORMALIZED_DATA).value;
     }   //getRawPosition
 
     /**
@@ -131,6 +131,8 @@ public class FrcAnalogEncoder implements FrcEncoder
     @Override
     public double getPosition()
     {
+        // getCartesianData returns the normalized reading from AnalogInput.
+        // Offset must also be normalized.
         return sign * (cardinalConverter.getCartesianData(0).value - offset) * scale;
     }   //getPosition
 

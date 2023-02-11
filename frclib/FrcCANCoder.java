@@ -94,6 +94,7 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
     @Override
     public double getPosition()
     {
+        // Offset must be in the same unit as the absolute position.
         return (super.getAbsolutePosition() - offset) * scale;
     }   //getPosition
 
