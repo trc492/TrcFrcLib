@@ -24,14 +24,15 @@
  
 import java.util.Locale;
 
+import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidActuator;
 
 /**
- * This class implements a CAN Falcon motor actuator. A motor actuator consists of a Falcon motor, a lower limit
+ * This class implements a generic motor actuator. A motor actuator consists of a motor, a lower limit
  * switch and an optional upper limit switch. It creates all the necessary components for a PID controlled actuator
  * which includes a PID controller and a PID controlled actuator.
  */
-public class FrcFalconActuator
+public class FrcMotorActuator
 {
     /**
      * This class contains all the parameters related to the actuator motor.
@@ -112,19 +113,19 @@ public class FrcFalconActuator
 
     }   //class MotorParams
 
-    private final FrcCANFalcon actuatorMotor;
+    private final TrcMotor actuatorMotor;
     private final TrcPidActuator pidActuator;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param canId specifies the CAN ID of the motor.
+     * @param actuatorMotor specifies the actuator motor.
      * @param motorParams specifies the parameters to set up the actuator motor.
      * @param actuatorParams specifies the parameters to set up the PID actuator.
      */
-    public FrcFalconActuator(
-        String instanceName, int canId, MotorParams motorParams, TrcPidActuator.Parameters actuatorParams)
+    public FrcMotorActuator(
+        String instanceName, TrcMotor actuatorMotor, MotorParams motorParams, TrcPidActuator.Parameters actuatorParams)
     {
         FrcDigitalInput lowerLimitSwitch, upperLimitSwitch;
 
@@ -148,13 +149,7 @@ public class FrcFalconActuator
             upperLimitSwitch = null;
         }
 
-        actuatorMotor = new FrcCANFalcon(instanceName + ".motor", canId);
-        actuatorMotor.motor.configFactoryDefault();
-        if (motorParams.batteryNominalVoltage > 0.0)
-        {
-            actuatorMotor.motor.configVoltageCompSaturation(motorParams.batteryNominalVoltage);
-            actuatorMotor.motor.enableVoltageCompensation(true);
-        }
+        this.actuatorMotor = actuatorMotor;
         actuatorMotor.setBrakeModeEnabled(true);
         actuatorMotor.setInverted(motorParams.motorInverted);
 
@@ -188,9 +183,9 @@ public class FrcFalconActuator
      *
      * @return motor object.
      */
-    public FrcCANFalcon getMotor()
+    public TrcMotor getMotor()
     {
         return actuatorMotor;
     }   //getMotor
 
-}   //class FrcFalconActuator
+}   //class FrcMotorActuator
