@@ -99,6 +99,16 @@ public class FrcAnalogEncoder implements FrcEncoder
         return cardinalConverter.isEnabled();
     }   //isEnabled
 
+    /**
+     * This method reads the raw voltage from the analog input of the encoder.
+     *
+     * @return raw voltage of the analog encoder.
+     */
+    public double getRawVoltage()
+    {
+        return analogInput.getRawData(0, DataType.RAW_DATA).value;
+    }   //getRawVoltage
+
     //
     // Implements the FrcEncoder interface.
     //
