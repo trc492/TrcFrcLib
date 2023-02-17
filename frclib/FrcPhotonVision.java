@@ -30,12 +30,17 @@ import org.photonvision.targeting.TargetCorner;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicReference;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcEvent;
+import TrcCommonLib.trclib.TrcRobot;
+import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcUtil;
 import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
+import TrcCommonLib.trclib.TrcTaskMgr.TaskType;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -122,6 +127,12 @@ public class FrcPhotonVision extends PhotonCamera
 
     private final TrcVisionPerformanceMetrics performanceMetrics = new TrcVisionPerformanceMetrics();
     private final TrcDbgTrace tracer;
+    private final TrcTaskMgr.TaskObject visionTaskObj;
+    private AtomicReference<DetectedObject[]> lastDetectedObjects = new AtomicReference<>();
+    private AtomicReference<DetectedObject> lastDetectedBestObject = new AtomicReference<>();
+    private TrcEvent completionEvent = null;
+    private double expireTime = 0.0;
+    private boolean detectBest = false;
 
     /**
      * Constructor: Create an instance of the object.
@@ -133,6 +144,7 @@ public class FrcPhotonVision extends PhotonCamera
     {
         super(cameraName);
         this.tracer = tracer;
+        visionTaskObj = TrcTaskMgr.createTask(cameraName + ".visionTask", this::visionTask);
     }   //FrcPhotonVision
 
     /**
@@ -145,6 +157,94 @@ public class FrcPhotonVision extends PhotonCamera
     {
         return getName();
     }   //toString
+
+    /**
+     * This method cancels pending detection request if any.
+     */
+    public void cancel()
+    {
+        visionTaskObj.unregisterTask();
+    }   //cancel
+
+    /**
+     * This method start a detection request. If there is already a pending request, this will fail and return false.
+     *
+     * @param event specifies the event to signal if detection request is completed.
+     * @param timeout specifies the maximum timeout allowed for the detection. If failed to detect objects past
+     *        timeout, event will be signaled. Caller is responsible to check if there is valid detection result.
+     * @retrun true if detection request is started, false if there is already a pending request.
+     */
+    public boolean detectObjects(TrcEvent event, double timeout)
+    {
+        boolean success = false;
+
+        if (event == null || timeout <= 0.0)
+        {
+            throw new IllegalArgumentException("Must provide a non-null event and a valid timeout.");
+        }
+
+        if (!visionTaskObj.isRegistered())
+        {
+            lastDetectedObjects.set(null);
+            completionEvent = event;
+            expireTime = TrcTimer.getCurrentTime() + timeout;
+            detectBest = false;
+            visionTaskObj.registerTask(TaskType.PRE_PERIODIC_TASK);
+            success = true;
+        }
+
+        return success;
+    }   //detectObjects
+
+    /**
+     * This method start a detection request. If there is already a pending request, this will fail and return false.
+     *
+     * @param event specifies the event to signal if detection request is completed.
+     * @param timeout specifies the maximum timeout allowed for the detection. If failed to detect objects past
+     *        timeout, event will be signaled. Caller is responsible to check if there is valid detection result.
+     * @retrun true if detection request is started, false if there is already a pending request.
+     */
+    public boolean detectBestObject(TrcEvent event, double timeout)
+    {
+        boolean success = false;
+
+        if (event == null || timeout <= 0.0)
+        {
+            throw new IllegalArgumentException("Must provide a non-null event and a valid timeout.");
+        }
+
+        if (!visionTaskObj.isRegistered())
+        {
+            lastDetectedBestObject.set(null);
+            completionEvent = event;
+            expireTime = TrcTimer.getCurrentTime() + timeout;
+            detectBest = true;
+            visionTaskObj.registerTask(TaskType.PRE_PERIODIC_TASK);
+            success = true;
+        }
+
+        return success;
+    }   //detectBestObject
+
+    /**
+     * This method returns the last vision detected objects. This call consumes the detected objects.
+     *
+     * @return array of last detected objects.
+     */
+    public DetectedObject[] getLastDetectedObjects()
+    {
+        return lastDetectedObjects.getAndSet(null);
+    }   //getLastDetectedObjects
+
+    /**
+     * This method returns the last vision detected best object. This call consumes the detected object.
+     *
+     * @return last detected best object.
+     */
+    public DetectedObject getLastDetectedBestObject()
+    {
+        return lastDetectedBestObject.getAndSet(null);
+    }   //getLastDetectedBestObject
 
     /**
      * This method returns the array of detected objects.
@@ -204,5 +304,40 @@ public class FrcPhotonVision extends PhotonCamera
 
         return bestDetectedObj;
     }   //getBestDetectedObject
+
+    /**
+     * This methods is called periodically to check if vision has detected objects.
+     *
+     * @param taskType specifies the type of task being run.
+     * @param runMode specifies the competition mode (e.g. Autonomous, TeleOp, Test).
+     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
+     *        false otherwise.
+     */
+    private void visionTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
+    {
+        boolean detected = false;
+
+        if (detectBest)
+        {
+            DetectedObject detectedBestObj = getBestDetectedObject();
+            detected = lastDetectedBestObject != null;
+            lastDetectedBestObject.set(detectedBestObj);
+        }
+        else
+        {
+            DetectedObject[] detectedObjs = getDetectedObjects();
+            detected = detectedObjs != null;
+            lastDetectedObjects.set(detectedObjs);
+        }
+
+        if (detected || TrcTimer.getCurrentTime() >= expireTime)
+        {
+            // Either we have detected objects or we have timed out, signal completion and disable task. 
+            completionEvent.signal();
+            completionEvent = null;
+            expireTime = 0.0;
+            visionTaskObj.unregisterTask();
+        }
+    }   //visionTask
 
 }   //class FrcPhotonVision
