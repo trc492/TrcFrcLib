@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcEvent;
+import TrcCommonLib.trclib.TrcPose2D;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcTimer;
@@ -126,6 +127,8 @@ public class FrcPhotonVision extends PhotonCamera
     }   //class DetectedObject
 
     private final TrcVisionPerformanceMetrics performanceMetrics = new TrcVisionPerformanceMetrics();
+    private final double camHeightInches;
+    private final double camPitchRadians;
     private final TrcDbgTrace tracer;
     private final TrcTaskMgr.TaskObject visionTaskObj;
     private AtomicReference<DetectedObject[]> lastDetectedObjects = new AtomicReference<>();
@@ -138,11 +141,15 @@ public class FrcPhotonVision extends PhotonCamera
      * Constructor: Create an instance of the object.
      *
      * @param cameraName specifies the photon vision camera name.
+     * @param camHeight specifies the camera height from the ground in inches.
+     * @param camPitch specifies the camera pitch angle from horizontal in degrees.
      * @param tracer specifies the tracer for trace info, null if none provided.
      */
-    public FrcPhotonVision(String cameraName, TrcDbgTrace tracer)
+    public FrcPhotonVision(String cameraName, double camHeight, double camPitch, TrcDbgTrace tracer)
     {
         super(cameraName);
+        this.camHeightInches = camHeight;
+        this.camPitchRadians = Math.toRadians(camPitch);
         this.tracer = tracer;
         visionTaskObj = TrcTaskMgr.createTask(cameraName + ".visionTask", this::visionTask);
     }   //FrcPhotonVision
@@ -304,6 +311,26 @@ public class FrcPhotonVision extends PhotonCamera
 
         return bestDetectedObj;
     }   //getBestDetectedObject
+
+    /**
+     * This method calculates the pose of the detected object given the height offset of the object from ground.
+     *
+     * @param detectedObj specifies the detected object.
+     * @param targetHeightInches specifies the height offset of the object from ground.
+     * @return a 2D pose of the detected object from the camera.
+     */
+    public TrcPose2D getTargetPose2D(DetectedObject detectedObj, double targetHeightInches)
+    {
+        double targetYawDegrees = detectedObj.target.getYaw();
+        double targetYawRadians = Math.toRadians(targetYawDegrees);
+        double targetPitchRadians = Math.toRadians(detectedObj.target.getPitch());
+        double targetDistanceInches =
+            (targetHeightInches - camHeightInches)/Math.tan(camPitchRadians + targetPitchRadians);
+
+        return new TrcPose2D(
+            targetDistanceInches * Math.sin(targetYawRadians), targetDistanceInches * Math.cos(targetYawRadians),
+            targetYawDegrees);
+    }   //getTargetPose2D
 
     /**
      * This methods is called periodically to check if vision has detected objects.
