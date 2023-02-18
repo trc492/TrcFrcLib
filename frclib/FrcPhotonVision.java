@@ -102,15 +102,22 @@ public class FrcPhotonVision extends PhotonCamera
         @Override
         public Rect getRect()
         {
+            Rect rect = null;
             List<TargetCorner> corners = target.getDetectedCorners();
-            TargetCorner lowerLeftCorner = corners.get(0);
-            TargetCorner lowerRightCorner = corners.get(1);
-            TargetCorner upperRightCorner = corners.get(2);
-            TargetCorner upperLeftCorner = corners.get(3);
-            double width = ((upperRightCorner.x - upperLeftCorner.x) + (lowerRightCorner.x - lowerLeftCorner.x))/2.0;
-            double height = ((lowerLeftCorner.y - upperLeftCorner.y) + (lowerRightCorner.y - upperRightCorner.y))/2.0;
 
-            return new Rect((int)upperLeftCorner.x, (int)upperLeftCorner.y, (int)width, (int)height);
+            if (corners != null && corners.size() >= 4)
+            {
+                TargetCorner lowerLeftCorner = corners.get(0);
+                TargetCorner lowerRightCorner = corners.get(1);
+                TargetCorner upperRightCorner = corners.get(2);
+                TargetCorner upperLeftCorner = corners.get(3);
+                double width = ((upperRightCorner.x - upperLeftCorner.x) + (lowerRightCorner.x - lowerLeftCorner.x))/2.0;
+                double height = ((lowerLeftCorner.y - upperLeftCorner.y) + (lowerRightCorner.y - upperRightCorner.y))/2.0;
+
+                rect = new Rect((int)upperLeftCorner.x, (int)upperLeftCorner.y, (int)width, (int)height);
+            }
+
+            return rect;
         }   //getRect
 
         /**
@@ -321,15 +328,23 @@ public class FrcPhotonVision extends PhotonCamera
      */
     public TrcPose2D getTargetPose2D(DetectedObject detectedObj, double targetHeightInches)
     {
+        final String funcName = "getTargetPose2D";
         double targetYawDegrees = detectedObj.target.getYaw();
         double targetYawRadians = Math.toRadians(targetYawDegrees);
         double targetPitchRadians = Math.toRadians(detectedObj.target.getPitch());
         double targetDistanceInches =
             (targetHeightInches - camHeightInches)/Math.tan(camPitchRadians + targetPitchRadians);
-
-        return new TrcPose2D(
+        TrcPose2D targetPose = new TrcPose2D(
             targetDistanceInches * Math.sin(targetYawRadians), targetDistanceInches * Math.cos(targetYawRadians),
             targetYawDegrees);
+
+        if (tracer != null)
+        {
+            tracer.traceInfo(
+                funcName, "[%.3f] TargetPose=%s", TrcTimer.getModeElapsedTime(), targetPose);
+        }
+
+        return targetPose;
     }   //getTargetPose2D
 
     /**
