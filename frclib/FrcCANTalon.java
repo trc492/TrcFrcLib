@@ -22,7 +22,12 @@
 
 package TrcFrcLib.frclib;
 
+import com.ctre.phoenix.ErrorCode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+
+import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class implements a CANTalon motor controller. It extends the TrcMotor class and
@@ -30,6 +35,9 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
  */
 public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
 {
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
+    private static final boolean debugEnabled = false;
+
     /**
      * Constructor: Create an instance of the object.
      *
@@ -40,4 +48,33 @@ public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
     {
         super(instanceName, new TalonSRX(deviceNumber));
     }   //FrcCANTalon
+
+    public void setAbsoluteZeroOffset(int rangeLow, int rangeHigh, boolean crossZeroOnInterval, int zeroOffset)
+    {
+        final String funcName = "setAbsoluteZeroOffset";
+        ErrorCode error;
+        SensorCollection sensorCollection = motor.getSensorCollection();
+
+        error = sensorCollection.syncQuadratureWithPulseWidth(
+            rangeLow, rangeHigh, crossZeroOnInterval, -zeroOffset, 10);
+        if (error != ErrorCode.OK)
+        {
+            globalTracer.traceErr(funcName, "syncQuadratureWithPulseWidth failed (error=%s).", error.name());
+        }
+
+        error = motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 10);
+        if (error != ErrorCode.OK)
+        {
+            globalTracer.traceErr(funcName, "configSelectedFeedbackSensor failed (error=%s).", error.name());
+        }
+
+        if (debugEnabled)
+        {
+            globalTracer.traceInfo(
+                funcName, "zeroOffset=%d, pwmPos=%d, quadPos=%d, selectedPos=%.3f",
+                zeroOffset, sensorCollection.getPulseWidthPosition(), sensorCollection.getQuadraturePosition(),
+                motor.getSelectedSensorPosition());
+        }
+    }   //setAbsoluteZeroOffset
+
 }   //class FrcCANTalon

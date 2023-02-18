@@ -80,6 +80,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         super(instanceName);
         motor = baseTalon;
+        motor.configFactoryDefault();
         resetMotorPosition();
     }   //FrcCANPhoenixController
 
@@ -132,6 +133,28 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         }
         return errorCode;
     }   //recordResponseCode
+
+    /**
+     * This method enables voltage compensation so that it will maintain the motor output regardless of battery
+     * voltage.
+     *
+     * @param batteryNominalVoltage specifies the nominal voltage of the battery.
+     */
+    @Override
+    public void enableVoltageCompensation(double batteryNominalVoltage)
+    {
+        motor.configVoltageCompSaturation(batteryNominalVoltage);
+        motor.enableVoltageCompensation(true);
+    }   //enableVoltageCompensation
+
+    /**
+     * This method disables voltage compensation
+     */
+    @Override
+    public void disableVoltageCompensation()
+    {
+        motor.enableVoltageCompensation(false);
+    }   //disableVoltageCompensation
 
     /**
      * This method sets the motor controller to velocity mode with the specified maximum velocity.

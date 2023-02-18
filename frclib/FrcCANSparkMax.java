@@ -65,6 +65,7 @@ public class FrcCANSparkMax extends TrcMotor
         this.brushless = brushless;
         motor = new CANSparkMax(deviceId,
             brushless ? CANSparkMaxLowLevel.MotorType.kBrushless : CANSparkMaxLowLevel.MotorType.kBrushed);
+        motor.restoreFactoryDefaults();
         encoder = motor.getEncoder();
         fwdLimitSwitch = motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
         revLimitSwitch = motor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
@@ -134,6 +135,27 @@ public class FrcCANSparkMax extends TrcMotor
     public void disableVelocityMode()
     {
     }   //disableVelocityMode
+
+    /**
+     * This method enables voltage compensation so that it will maintain the motor output regardless of battery
+     * voltage.
+     *
+     * @param batteryNominalVoltage specifies the nominal voltage of the battery.
+     */
+    @Override
+    public void enableVoltageCompensation(double batteryNominalVoltage)
+    {
+        motor.enableVoltageCompensation(batteryNominalVoltage);
+    }   //enableVoltageCompensation
+
+    /**
+     * This method disables voltage compensation
+     */
+    @Override
+    public void disableVoltageCompensation()
+    {
+        motor.disableVoltageCompensation();
+    }   //disableVoltageCompensation
 
     //
     // Overriding TrcMotor specific methods.
