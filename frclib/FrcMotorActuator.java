@@ -24,6 +24,7 @@
  
 import java.util.Locale;
 
+import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidActuator;
 
@@ -113,8 +114,47 @@ public class FrcMotorActuator
 
     }   //class MotorParams
 
-    private final TrcMotor actuatorMotor;
-    private final TrcPidActuator pidActuator;
+    private TrcMotor actuatorMotor;
+    private TrcPidActuator pidActuator;
+
+    /**
+     * This method contains the common init code that will be called by all constructor.
+     *
+     * @param instanceName specifies the instance name.
+     * @param actuatorMotor specifies the actuator motor.
+     * @param lowerLimitSw specifies the lower limit switch object.
+     * @param upperLimitSw specifies the upper limit switch object.
+     * @param motorParams specifies the parameters to set up the actuator motor.
+     * @param actuatorParams specifies the parameters to set up the PID actuator.
+     */
+    private void commonInit(
+        String instanceName, TrcMotor actuatorMotor, TrcDigitalInput lowerLimitSw, TrcDigitalInput upperLimitSw,
+        MotorParams motorParams, TrcPidActuator.Parameters actuatorParams)
+    {
+        this.actuatorMotor = actuatorMotor;
+        actuatorMotor.setBrakeModeEnabled(true);
+        actuatorMotor.setInverted(motorParams.motorInverted);
+
+        pidActuator = new TrcPidActuator(
+            instanceName + ".pidActuator", actuatorMotor, lowerLimitSw, upperLimitSw, actuatorParams);
+    }   //commonInit
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param actuatorMotor specifies the actuator motor.
+     * @param lowerLimitSw specifies the lower limit switch object.
+     * @param upperLimitSw specifies the upper limit switch object.
+     * @param motorParams specifies the parameters to set up the actuator motor.
+     * @param actuatorParams specifies the parameters to set up the PID actuator.
+     */
+    public FrcMotorActuator(
+        String instanceName, TrcMotor actuatorMotor, TrcDigitalInput lowerLimitSw, TrcDigitalInput upperLimitSw,
+        MotorParams motorParams, TrcPidActuator.Parameters actuatorParams)
+    {
+        commonInit(instanceName, actuatorMotor, lowerLimitSw, upperLimitSw, motorParams, actuatorParams);
+    }   //FrcMotorActuator
 
     /**
      * Constructor: Create an instance of the object.
@@ -149,13 +189,8 @@ public class FrcMotorActuator
             upperLimitSwitch = null;
         }
 
-        this.actuatorMotor = actuatorMotor;
-        actuatorMotor.setBrakeModeEnabled(true);
-        actuatorMotor.setInverted(motorParams.motorInverted);
-
-        pidActuator = new TrcPidActuator(
-            instanceName + ".pidActuator", actuatorMotor, lowerLimitSwitch, upperLimitSwitch, actuatorParams);
-    }   //FrcFalconActuator
+        commonInit(instanceName, actuatorMotor, lowerLimitSwitch, upperLimitSwitch, motorParams, actuatorParams);
+    }   //FrcMotorActuator
 
     /**
      * This method returns the instance name.
