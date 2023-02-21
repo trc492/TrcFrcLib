@@ -176,6 +176,24 @@ public class FrcXboxController extends XboxController
     }
 
     /**
+     * This method overrides the method from the super class so that it will respect our inverted call.
+     */
+    @Override
+    public double getLeftY()
+    {
+        return leftYSign * super.getLeftY();
+    }   //getLeftY
+
+    /**
+     * This method overrides the method from the super class so that it will respect our inverted call.
+     */
+    @Override
+    public double getRightY()
+    {
+        return rightYSign * super.getRightY();
+    }   //getRightY
+
+    /**
      * This method returns the Y value of the left analog stick.
      *
      * @param squared specifies true to apply a squared curve to the output value, false otherwise.
@@ -183,7 +201,7 @@ public class FrcXboxController extends XboxController
      */
     public double getLeftYWithDeadband(boolean squared)
     {
-        return leftYSign * adjustValueWithDeadband(getLeftY(), squared, deadbandThreshold);
+        return adjustValueWithDeadband(getLeftY(), squared, deadbandThreshold);
     }
 
     /**
@@ -194,7 +212,7 @@ public class FrcXboxController extends XboxController
      */
     public double getRightYWithDeadband(boolean squared)
     {
-        return rightYSign * adjustValueWithDeadband(getRightY(), squared, deadbandThreshold);
+        return adjustValueWithDeadband(getRightY(), squared, deadbandThreshold);
     }
 
     /**

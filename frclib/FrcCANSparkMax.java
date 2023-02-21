@@ -67,8 +67,7 @@ public class FrcCANSparkMax extends TrcMotor
             brushless ? CANSparkMaxLowLevel.MotorType.kBrushless : CANSparkMaxLowLevel.MotorType.kBrushed);
         motor.restoreFactoryDefaults();
         encoder = motor.getEncoder();
-        fwdLimitSwitch = motor.getForwardLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
-        revLimitSwitch = motor.getReverseLimitSwitch(SparkMaxLimitSwitch.Type.kNormallyOpen);
+        fwdLimitSwitch = revLimitSwitch = null;
         resetPosition(true);
     }   //FrcCANSparkMax
 
@@ -333,7 +332,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isRevLimitSwitchActive()
     {
-        return revLimitSwitch.isPressed();
+        return revLimitSwitch != null && revLimitSwitch.isPressed();
     }   //isRevLimitSwitchClosed
 
     /**
@@ -344,7 +343,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isFwdLimitSwitchActive()
     {
-        return fwdLimitSwitch.isPressed();
+        return fwdLimitSwitch != null && fwdLimitSwitch.isPressed();
     }   //isFwdLimitSwitchActive
 
     /**
