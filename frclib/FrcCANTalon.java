@@ -49,6 +49,14 @@ public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
         super(instanceName, new TalonSRX(deviceNumber));
     }   //FrcCANTalon
 
+    /**
+     * This method synchronizes the internal encoder to the absolute zero position.
+     *
+     * @param rangeLow specifies the low range of the absolute encoder reading.
+     * @param rangeHigh specifies the high range of the absolute encoder reading.
+     * @param crossZeroOnInterval specifies true if the absoulte encoder will cross the zero point.
+     * @param zeroOffset specifies the encoder offset of the absolute zero position.
+     */
     public void setAbsoluteZeroOffset(int rangeLow, int rangeHigh, boolean crossZeroOnInterval, int zeroOffset)
     {
         final String funcName = "setAbsoluteZeroOffset";
