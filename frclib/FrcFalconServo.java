@@ -33,6 +33,7 @@ public class FrcFalconServo extends TrcServo
     private final FrcCANFalcon falcon;
     private final double degreesPerTick;
     private final double zeroPos;
+    private TalonFXControlMode controlMode = TalonFXControlMode.Position;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -61,6 +62,16 @@ public class FrcFalconServo extends TrcServo
         falcon.motor.configMotionCruiseVelocity(TrcUtil.round((maxSpeed / degreesPerTick) / 10));
         falcon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerTick) / 10));
     }   //FrcFalconServo
+
+    /**
+     * This method sets the motor control mode. Default control mode is Position mode.
+     *
+     * @param controlMode specifies the control mode to use in setting the motor position.
+     */
+    public void setControlMode(TalonFXControlMode controlMode)
+    {
+        this.controlMode = controlMode;
+    }   //setControlMode
 
     /**
      * This method inverts the servo motor direction.
@@ -93,8 +104,7 @@ public class FrcFalconServo extends TrcServo
     public void setLogicalPosition(double position)
     {
         double encPos = position * 360.0 / degreesPerTick + zeroPos;
-        // falcon.motor.set(ControlMode.MotionMagic, encPos);
-        falcon.motor.set(TalonFXControlMode.Position, encPos);
+        falcon.motor.set(controlMode, encPos);
     }   //setLogicalPosition
 
     /**
