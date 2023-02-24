@@ -22,6 +22,7 @@
 
 package TrcFrcLib.frclib;
 
+import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 
 import TrcCommonLib.trclib.TrcPidController;
@@ -54,13 +55,26 @@ public class FrcFalconServo extends TrcServo
         this.degreesPerTick = degreesPerTick;
         this.zeroPos = zeroPos;
 
-        falcon.motor.config_kP(0, pidCoefficients.kP);
-        falcon.motor.config_kI(0, pidCoefficients.kI);
-        falcon.motor.config_kD(0, pidCoefficients.kD);
-        falcon.motor.config_kF(0, pidCoefficients.kF);
-        falcon.motor.config_IntegralZone(0, TrcUtil.round(pidCoefficients.iZone));
-        falcon.motor.configMotionCruiseVelocity(TrcUtil.round((maxSpeed / degreesPerTick) / 10));
-        falcon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerTick) / 10));
+        // Set deadband to super small 0.001 (0.1 %). The default deadband is 0.04 (4 %).
+        falcon.motor.configNeutralDeadband(0.001, 30);
+        // Set relevant frame periods to be at least as fast as periodic rate.
+        falcon.motor.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, 30);
+        falcon.motor.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, 30);
+        // Set the peak and nominal outputs.
+        falcon.motor.configNominalOutputForward(0, 30);
+        falcon.motor.configNominalOutputReverse(0, 30);
+        falcon.motor.configPeakOutputForward(1, 30);
+        falcon.motor.configPeakOutputReverse(-1, 30);
+        // Set Motion Magic gains in slot0 - see documentation.
+        falcon.motor.selectProfileSlot(0, 0);
+        falcon.motor.config_kP(0, pidCoefficients.kP, 30);
+        falcon.motor.config_kI(0, pidCoefficients.kI, 30);
+        falcon.motor.config_kD(0, pidCoefficients.kD, 30);
+        falcon.motor.config_kF(0, pidCoefficients.kF, 30);
+        falcon.motor.config_IntegralZone(0, TrcUtil.round(pidCoefficients.iZone), 30);
+        // Set acceleration and vcruise velocity - see documentation.
+        falcon.motor.configMotionCruiseVelocity(TrcUtil.round((maxSpeed / degreesPerTick) / 10), 30);
+        falcon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerTick) / 10), 30);
     }   //FrcFalconServo
 
     /**

@@ -22,7 +22,9 @@
 
 package TrcFrcLib.frclib;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
+import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
+
 import TrcCommonLib.trclib.TrcPidController;
 import TrcCommonLib.trclib.TrcServo;
 import TrcCommonLib.trclib.TrcUtil;
@@ -31,6 +33,7 @@ public class FrcTalonServo extends TrcServo
 {
     private FrcCANTalon talon;
     private double degreesPerTick;
+    private TalonSRXControlMode controlMode = TalonSRXControlMode.Position;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -49,13 +52,26 @@ public class FrcTalonServo extends TrcServo
         this.talon = talon;
         this.degreesPerTick = degreesPerTick;
 
-        talon.motor.config_kP(0, pidCoefficients.kP);
-        talon.motor.config_kI(0, pidCoefficients.kI);
-        talon.motor.config_kD(0, pidCoefficients.kD);
-        talon.motor.config_kF(0, pidCoefficients.kF);
-        talon.motor.config_IntegralZone(0, TrcUtil.round(pidCoefficients.iZone));
-        talon.motor.configMotionCruiseVelocity(TrcUtil.round((maxSpeed / degreesPerTick) / 10));
-        talon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerTick) / 10));
+        // Set deadband to super small 0.001 (0.1 %). The default deadband is 0.04 (4 %).
+        talon.motor.configNeutralDeadband(0.001, 30);
+        // Set relevant frame periods to be at least as fast as periodic rate.
+        talon.motor.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, 30);
+        talon.motor.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, 30);
+        // Set the peak and nominal outputs.
+        talon.motor.configNominalOutputForward(0, 30);
+        talon.motor.configNominalOutputReverse(0, 30);
+        talon.motor.configPeakOutputForward(1, 30);
+        talon.motor.configPeakOutputReverse(-1, 30);
+        // Set Motion Magic gains in slot0 - see documentation.
+        talon.motor.selectProfileSlot(0, 0);
+        talon.motor.config_kP(0, pidCoefficients.kP, 30);
+        talon.motor.config_kI(0, pidCoefficients.kI, 30);
+        talon.motor.config_kD(0, pidCoefficients.kD, 30);
+        talon.motor.config_kF(0, pidCoefficients.kF, 30);
+        talon.motor.config_IntegralZone(0, TrcUtil.round(pidCoefficients.iZone), 30);
+        // Set acceleration and vcruise velocity - see documentation.
+        talon.motor.configMotionCruiseVelocity(TrcUtil.round((maxSpeed / degreesPerTick) / 10), 30);
+        talon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerTick) / 10), 30);
     }   //FrcTalonServo
 
     /**
@@ -89,7 +105,7 @@ public class FrcTalonServo extends TrcServo
     public void setLogicalPosition(double position)
     {
         int ticks = TrcUtil.round(position*360.0 / degreesPerTick);
-        talon.motor.set(ControlMode.MotionMagic, ticks);
+        talon.motor.set(controlMode, ticks);
     }   //setLogicalPosition
 
     /**
