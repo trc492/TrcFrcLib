@@ -82,7 +82,7 @@ public class FrcTalonServo extends TrcServo
     @Override
     public void setInverted(boolean inverted)
     {
-        talon.setInverted(inverted);
+        talon.setMotorInverted(inverted);
     }   //setInverted
 
     /**
@@ -93,7 +93,7 @@ public class FrcTalonServo extends TrcServo
     @Override
     public boolean isInverted()
     {
-        return talon.isInverted();
+        return talon.isMotorInverted();
     }   //isInverted
 
     /**

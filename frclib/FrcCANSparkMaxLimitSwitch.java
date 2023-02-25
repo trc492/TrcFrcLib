@@ -74,11 +74,11 @@ public class FrcCANSparkMaxLimitSwitch extends TrcDigitalInput
     {
         if (upperLimitSwitch)
         {
-            canSparkMax.configFwdLimitSwitchNormallyOpen(inverted);
+            canSparkMax.setFwdLimitSwitchInverted(inverted);
         }
         else
         {
-            canSparkMax.configRevLimitSwitchNormallyOpen(inverted);
+            canSparkMax.setRevLimitSwitchInverted(inverted);
         }
     }   //setInverted
 

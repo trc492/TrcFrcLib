@@ -95,7 +95,7 @@ public class FrcFalconServo extends TrcServo
     @Override
     public void setInverted(boolean inverted)
     {
-        falcon.setInverted(inverted);
+        falcon.setMotorInverted(inverted);
     }   //setInverted
 
     /**
@@ -106,7 +106,7 @@ public class FrcFalconServo extends TrcServo
     @Override
     public boolean isInverted()
     {
-        return falcon.isInverted();
+        return falcon.isMotorInverted();
     }   //isInverted
 
     /**

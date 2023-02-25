@@ -63,10 +63,10 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
      * @return true if the motor direction is inverted, false otherwise.
      */
     @Override
-    public boolean isInverted()
+    public boolean isMotorInverted()
     {
         return motor.getInverted();
-    }   //isInverted
+    }   //isMotorInverted
 
     /**
      * This method inverts the motor direction.
@@ -74,10 +74,10 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
      * @param inverted specifies true to invert motor direction, false otherwise.
      */
     @Override
-    public void setInverted(boolean inverted)
+    public void setMotorInverted(boolean inverted)
     {
         motor.setInverted(inverted);
-    }   //setInverted
+    }   //setMotorInverted
 
     /**
      * This method gets the last set power.

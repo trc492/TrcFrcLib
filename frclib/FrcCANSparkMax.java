@@ -23,7 +23,9 @@
 package TrcFrcLib.frclib;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxLimitSwitch.Type;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.REVLibError;
@@ -46,11 +48,15 @@ public class FrcCANSparkMax extends TrcMotor
     private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     private static final boolean debugEnabled = false;
 
-    private boolean brushless;
-    public CANSparkMax motor;
-    private RelativeEncoder encoder;
-    private SparkMaxLimitSwitch fwdLimitSwitch, revLimitSwitch;
-    private double currPower = 0.0;
+    public final CANSparkMax motor;
+    private final SparkMaxPIDController pidCtrl;
+    private final RelativeEncoder encoder;
+    private SparkMaxLimitSwitch revLimitSwitch, fwdLimitSwitch;
+    private double motorPower = 0.0;
+
+    // The number of non-success error codes reported by the device after sending a command.
+    private int errorCount = 0;
+    private REVLibError lastError = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -62,41 +68,53 @@ public class FrcCANSparkMax extends TrcMotor
     public FrcCANSparkMax(String instanceName, int deviceId, boolean brushless)
     {
         super(instanceName);
-        this.brushless = brushless;
         motor = new CANSparkMax(deviceId,
-            brushless ? CANSparkMaxLowLevel.MotorType.kBrushless : CANSparkMaxLowLevel.MotorType.kBrushed);
-        motor.restoreFactoryDefaults();
+            brushless? CANSparkMaxLowLevel.MotorType.kBrushless: CANSparkMaxLowLevel.MotorType.kBrushed);
+        pidCtrl = motor.getPIDController();
         encoder = motor.getEncoder();
-        fwdLimitSwitch = revLimitSwitch = null;
-        resetPosition(true);
+        revLimitSwitch = fwdLimitSwitch = null;
+        resetFactoryDefault();
+        resetPosition();
     }   //FrcCANSparkMax
 
     /**
-     * This method sets this motor to follow another motor. If the subclass is not capable of following another motor,
-     * it should throw an UnsupportedOperationException.
+     * This method returns the number of error responses seen from the motor after sending a command.
      *
-     * @throws UnsupportedOperationException if hardware does not support it.
+     * @return The number of non-OK error code responses seen from the motor
+     * after sending a command.
      */
-    @Override
-    public void followMotor(TrcMotor motor)
+    public int getErrorCount()
     {
-        if (motor instanceof FrcCANSparkMax)
+        return errorCount;
+    } //getErrorCount
+
+    /**
+     * The method returns the last error code. If there is none, null is returned.
+     *
+     * @return last error code.
+     */
+    public REVLibError getLastError()
+    {
+        return lastError;
+    }   //getLastError
+
+    /**
+     * This method checks for error code returned by the motor controller executing the last command. If there was
+     * an error, the error count is incremented.
+     *
+     * @param operation specifies the operation that failed.
+     * @param errorCode specifies the error code returned by the motor controller.
+     */
+    private REVLibError recordResponseCode(String operation, REVLibError errorCode)
+    {
+        lastError = errorCode;
+        if (errorCode != null && !errorCode.equals(REVLibError.kOk))
         {
-            FrcCANSparkMax sparkMax = (FrcCANSparkMax) motor;
-            this.motor.follow(sparkMax.motor);
+            errorCount++;
+            globalTracer.traceErr(instanceName + ".recordResponseCode", "%s (ErrCode=%s)", operation, errorCode);
         }
-        else if (motor instanceof FrcCANTalon)
-        {
-            FrcCANTalon talon = (FrcCANTalon) motor;
-            this.motor.follow(CANSparkMax.ExternalFollower.kFollowerPhoenix, talon.motor.getDeviceID());
-        }
-        else
-        {
-            // Unknown motor type, add this motor to the follow list of the other motor and let TrcMotor simulates
-            // motor following.
-            motor.addFollowingMotor(this);
-        }
-    }   //follow
+        return errorCode;
+    }   //recordResponseCode
 
     /**
      * This method returns the motor type.
@@ -105,35 +123,69 @@ public class FrcCANSparkMax extends TrcMotor
      */
     public boolean isBrushless()
     {
-        return brushless;
+        return motor.getMotorType() == MotorType.kBrushless;
     }   //isBrushless
 
-    /**
-     * This method sets the motor controller to velocity mode with the specified maximum velocity.
-     *
-     * @param maxVelocity     specifies the maximum velocity the motor can run, in sensor units per second.
-     * @param pidCoefficients specifies the PIDF coefficients to send to the Talon to use for velocity control.
-     */
-    @Override
-    public void enableVelocityMode(double maxVelocity, TrcPidController.PidCoefficients pidCoefficients)
-    {
-        if (pidCoefficients != null)
-        {
-            SparkMaxPIDController pidController = motor.getPIDController();
-            pidController.setP(pidCoefficients.kP);
-            pidController.setI(pidCoefficients.kI);
-            pidController.setD(pidCoefficients.kD);
-            pidController.setFF(pidCoefficients.kF);
-        }
-    }   //enableVelocityMode
+    //
+    // Implements TrcMotorController interface.
+    //
 
     /**
-     * This method disables velocity mode returning it to power mode.
+     * This method resets the motor controller configurations to factory default so that everything is at known state.
      */
     @Override
-    public void disableVelocityMode()
+    public void resetFactoryDefault()
     {
-    }   //disableVelocityMode
+        recordResponseCode("restoreFactoryDefault", motor.restoreFactoryDefaults());
+    }   //resetFactoryDefault
+
+    /**
+     * This method checks if the SparkMax is connected to the robot. This does NOT say anything about the connection
+     * status of the motor.
+     *
+     * @return true if the SparkMax is connected, false otherwise.
+     */
+    @Override
+    public boolean isConnected()
+    {
+        // Hacky, but should work
+        return motor.getFirmwareString() != null;
+    }   //isConnected
+
+    /**
+     * This method sets this motor to follow another motor.
+     *
+     * @param otherMotor specifies the other motor to follow.
+     */
+    @Override
+    public void followMotor(TrcMotor otherMotor)
+    {
+        if (otherMotor instanceof FrcCANSparkMax)
+        {
+            recordResponseCode("follow", motor.follow(((FrcCANSparkMax) otherMotor).motor));
+        }
+        else if (otherMotor instanceof FrcCANTalon)
+        {
+            recordResponseCode("follow", motor.follow(
+                CANSparkMax.ExternalFollower.kFollowerPhoenix, ((FrcCANTalon) otherMotor).motor.getDeviceID()));
+        }
+        else
+        {
+            // Unknow motor type, let TrcMotor simulate it.
+            super.followMotor(otherMotor);
+        }
+    }   //followMotor
+
+    /**
+     * This method returns the bus voltage of the motor controller.
+     *
+     * @return bus voltage of the motor controller.
+     */
+    @Override
+    public double getBusVoltage()
+    {
+        return motor.getBusVoltage();
+    }   //getBusVoltage
 
     /**
      * This method enables voltage compensation so that it will maintain the motor output regardless of battery
@@ -144,7 +196,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void enableVoltageCompensation(double batteryNominalVoltage)
     {
-        motor.enableVoltageCompensation(batteryNominalVoltage);
+        recordResponseCode("enableVoltageCompensation", motor.enableVoltageCompensation(batteryNominalVoltage));
     }   //enableVoltageCompensation
 
     /**
@@ -153,176 +205,84 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void disableVoltageCompensation()
     {
-        motor.disableVoltageCompensation();
+        recordResponseCode("disableVoltageCompensation", motor.disableVoltageCompensation());
     }   //disableVoltageCompensation
 
-    //
-    // Overriding TrcMotor specific methods.
-    //
-
     /**
-     * This method configures the forward limit switch to be normally open (i.e. active when close).
+     * This method checks if voltage compensation is enabled.
      *
-     * @param normalOpen specifies true for normal open, false for normal close.
-     */
-    public void configFwdLimitSwitchNormallyOpen(boolean normalOpen)
-    {
-        fwdLimitSwitch = motor.getForwardLimitSwitch(normalOpen ? Type.kNormallyOpen : Type.kNormallyClosed);
-    }   //configFwdLimitSwitchNormallyOpen
-
-    /**
-     * This method configures the reverse limit switch to be normally open (i.e. active when close).
-     *
-     * @param normalOpen specifies true for normal open, false for normal close.
-     */
-    public void configRevLimitSwitchNormallyOpen(boolean normalOpen)
-    {
-        revLimitSwitch = motor.getReverseLimitSwitch(normalOpen ? Type.kNormallyOpen : Type.kNormallyClosed);
-    }   //configRevLimitSwitchNormallyOpen
-
-    // /**
-    //  * This method sets the feedback device type.
-    //  *
-    //  * @param devType specifies the feedback device type.
-    //  */
-    // public void setFeedbackDevice(FeedbackDevice devType)
-    // {
-    //     final String funcName = "setFeedbackDevice";
-
-    //     if (debugEnabled)
-    //     {
-    //         dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "devType=%s", devType.toString());
-    //         dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-    //     }
-
-    //     this.feedbackDeviceType = devType;
-    //     recordResponseCode(motor.configSelectedFeedbackSensor(devType, 0, 0));
-    //     feedbackDeviceIsPot = devType == FeedbackDevice.Analog;
-    // }   //setFeedbackDevice
-
-    //
-    // Implements TrcMotor abstract methods and overrides some of its methods supported in hardware.
-    //
-
-    /**
-     * This method returns the state of the motor controller direction.
-     *
-     * @return true if the motor direction is inverted, false otherwise.
+     * @return true if voltage compensation is enabled, false if disabled.
      */
     @Override
-    public boolean isInverted()
+    public boolean isVoltageCompensationEnabled()
     {
-        return motor.getInverted();
-    }   //getInverted
+        return motor.getVoltageCompensationNominalVoltage() != 0.0;
+    }   //isVoltageCompensationEnabled
 
     /**
-     * This method inverts the motor direction.
+     * This method enables/disables motor brake mode. In motor brake mode, set power to 0 would stop the motor very
+     * abruptly by shorting the motor wires together using the generated back EMF to stop the motor. When not enabled,
+     * (i.e. float/coast mode), the motor wires are just disconnected from the motor controller so the motor will
+     * stop gradually.
      *
-     * @param inverted specifies true to invert motor direction, false otherwise.
+     * @param enabled specifies true to enable brake mode, false otherwise.
      */
     @Override
-    public void setInverted(boolean inverted)
+    public void setBrakeModeEnabled(boolean enabled)
     {
-        motor.setInverted(inverted);
-    }   //setInverted
+        recordResponseCode("setIdleMode", motor.setIdleMode(enabled ? IdleMode.kBrake : IdleMode.kCoast));
+    }   //setBrakeModeEnabled
 
     /**
-     * This method gets the last set power.
+     * This method sets the PID coefficients of the motor's PID controller.
      *
-     * @return the last setPower value.
+     * @param pidCoeff specifies the PID coefficients to set.
      */
     @Override
-    public double getMotorPower()
+    public void setPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        return motor.getAppliedOutput();
-    }   //getMotorPower
+        recordResponseCode("setP", pidCtrl.setP(pidCoeff.kP));
+        recordResponseCode("setI", pidCtrl.setI(pidCoeff.kI));
+        recordResponseCode("setD", pidCtrl.setD(pidCoeff.kD));
+        recordResponseCode("setFF", pidCtrl.setFF(pidCoeff.kF));
+        recordResponseCode("setIZone", pidCtrl.setIZone(pidCoeff.iZone));
+    }   //setPidCoefficients
 
     /**
-     * This method sets the raw motor power.
+     * This method returns the PID coefficients of the motor's PID controller.
      *
-     * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
+     * @return PID coefficients of the motor's PID controller.
      */
     @Override
-    public void setMotorPower(double power)
+    public TrcPidController.PidCoefficients getPidCoefficients()
     {
-        final String funcName = "setMotorPower";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "prevPower=%.2f, power=%.2f", currPower, power);
-        }
-
-        if (power != currPower)
-        {
-            motor.set(power);
-            currPower = power;
-        }
-    }   //setMotorPower
+        return new TrcPidController.PidCoefficients(
+            pidCtrl.getP(), pidCtrl.getI(), pidCtrl.getD(), pidCtrl.getFF(), pidCtrl.getIZone());
+    }   //getPidCoefficients
 
     /**
-     * This method returns the motor current.
+     * This method inverts the active state of the reverse limit switch, typically reflecting whether the switch is
+     * wired normally open or normally close.
      *
-     * @return motor current.
+     * @param inverted specifies true to invert the limit switch, false otherwise.
      */
     @Override
-    public double getMotorCurrent()
+    public void setRevLimitSwitchInverted(boolean inverted)
     {
-        return motor.getOutputCurrent();
-    }   //getMotorCurrent
+        revLimitSwitch = motor.getReverseLimitSwitch(inverted? Type.kNormallyClosed: Type.kNormallyOpen);
+    }   //setRevLimitSwitchInverted
 
     /**
-     * This method stops the motor regardless of what control mode the motor is on.
-     */
-    public void stopMotor()
-    {
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo("stopMotor", "prevPower=%.2f", currPower);
-        }
-
-        setMotorPower(0.0);
-    }   //stopMotor
-
-    /**
-     * This method resets the motor position sensor, typically an encoder. This method emulates a reset for a
-     * potentiometer.
-     */
-    @Override
-    public void resetMotorPosition()
-    {
-        final String funcName = "resetMotorPosition";
-
-        REVLibError error = encoder.setPosition(0.0);
-        if (error != REVLibError.kOk)
-        {
-            globalTracer.traceErr(
-                funcName, "resetPosition() on SparkMax %d failed with error %s!", motor.getDeviceId(), error.name());
-        }
-    }   //resetMotorPosition
-
-    /**
-     * This method returns the motor position by reading the position sensor. The position sensor can be an encoder
-     * or a potentiometer.
+     * This method inverts the active state of the forward limit switch, typically reflecting whether the switch is
+     * wired normally open or normally close.
      *
-     * @return current motor position.
+     * @param inverted specifies true to invert the limit switch, false otherwise.
      */
     @Override
-    public double getMotorPosition()
+    public void setFwdLimitSwitchInverted(boolean inverted)
     {
-        return encoder.getPosition();
-    }   //getMotorPosition
-
-    /**
-     * This method returns the motor velocity from the platform dependent motor hardware. If the hardware does
-     * not support velocity info, it should throw an UnsupportedOperationException.
-     *
-     * @return current motor velocity in native unit per second (RPS).
-     */
-    @Override
-    public double getMotorVelocity()
-    {
-        return encoder.getVelocity() / 60.0;
-    }   //getMotorVelocity
+        fwdLimitSwitch = motor.getForwardLimitSwitch(inverted? Type.kNormallyClosed: Type.kNormallyOpen);
+    }   //setFwdLimitSwitchInverted
 
     /**
      * This method returns the state of the reverse limit switch.
@@ -347,30 +307,198 @@ public class FrcCANSparkMax extends TrcMotor
     }   //isFwdLimitSwitchActive
 
     /**
-     * This method enables/disables motor brake mode. In motor brake mode, set power to 0 would stop the motor very
-     * abruptly by shorting the motor wires together using the generated back EMF to stop the motor. When brakMode
-     * is false (i.e. float/coast mode), the motor wires are just disconnected from the motor controller so the motor
-     * will stop gradually.
+     * This method inverts the spinning direction of the motor.
      *
-     * @param enabled specifies true to enable brake mode, false otherwise.
+     * @param inverted specifies true to invert motor direction, false otherwise.
      */
     @Override
-    public void setBrakeModeEnabled(boolean enabled)
+    public void setMotorInverted(boolean inverted)
     {
-        motor.setIdleMode(enabled ? IdleMode.kBrake : IdleMode.kCoast);
-    }   //setBrakeModeEnabled
+        motor.setInverted(inverted);
+    }   //setMotorInverted
 
     /**
-     * This method checks if the SparkMax is connected to the robot. This does NOT say anything about the connection
-     * status of the motor.
+     * This method checks if the motor direction is inverted.
      *
-     * @return True if the SparkMax is connected, false otherwise.
+     * @return true if motor direction is inverted, false otherwise.
      */
     @Override
-    public boolean isConnected()
+    public boolean isMotorInverted()
     {
-        // hacky, but should work
-        return motor.getFirmwareString() != null;
-    }   //isConnected
+        return motor.getInverted();
+    }   //isMotorInverted
+
+    /**
+     * This method stops the motor regardless of what control mode the motor is on.
+     */
+    @Override
+    public void stopMotor()
+    {
+        motorPower = 0.0;
+        motor.stopMotor();
+    }   //stopMotor
+
+    /**
+     * This method sets the raw motor power.
+     *
+     * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
+     */
+    @Override
+    public void setMotorPower(double power)
+    {
+        final String funcName = "setMotorPower";
+
+        if (debugEnabled)
+        {
+            globalTracer.traceInfo(funcName, "prevPower=%.2f, power=%.2f", motorPower, power);
+        }
+
+        // Do this only if power is different from the previous set power.
+        if (power != motorPower)
+        {
+            motor.set(power);
+            motorPower = power;
+        }
+    }   //setMotorPower
+
+    /**
+     * This method gets the current motor power.
+     *
+     * @return current motor power.
+     */
+    @Override
+    public double getMotorPower()
+    {
+        // Motor power might have changed by closed loop controls, so get it directly from the motor.
+        motorPower = motor.getAppliedOutput();
+        return motorPower;
+    }   //getMotorPower
+
+    /**
+     * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
+     * encoder may be mounted somewhere in the power train that it rotates opposite to the motor rotation. This will
+     * cause the encoder reading to go down when the motor is receiving positive power. This method can correct this
+     * situation.
+     *
+     * @param inverted specifies true to invert position sensor direction, false otherwise.
+     */
+    @Override
+    public void setPositionSensorInverted(boolean inverted)
+    {
+        recordResponseCode("encoderSetInverted", encoder.setInverted(inverted));
+    }   //setPositionSensorInverted
+
+    /**
+     * This method returns the state of the position sensor direction.
+     *
+     * @return true if the motor direction is inverted, false otherwise.
+     */
+    @Override
+    public boolean isPositionSensorInverted()
+    {
+        return encoder.getInverted();
+    }   //isPositionSensorInverted
+
+    /**
+     * This method commands the motor to go to the given position using close loop control.
+     *
+     * @param position specifies the motor position in number of rotations.
+     */
+    @Override
+    public void setMotorPosition(double position)
+    {
+        recordResponseCode("pidCtrlSetPosition", pidCtrl.setReference(position, ControlType.kPosition));
+    }   //setMotorPosition
+
+    /**
+     * This method returns the motor position by reading the position sensor.
+     *
+     * @return current motor position in number of rotations.
+     */
+    @Override
+    public double getMotorPosition()
+    {
+        return encoder.getPosition();
+    }   //getMotorPosition
+
+    /**
+     * This method resets the motor position sensor, typically an encoder.
+     */
+    @Override
+    public void resetMotorPosition()
+    {
+        recordResponseCode("encoderReset", encoder.setPosition(0.0));
+    }   //resetMotorPosition
+
+    /**
+     * This method commands the motor to spin at the given velocity using close loop control.
+     *
+     * @param velocity specifies the motor velocity in rotations per second.
+     */
+    @Override
+    public void setMotorVelocity(double velocity)
+    {
+        recordResponseCode("pidCtrlSetVelocity", pidCtrl.setReference(velocity/60.0, ControlType.kVelocity));
+    }   //setMotorVelocity
+
+    /**
+     * This method returns the current motor velocity.
+     *
+     * @return current motor velocity in rotations per second.
+     */
+    @Override
+    public double getMotorVelocity()
+    {
+        return encoder.getVelocity()*60.0;
+    }   //getMotorVelocity
+
+    /**
+     * This method commands the motor to spin at the given current value using close loop control.
+     *
+     * @param current specifies current in amperes.
+     */
+    @Override
+    public void setMotorCurrent(double current)
+    {
+        recordResponseCode("pidCtrlSetCurret", pidCtrl.setReference(current, ControlType.kCurrent));
+    }   //setMotorCurrent
+
+    /**
+     * This method returns the motor current.
+     *
+     * @return motor current in amperes.
+     */
+    @Override
+    public double getMotorCurrent()
+    {
+        return motor.getOutputCurrent();
+    }   //getMotorCurrent
+
+    // /**
+    //  * This method sets the motor controller to velocity mode with the specified maximum velocity.
+    //  *
+    //  * @param maxVelocity     specifies the maximum velocity the motor can run, in sensor units per second.
+    //  * @param pidCoefficients specifies the PIDF coefficients to send to the Talon to use for velocity control.
+    //  */
+    // @Override
+    // public void enableVelocityMode(double maxVelocity, TrcPidController.PidCoefficients pidCoefficients)
+    // {
+    //     if (pidCoefficients != null)
+    //     {
+    //         SparkMaxPIDController pidController = motor.getPIDController();
+    //         pidController.setP(pidCoefficients.kP);
+    //         pidController.setI(pidCoefficients.kI);
+    //         pidController.setD(pidCoefficients.kD);
+    //         pidController.setFF(pidCoefficients.kF);
+    //     }
+    // }   //enableVelocityMode
+
+    // /**
+    //  * This method disables velocity mode returning it to power mode.
+    //  */
+    // @Override
+    // public void disableVelocityMode()
+    // {
+    // }   //disableVelocityMode
 
 }   //class FrcCANSparkMax

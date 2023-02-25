@@ -133,7 +133,7 @@ public class FrcMotorActuator
     {
         this.actuatorMotor = actuatorMotor;
         actuatorMotor.setBrakeModeEnabled(true);
-        actuatorMotor.setInverted(motorParams.motorInverted);
+        actuatorMotor.setMotorInverted(motorParams.motorInverted);
 
         pidActuator = new TrcPidActuator(
             instanceName + ".pidActuator", actuatorMotor, lowerLimitSw, upperLimitSw, actuatorParams);
