@@ -349,12 +349,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void stopMotor()
     {
-        // Do this only if the motor was spinning.
-        if (motorPower == null || motorPower != 0.0)
-        {
-            motor.set(ControlMode.PercentOutput, 0.0);
-            motorPower = 0.0;
-        }
+        setMotorPower(0.0);
     }   //stopMotor
 
     /**
