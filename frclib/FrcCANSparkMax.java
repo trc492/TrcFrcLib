@@ -46,13 +46,12 @@ import TrcCommonLib.trclib.TrcPidController;
 public class FrcCANSparkMax extends TrcMotor
 {
     private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = false;
 
     public final CANSparkMax motor;
     private final SparkMaxPIDController pidCtrl;
     private final RelativeEncoder encoder;
     private SparkMaxLimitSwitch revLimitSwitch, fwdLimitSwitch;
-    private double motorPower = 0.0;
+    private Double motorPower = null;
 
     // The number of non-success error codes reported by the device after sending a command.
     private int errorCount = 0;
@@ -140,10 +139,9 @@ public class FrcCANSparkMax extends TrcMotor
     }   //resetFactoryDefault
 
     /**
-     * This method checks if the SparkMax is connected to the robot. This does NOT say anything about the connection
-     * status of the motor.
+     * This method checks if the device is connected to the robot.
      *
-     * @return true if the SparkMax is connected, false otherwise.
+     * @return true if the device is connected, false otherwise.
      */
     @Override
     public boolean isConnected()
@@ -172,7 +170,7 @@ public class FrcCANSparkMax extends TrcMotor
         else
         {
             // Unknow motor type, let TrcMotor simulate it.
-            super.followMotor(otherMotor);
+            otherMotor.addFollowingMotor(this);
         }
     }   //followMotor
 
@@ -331,11 +329,13 @@ public class FrcCANSparkMax extends TrcMotor
     /**
      * This method stops the motor regardless of what control mode the motor is on.
      */
-    @Override
     public void stopMotor()
     {
-        motorPower = 0.0;
-        motor.stopMotor();
+        if (motorPower == null || motorPower != 0.0)
+        {
+            motor.stopMotor();
+            motorPower = 0.0;
+        }
     }   //stopMotor
 
     /**
@@ -346,15 +346,8 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorPower(double power)
     {
-        final String funcName = "setMotorPower";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "prevPower=%.2f, power=%.2f", motorPower, power);
-        }
-
         // Do this only if power is different from the previous set power.
-        if (power != motorPower)
+        if (motorPower == null || motorPower != power)
         {
             motor.set(power);
             motorPower = power;
@@ -408,6 +401,7 @@ public class FrcCANSparkMax extends TrcMotor
     public void setMotorPosition(double position)
     {
         recordResponseCode("pidCtrlSetPosition", pidCtrl.setReference(position, ControlType.kPosition));
+        motorPower = null;
     }   //setMotorPosition
 
     /**
@@ -439,6 +433,7 @@ public class FrcCANSparkMax extends TrcMotor
     public void setMotorVelocity(double velocity)
     {
         recordResponseCode("pidCtrlSetVelocity", pidCtrl.setReference(velocity/60.0, ControlType.kVelocity));
+        motorPower = null;
     }   //setMotorVelocity
 
     /**
@@ -461,6 +456,7 @@ public class FrcCANSparkMax extends TrcMotor
     public void setMotorCurrent(double current)
     {
         recordResponseCode("pidCtrlSetCurret", pidCtrl.setReference(current, ControlType.kCurrent));
+        motorPower = null;
     }   //setMotorCurrent
 
     /**
@@ -473,32 +469,5 @@ public class FrcCANSparkMax extends TrcMotor
     {
         return motor.getOutputCurrent();
     }   //getMotorCurrent
-
-    // /**
-    //  * This method sets the motor controller to velocity mode with the specified maximum velocity.
-    //  *
-    //  * @param maxVelocity     specifies the maximum velocity the motor can run, in sensor units per second.
-    //  * @param pidCoefficients specifies the PIDF coefficients to send to the Talon to use for velocity control.
-    //  */
-    // @Override
-    // public void enableVelocityMode(double maxVelocity, TrcPidController.PidCoefficients pidCoefficients)
-    // {
-    //     if (pidCoefficients != null)
-    //     {
-    //         SparkMaxPIDController pidController = motor.getPIDController();
-    //         pidController.setP(pidCoefficients.kP);
-    //         pidController.setI(pidCoefficients.kI);
-    //         pidController.setD(pidCoefficients.kD);
-    //         pidController.setFF(pidCoefficients.kF);
-    //     }
-    // }   //enableVelocityMode
-
-    // /**
-    //  * This method disables velocity mode returning it to power mode.
-    //  */
-    // @Override
-    // public void disableVelocityMode()
-    // {
-    // }   //disableVelocityMode
 
 }   //class FrcCANSparkMax

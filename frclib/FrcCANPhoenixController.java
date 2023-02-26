@@ -40,7 +40,6 @@ import TrcCommonLib.trclib.TrcPidController;
 public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMotor
 {
     private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = false;
 
     private class EncoderInfo implements Sendable
     {
@@ -60,7 +59,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //class EncoderInfo
 
     public final T motor;
-    private double motorPower = 0.0;
+    private Double motorPower = null;
     private boolean revLimitSwitchInverted = false;
     private boolean fwdLimitSwitchInverted = false;
     private FeedbackDevice feedbackDeviceType = FeedbackDevice.QuadEncoder;
@@ -144,8 +143,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void resetFactoryDefault()
     {
-        motor.configFactoryDefault();
-        recordResponseCode("configFactoryDefault", motor.getLastError());
+        recordResponseCode("configFactoryDefault", motor.configFactoryDefault());
     }   //resetFactoryDefault
 
     /**
@@ -172,12 +170,11 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         {
             // Can only follow the same type of motor natively.
             motor.follow(((FrcCANPhoenixController<?>) otherMotor).motor);
-            recordResponseCode("follow", motor.getLastError());
         }
         else
         {
             // Not the same type of motor, let TrcMotor simulate it.
-            super.followMotor(otherMotor);
+            otherMotor.addFollowingMotor(this);
         }
     }   //followMotor
 
@@ -201,10 +198,8 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void enableVoltageCompensation(double batteryNominalVoltage)
     {
-        motor.configVoltageCompSaturation(batteryNominalVoltage);
-        recordResponseCode("configVoltageCompSaturation", motor.getLastError());
+        recordResponseCode("configVoltageCompSaturation", motor.configVoltageCompSaturation(batteryNominalVoltage));
         motor.enableVoltageCompensation(true);
-        recordResponseCode("enableVoltageCompensation", motor.getLastError());
     }   //enableVoltageCompensation
 
     /**
@@ -214,7 +209,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void disableVoltageCompensation()
     {
         motor.enableVoltageCompensation(false);
-        recordResponseCode("disableVoltageCompensation", motor.getLastError());
     }   //disableVoltageCompensation
 
     /**
@@ -240,7 +234,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void setBrakeModeEnabled(boolean enabled)
     {
         motor.setNeutralMode(enabled ? NeutralMode.Brake : NeutralMode.Coast);
-        recordResponseCode("setNeutralMode", motor.getLastError());
     }   //setBrakeModeEnabled
 
     /**
@@ -251,16 +244,11 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void setPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        motor.config_kP(0, pidCoeff.kP);
-        recordResponseCode("config_kP", motor.getLastError());
-        motor.config_kI(0, pidCoeff.kI);
-        recordResponseCode("config_kI", motor.getLastError());
-        motor.config_kD(0, pidCoeff.kD);
-        recordResponseCode("config_kD", motor.getLastError());
-        motor.config_kF(0, pidCoeff.kF);
-        recordResponseCode("config_kF", motor.getLastError());
-        motor.config_IntegralZone(0, pidCoeff.iZone);
-        recordResponseCode("config_IntegralZone", motor.getLastError());
+        recordResponseCode("config_kP", motor.config_kP(0, pidCoeff.kP));
+        recordResponseCode("config_kI", motor.config_kI(0, pidCoeff.kI));
+        recordResponseCode("config_kD", motor.config_kD(0, pidCoeff.kD));
+        recordResponseCode("config_kF", motor.config_kF(0, pidCoeff.kF));
+        recordResponseCode("config_IntegralZone", motor.config_IntegralZone(0, pidCoeff.iZone));
     }   //setPidCoefficients
 
     /**
@@ -289,10 +277,10 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void setRevLimitSwitchInverted(boolean inverted)
     {
         revLimitSwitchInverted = inverted;
-        motor.configReverseLimitSwitchSource(
-            LimitSwitchSource.FeedbackConnector,
-            inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen);
-        recordResponseCode("configReverseLimitSwitchSource", motor.getLastError());
+        recordResponseCode("configReverseLimitSwitchSource",
+            motor.configReverseLimitSwitchSource(
+                LimitSwitchSource.FeedbackConnector,
+                inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen));
     }   //setRevLimitSwitchInverted
 
     /**
@@ -305,10 +293,10 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void setFwdLimitSwitchInverted(boolean inverted)
     {
         fwdLimitSwitchInverted = inverted;
-        motor.configForwardLimitSwitchSource(
-            LimitSwitchSource.FeedbackConnector,
-            inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen);
-        recordResponseCode("configForwardLimitSwitchSource", motor.getLastError());
+        recordResponseCode("configForwardLimitSwitchSource",
+            motor.configForwardLimitSwitchSource(
+                LimitSwitchSource.FeedbackConnector,
+                inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen));
     }   //setFwdLimitSwitchInverted
 
     /**
@@ -342,7 +330,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void setMotorInverted(boolean inverted)
     {
         motor.setInverted(inverted);
-        recordResponseCode("setInverted", motor.getLastError());
     }   //setMotorInverted
 
     /**
@@ -362,18 +349,10 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void stopMotor()
     {
-        final String funcName = "stopMotor";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "prevPower=%.2f", motorPower);
-        }
-
         // Do this only if the motor was spinning.
-        if (motorPower != 0.0)
+        if (motorPower == null || motorPower != 0.0)
         {
             motor.set(ControlMode.PercentOutput, 0.0);
-            recordResponseCode("set", motor.getLastError());
             motorPower = 0.0;
         }
     }   //stopMotor
@@ -386,30 +365,10 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void setMotorPower(double power)
     {
-        final String funcName = "setMotorPower";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "prevPower=%.2f, power=%.2f", motorPower, power);
-        }
-
         // Do this only if power is different from the previous set power.
-        if (power != motorPower)
+        if (motorPower == null || motorPower != power)
         {
             motor.set(ControlMode.PercentOutput, power);
-            // if (maxMotorVelocity != 0.0)
-            // {
-            //     // Velocity control mode.
-            //     // Note: value is in the unit of sensor units per second but CTRE controllers want sensor units
-            //     // per 100 msec so we need to divide value by 10.
-            //     motor.set(ControlMode.Velocity, value/10.0);
-            // }
-            // else
-            // {
-            //     // PercentOutput control mode.
-            //     motor.set(ControlMode.PercentOutput, value);
-            // }
-            recordResponseCode("set", motor.getLastError());
             motorPower = power;
         }
     }   //setMotorPower
@@ -424,8 +383,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         // Motor power might have changed by closed loop controls, so get it directly from the motor.
         motorPower = motor.getMotorOutputPercent();
-        recordResponseCode("getMotorOutputPercent", motor.getLastError());
-
         return motorPower;
     }   //getMotorPower
 
@@ -441,7 +398,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void setPositionSensorInverted(boolean inverted)
     {
         motor.setSensorPhase(inverted);
-        recordResponseCode("setSensorPhase", motor.getLastError());
     }   //setPositionSensorInverted
 
     /**
@@ -465,7 +421,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void setMotorPosition(double position)
     {
         motor.set(ControlMode.Position, position);
-        recordResponseCode("set", motor.getLastError());
+        motorPower = null;
     }   //setMotorPosition
 
     /**
@@ -488,8 +444,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         if (feedbackDeviceType != FeedbackDevice.Analog)
         {
-            motor.setSelectedSensorPosition(0, 0, 30);
-            recordResponseCode("setSelectedSensorPosition", motor.getLastError());
+            recordResponseCode("setSelectedSensorPosition", motor.setSelectedSensorPosition(0, 0, 30));
         }
     }   //resetMotorPosition
 
@@ -503,7 +458,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         // set takes a velocity value in sensor units per 100 msec.
         motor.set(ControlMode.Velocity, velocity/10.0);
-        recordResponseCode("set", motor.getLastError());
+        motorPower = null;
     }   //setMotorVelocity
 
     /**
@@ -527,7 +482,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void setMotorCurrent(double current)
     {
         motor.set(ControlMode.Current, current);
-        recordResponseCode("set", motor.getLastError());
+        motorPower = null;
     }   //setMotorCurrent
 
     /**
@@ -549,41 +504,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void setFeedbackDevice(FeedbackDevice devType)
     {
         this.feedbackDeviceType = devType;
-        motor.configSelectedFeedbackSensor(devType, 0, 10);
-        recordResponseCode("configSelectedFeedbackSensor", motor.getLastError());
+        recordResponseCode("configSelectedFeedbackSensor", motor.configSelectedFeedbackSensor(devType));
     }   //setFeedbackDevice
-
-    // /**
-    //  * This method sets the motor controller to velocity mode with the specified maximum velocity.
-    //  *
-    //  * @param maxVelocity     specifies the maximum velocity the motor can run, in sensor units per second.
-    //  * @param pidCoefficients specifies the PIDF coefficients to send to the controller to use for velocity control.
-    //  */
-    // @Override
-    // public void enableVelocityMode(double maxVelocity, TrcPidController.PidCoefficients pidCoefficients)
-    // {
-    //     this.maxMotorVelocity = maxVelocity;
-
-    //     if (pidCoefficients != null)
-    //     {
-    //         motor.config_kP(0, pidCoefficients.kP);
-    //         recordResponseCode("config_kP", motor.getLastError());
-    //         motor.config_kI(0, pidCoefficients.kI);
-    //         recordResponseCode("config_kI", motor.getLastError());
-    //         motor.config_kD(0, pidCoefficients.kD);
-    //         recordResponseCode("config_kD", motor.getLastError());
-    //         motor.config_kF(0, pidCoefficients.kF);
-    //         recordResponseCode("config_kF", motor.getLastError());
-    //     }
-    // }   //enableVelocityMode
-
-    // /**
-    //  * This method disables velocity mode returning it to power mode.
-    //  */
-    // @Override
-    // public void disableVelocityMode()
-    // {
-    //     this.maxMotorVelocity = 0.0;
-    // }   //disableVelocityMode
 
 }   //class FrcCANPhoenixController
