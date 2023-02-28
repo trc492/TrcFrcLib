@@ -133,9 +133,30 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         return errorCode;
     }   //recordResponseCode
 
+    /**
+     * This method sets the feedback device type.
+     *
+     * @param devType specifies the feedback device type.
+     */
+    public void setFeedbackDevice(FeedbackDevice devType)
+    {
+        feedbackDeviceType = devType;
+        recordResponseCode("configSelectedFeedbackSensor", motor.configSelectedFeedbackSensor(devType));
+    }   //setFeedbackDevice
+
     //
     // Implements TrcMotorController interface.
     //
+
+    /**
+     * This method is used to check if the motor controller supports close loop control internally.
+     *
+     * @return true if motor controller supports close loop control, false otherwise.
+     */
+    public boolean supportCloseLoopControl()
+    {
+        return true;
+    }   // supportCloseLoopControl
 
     /**
      * This method resets the motor controller configurations to factory default so that everything is at known state.
@@ -173,7 +194,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         }
         else
         {
-            // Not the same type of motor, let TrcMotor simulate it.
+            // Not the same type of motor, let TrcMotor simulates it.
             otherMotor.addFollowingMotor(this);
         }
     }   //followMotor
@@ -492,14 +513,17 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //getMotorCurrent
 
     /**
-     * This method sets the feedback device type.
+     * This method sets the close loop percentage output limits. By default the limits are set to the max at -1 to 1.
+     * By setting a non-default limits, it effectively limits the output power of the close loop control.
      *
-     * @param devType specifies the feedback device type.
+     * @param revLimit specifies the percentage output limit of the reverse direction.
+     * @param fwdLimit specifies the percentage output limit of the forward direction.
      */
-    public void setFeedbackDevice(FeedbackDevice devType)
+    @Override
+    public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
     {
-        this.feedbackDeviceType = devType;
-        recordResponseCode("configSelectedFeedbackSensor", motor.configSelectedFeedbackSensor(devType));
-    }   //setFeedbackDevice
+        motor.configPeakOutputReverse(revLimit);
+        motor.configPeakOutputForward(fwdLimit);
+    }   //setCloseLoopOutputLimits
 
 }   //class FrcCANPhoenixController
