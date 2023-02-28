@@ -29,6 +29,7 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.BaseTalon;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -120,7 +121,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * @param operation specifies the operation that failed.
      * @param errorCode specifies the error code returned by the motor controller.
      */
-    private ErrorCode recordResponseCode(String operation, ErrorCode errorCode)
+    protected ErrorCode recordResponseCode(String operation, ErrorCode errorCode)
     {
         lastError = errorCode;
         if (errorCode != null && !errorCode.equals(ErrorCode.OK))
@@ -520,8 +521,25 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
     {
-        motor.configPeakOutputReverse(revLimit);
-        motor.configPeakOutputForward(fwdLimit);
+        recordResponseCode("configPeakOutputReverse", motor.configPeakOutputReverse(revLimit));
+        recordResponseCode("configPeakOutputForward", motor.configPeakOutputForward(fwdLimit));
     }   //setCloseLoopOutputLimits
+
+   /**
+     * This method sets the current limit of the motor.
+     *
+     * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
+     * @param triggerThresholdCurrent specifies threshold current in amperes to be exceeded before limiting occurs.
+     *        If this value is less than currentLimit, then currentLimit is used as the threshold.
+     * @param triggerThresholdTime specifies how long current must exceed threshold (seconds) before limiting occurs.
+     */
+    @Override
+    public void setCurrentLimit(double currentLimit, double triggerThresholdCurrent, double triggerThresholdTime)
+    {
+        recordResponseCode(
+            "configSupplyCurrentLimit",
+            motor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(
+                true, currentLimit, triggerThresholdCurrent, triggerThresholdTime), 10));
+    }   //setCurrentLimit
 
 }   //class FrcCANPhoenixController

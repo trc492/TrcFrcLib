@@ -424,7 +424,20 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
     {
-        throw new UnsupportedOperationException("PWM motor controller does not support close loop control.");
+        throw new UnsupportedOperationException("PWM motor controller does not support this operation.");
     }   //setCloseLoopOutputLimits
+
+   /**
+     * This method sets the current limit of the motor.
+     *
+     * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
+     * @param triggerThresholdCurrent not used. SparkMax does not support this.
+     * @param triggerThresholdTime not used. SparkMax does not support this.
+     */
+    @Override
+    public void setCurrentLimit(double currentLimit, double triggerThresholdCurrent, double triggerThresholdTime)
+    {
+        throw new UnsupportedOperationException("PWM motor controller does not support this operation.");
+    }   //setCurrentLimit
 
 }   //class FrcPWMMotorController

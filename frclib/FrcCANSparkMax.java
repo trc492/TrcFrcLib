@@ -488,7 +488,30 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
     {
-        throw new UnsupportedOperationException("SparkMax does not support close loop output limits.");
+        recordResponseCode("setOutputRange", pidCtrl.setOutputRange(revLimit, fwdLimit));
     }   //setCloseLoopOutputLimits
+
+   /**
+     * This method sets the current limit of the motor.
+     *
+     * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
+     * @param triggerThresholdCurrent not used. SparkMax does not support this.
+     * @param triggerThresholdTime not used. SparkMax does not support this.
+     */
+    @Override
+    public void setCurrentLimit(double currentLimit, double triggerThresholdCurrent, double triggerThresholdTime)
+    {
+        recordResponseCode("setSmartCurrentLimit", motor.setSmartCurrentLimit((int) currentLimit));
+    }   //setCurrentLimit
+
+   /**
+     * This method sets the current limit of the motor.
+     *
+     * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
+     */
+    public void setCurrentLimit(double currentLimit)
+    {
+        setCurrentLimit(currentLimit, 0.0, 0.0);
+    }   //setCurrentLimit
 
 }   //class FrcCANSparkMax
