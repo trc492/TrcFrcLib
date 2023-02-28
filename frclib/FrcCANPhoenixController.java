@@ -78,8 +78,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         super(instanceName);
         motor = baseTalon;
-        resetFactoryDefault();
-        resetMotorPosition();
     }   //FrcCANPhoenixController
 
     /**

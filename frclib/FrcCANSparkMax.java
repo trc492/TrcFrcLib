@@ -72,8 +72,6 @@ public class FrcCANSparkMax extends TrcMotor
         pidCtrl = motor.getPIDController();
         encoder = motor.getEncoder();
         revLimitSwitch = fwdLimitSwitch = null;
-        resetFactoryDefault();
-        resetPosition();
     }   //FrcCANSparkMax
 
     /**

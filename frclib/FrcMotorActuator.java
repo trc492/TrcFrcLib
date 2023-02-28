@@ -22,8 +22,6 @@
 
  package TrcFrcLib.frclib;
  
-import java.util.Locale;
-
 import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidActuator;
@@ -35,106 +33,23 @@ import TrcCommonLib.trclib.TrcPidActuator;
  */
 public class FrcMotorActuator
 {
-    /**
-     * This class contains all the parameters related to the actuator motor.
-     */
-    public static class MotorParams
-    {
-        public boolean motorInverted;
-        public int lowerLimitSwitchDigitalChannel;
-        public boolean lowerLimitSwitchInverted;
-        public int upperLimitSwitchDigitalChannel;
-        public boolean upperLimitSwitchInverted;
-        public boolean lowerLimitZeroCalibrateOnly;
-        public double batteryNominalVoltage;
-
-        /**
-         * Constructor: Create an instance of the object.
-         *
-         * @param motorInverted specifies true if actuator motor direction is inverted, false otherwise.
-         * @param lowerLimitSwitchDigitalChannel specifies the digital channel for the lower limit swtich, set to -1
-         *        if there is no lower limit switch.
-         * @param lowerLimitSwitchInverted specifies true if lower limit switch is inverted, false otherwise.
-         * @param upperLimitSwitchDigitalChannel specifies the digital channel for the upper limit switch, set to -1
-         *        if there is no upper limit switch.
-         * @param upperLimitSwitchInverted specifies true if upper limit switch is inverted, false otherwise.
-         * @param lowerLimitZeroCalibrateOnly specifies true if lower limit switch is for zero calibration only.
-         * @param batteryNominalVoltage specifies the battery nominal voltage for enabling voltage compensation,
-         *        set to 0 to disable voltage compensation.
-         */
-        public MotorParams(
-            boolean motorInverted, int lowerLimitSwitchDigitalChannel, boolean lowerLimitSwitchInverted,
-            int upperLimitSwitchDigitalChannel, boolean upperLimitSwitchInverted,
-            boolean lowerLimitZeroCalibrateOnly, double batteryNominalVoltage)
-        {
-            this.motorInverted = motorInverted;
-            this.lowerLimitSwitchDigitalChannel = lowerLimitSwitchDigitalChannel;
-            this.lowerLimitSwitchInverted = lowerLimitSwitchInverted;
-            this.upperLimitSwitchDigitalChannel = upperLimitSwitchDigitalChannel;
-            this.upperLimitSwitchInverted = upperLimitSwitchInverted;
-            this.lowerLimitZeroCalibrateOnly = lowerLimitZeroCalibrateOnly;
-            this.batteryNominalVoltage = batteryNominalVoltage;
-        }   //MotorParams
-
-        /**
-         * Constructor: Create an instance of the object.
-         *
-         * @param motorInverted specifies true if actuator motor direction is inverted, false otherwise.
-         * @param lowerLimitSwitchDigitalChannel specifies the digital channel for the lower limit swtich, set to -1
-         *        if there is no lower limit switch.
-         * @param lowerLimitSwitchInverted specifies true if lower limit switch is inverted, false otherwise.
-         * @param upperLimitSwitchDigitalChannel specifies the digital channel for the upper limit switch, set to -1
-         *        if there is no upper limit switch.
-         * @param upperLimitSwitchInverted specifies true if upper limit switch is inverted, false otherwise.
-         */
-        public MotorParams(
-            boolean motorInverted, int lowerLimitSwitchDigitalChannel, boolean lowerLimitSwitchInverted,
-            int upperLimitSwitchDigitalChannel, boolean upperLimitSwitchInverted)
-        {
-            this(motorInverted, lowerLimitSwitchDigitalChannel, lowerLimitSwitchInverted,
-                 upperLimitSwitchDigitalChannel, upperLimitSwitchInverted, false, 0.0);
-        }   //MotorParams
-
-        /**
-         * This method returns the string format of the motorParams info.
-         *
-         * @return string format of the motor param info.
-         */
-        @Override
-        public String toString()
-        {
-            return String.format(
-                Locale.US,
-                "motorInverted=%s,lowerLimitSWChannel=%d,lowerLimitInverted=%s," +
-                "upperLimitSWChannel=%d,upperLimitInverted=%s,lowerLimitZeroCalOnly=%s,battNominalVolt=%.1f",
-                motorInverted, lowerLimitSwitchDigitalChannel, lowerLimitSwitchInverted,
-                upperLimitSwitchDigitalChannel, upperLimitSwitchInverted,
-                lowerLimitZeroCalibrateOnly, batteryNominalVoltage);
-        }   //toString
-
-    }   //class MotorParams
-
     private TrcMotor actuatorMotor;
     private TrcPidActuator pidActuator;
 
     /**
-     * This method contains the common init code that will be called by all constructor.
+     * Common initialization called by all constructors.
      *
      * @param instanceName specifies the instance name.
      * @param actuatorMotor specifies the actuator motor.
      * @param lowerLimitSw specifies the lower limit switch object.
      * @param upperLimitSw specifies the upper limit switch object.
-     * @param motorParams specifies the parameters to set up the actuator motor.
      * @param actuatorParams specifies the parameters to set up the PID actuator.
      */
     private void commonInit(
         String instanceName, TrcMotor actuatorMotor, TrcDigitalInput lowerLimitSw, TrcDigitalInput upperLimitSw,
-        MotorParams motorParams, TrcPidActuator.Parameters actuatorParams)
+        TrcPidActuator.Parameters actuatorParams)
     {
         this.actuatorMotor = actuatorMotor;
-        actuatorMotor.setBrakeModeEnabled(true);
-        actuatorMotor.setMotorInverted(motorParams.motorInverted);
-
         pidActuator = new TrcPidActuator(
             instanceName + ".pidActuator", actuatorMotor, lowerLimitSw, upperLimitSw, actuatorParams);
     }   //commonInit
@@ -146,14 +61,13 @@ public class FrcMotorActuator
      * @param actuatorMotor specifies the actuator motor.
      * @param lowerLimitSw specifies the lower limit switch object.
      * @param upperLimitSw specifies the upper limit switch object.
-     * @param motorParams specifies the parameters to set up the actuator motor.
      * @param actuatorParams specifies the parameters to set up the PID actuator.
      */
     public FrcMotorActuator(
         String instanceName, TrcMotor actuatorMotor, TrcDigitalInput lowerLimitSw, TrcDigitalInput upperLimitSw,
-        MotorParams motorParams, TrcPidActuator.Parameters actuatorParams)
+        TrcPidActuator.Parameters actuatorParams)
     {
-        commonInit(instanceName, actuatorMotor, lowerLimitSw, upperLimitSw, motorParams, actuatorParams);
+        commonInit(instanceName, actuatorMotor, lowerLimitSw, upperLimitSw, actuatorParams);
     }   //FrcMotorActuator
 
     /**
@@ -161,35 +75,41 @@ public class FrcMotorActuator
      *
      * @param instanceName specifies the instance name.
      * @param actuatorMotor specifies the actuator motor.
-     * @param motorParams specifies the parameters to set up the actuator motor.
+     * @param lowerLimitSwChannel specifies the digital input channel for the lower limit switch, set to null
+     *        if no lower limit switch.
+     * @param lowerLimitSwInverted specifies true to invert lower limit switch, false otherwise.
+     * @param upperLimitSwChannel specifies the digital input channel for the upper limit switch, set to null
+     *        if no upper limit switch.
+     * @param upperLimitSwInverted specifies true to invert upper limit switch, false otherwise.
      * @param actuatorParams specifies the parameters to set up the PID actuator.
      */
     public FrcMotorActuator(
-        String instanceName, TrcMotor actuatorMotor, MotorParams motorParams, TrcPidActuator.Parameters actuatorParams)
+        String instanceName, TrcMotor actuatorMotor, Integer lowerLimitSwChannel, boolean lowerLimitSwInverted,
+        Integer upperLimitSwChannel, boolean upperLimitSwInverted, TrcPidActuator.Parameters actuatorParams)
     {
         FrcDigitalInput lowerLimitSwitch, upperLimitSwitch;
 
-        if (motorParams.lowerLimitSwitchDigitalChannel >= 0)
+        if (lowerLimitSwChannel != null)
         {
-            lowerLimitSwitch = new FrcDigitalInput(instanceName + ".lowerLimitSw", motorParams.lowerLimitSwitchDigitalChannel);
-            lowerLimitSwitch.setInverted(motorParams.lowerLimitSwitchInverted);
+            lowerLimitSwitch = new FrcDigitalInput(instanceName + ".lowerLimitSw", lowerLimitSwChannel);
+            lowerLimitSwitch.setInverted(lowerLimitSwInverted);
         }
         else
         {
             lowerLimitSwitch = null;
         }
 
-        if (motorParams.upperLimitSwitchDigitalChannel >= 0)
+        if (upperLimitSwChannel != null)
         {
-            upperLimitSwitch = new FrcDigitalInput(instanceName + ".upperLimitSw", motorParams.upperLimitSwitchDigitalChannel);
-            upperLimitSwitch.setInverted(motorParams.upperLimitSwitchInverted);
+            upperLimitSwitch = new FrcDigitalInput(instanceName + ".upperLimitSw", upperLimitSwChannel);
+            upperLimitSwitch.setInverted(upperLimitSwInverted);
         }
         else
         {
             upperLimitSwitch = null;
         }
 
-        commonInit(instanceName, actuatorMotor, lowerLimitSwitch, upperLimitSwitch, motorParams, actuatorParams);
+        commonInit(instanceName, actuatorMotor, lowerLimitSwitch, upperLimitSwitch, actuatorParams);
     }   //FrcMotorActuator
 
     /**

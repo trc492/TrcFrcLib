@@ -54,7 +54,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
         this.encoder = encoder;
         this.revLimitSwitch = revLimitSwitch;
         this.fwdLimitSwitch = fwdLimitSwitch;
-        resetMotorPosition();
     }   //FrcPWMMotorController
 
     /**

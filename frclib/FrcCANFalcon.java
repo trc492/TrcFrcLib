@@ -22,7 +22,6 @@
 
 package TrcFrcLib.frclib;
 
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
 public class FrcCANFalcon extends FrcCANPhoenixController<TalonFX>
@@ -36,7 +35,6 @@ public class FrcCANFalcon extends FrcCANPhoenixController<TalonFX>
     public FrcCANFalcon(final String instanceName, int deviceNumber)
     {
         super(instanceName, new TalonFX(deviceNumber));
-        setFeedbackDevice(FeedbackDevice.IntegratedSensor);
     }   //FrcCANFalcon
 
 }   //class FrcCANFalcon
