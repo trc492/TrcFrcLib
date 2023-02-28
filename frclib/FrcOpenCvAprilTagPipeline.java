@@ -136,7 +136,7 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     private final AprilTagPoseEstimator.Config poseEstConfig;
     private final TrcDbgTrace tracer;
     private final AprilTagDetector aprilTagDetector;
-    private final AprilTagPoseEstimator poseEstimator;
+    // private final AprilTagPoseEstimator poseEstimator;
     private final Mat cameraMatrix;
     private final double tagSizeX, tagSizeY;
     private final Mat grayMat;
@@ -174,13 +174,13 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         if (poseEstConfig != null)
         {
             // Set up Pose Estimator
-            poseEstimator = new AprilTagPoseEstimator(poseEstConfig);
+            // poseEstimator = new AprilTagPoseEstimator(poseEstConfig);
             cameraMatrix = constructCameraMatrix();
             tagSizeX = tagSizeY = poseEstConfig.tagSize;
         }
         else
         {
-            poseEstimator = null;
+            // poseEstimator = null;
             cameraMatrix = null;
             tagSizeX = tagSizeY = 0.0;
         }
