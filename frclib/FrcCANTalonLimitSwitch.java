@@ -22,9 +22,6 @@
 
 package TrcFrcLib.frclib;
 
-import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
-import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
-
 import TrcCommonLib.trclib.TrcDigitalInput;
 
 /**
@@ -77,15 +74,11 @@ public class FrcCANTalonLimitSwitch extends TrcDigitalInput
     {
         if (upperLimitSwitch)
         {
-            canTalon.motor.configForwardLimitSwitchSource(
-                LimitSwitchSource.FeedbackConnector,
-                inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen, 10);
+            canTalon.setFwdLimitSwitchInverted(inverted);
         }
         else
         {
-            canTalon.motor.configReverseLimitSwitchSource(
-                LimitSwitchSource.FeedbackConnector,
-                inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen, 10);
+            canTalon.setRevLimitSwitchInverted(inverted);
         }
     }   //setInverted
 
