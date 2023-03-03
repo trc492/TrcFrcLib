@@ -42,13 +42,8 @@ import TrcCommonLib.trclib.TrcTimer;
  */
 public class FrcPneumatic
 {
-    private static final String moduleName = "FrcPneumatic";
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     private static final boolean debugEnabled = false;
-    private static final boolean tracingEnabled = false;
-    private static final boolean useGlobalTracer = false;
-    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
-    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    private TrcDbgTrace dbgTrace = null;
 
     /**
      * This class implements an action for setting all pneumatic channels to ON or OFF for a set period of time.
@@ -68,6 +63,7 @@ public class FrcPneumatic
     private String instanceName;
     private TrcTaskMgr.TaskObject pneumaticTaskObj;
     private TrcStateMachine<State> solSM;
+    private TrcTimer delayTimer;
     private TrcTimer solTimer;
     private TrcEvent timerEvent;
     private SolenoidAction[] pulseActions = new SolenoidAction[3];
@@ -86,16 +82,10 @@ public class FrcPneumatic
      */
     private void initPneumatic(final String instanceName)
     {
-        if (debugEnabled)
-        {
-            dbgTrace = useGlobalTracer?
-                TrcDbgTrace.getGlobalTracer():
-                new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
         this.instanceName = instanceName;
         pneumaticTaskObj = TrcTaskMgr.createTask(instanceName + ".pneumaticTask", this::pneumaticTask);
         solSM = new TrcStateMachine<>(instanceName);
+        delayTimer = new TrcTimer(instanceName + ".delayTimer");
         solTimer = new TrcTimer(instanceName);
         timerEvent = new TrcEvent(instanceName);
         for (int i = 0; i < pulseActions.length; i++)
@@ -201,8 +191,7 @@ public class FrcPneumatic
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "bitMask=%x,on=%s",
-                bitMask, Boolean.toString(on));
+            globalTracer.traceInfo(funcName, "bitMask=%x,on=%s", bitMask, Boolean.toString(on));
         }
 
         cancel();
@@ -226,11 +215,6 @@ public class FrcPneumatic
                 // Retract channel fired.
                 cylinderExtended = false;
             }
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //set
 
@@ -314,11 +298,7 @@ public class FrcPneumatic
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(
-                    funcName, TrcDbgTrace.TraceLevel.API,
-                    "numActions=%d,repeat=%s,event=%s",
-                    numActions, Boolean.toString(repeat),
-                    event != null? event.toString(): "null");
+            globalTracer.traceInfo(funcName, "numActions=%d,repeat=%s,event=%s", numActions, repeat, event);
         }
 
         if (actionList.length > 0 && actionList[0].period > 0.0)
@@ -340,11 +320,6 @@ public class FrcPneumatic
             setTaskEnabled(true);
             solSM.start(State.START);
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //set
 
     /**
@@ -358,7 +333,7 @@ public class FrcPneumatic
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "state=%s", state);
+            globalTracer.traceInfo(funcName, "state=%s", state);
         }
 
         if (state)
@@ -369,11 +344,6 @@ public class FrcPneumatic
         {
             retract();
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //setState
 
     /**
@@ -381,13 +351,6 @@ public class FrcPneumatic
      */
     public void extend()
     {
-        final String funcName = "extend";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         if (solenoids.length == 2)
         {
             //
@@ -407,12 +370,34 @@ public class FrcPneumatic
         {
             throw new UnsupportedOperationException("Method supports only one or two-valve cylinders.");
         }
+    }   //extend
 
-        if (debugEnabled)
+    /**
+     * This method extends a 1 or 2-channel pneumatic cylinder.
+     *
+     * @param delay specifies delay in seconds to perform the extend.
+     */
+    public void extend(double delay)
+    {
+        if (delay > 0.0)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+            delayTimer.set(delay, this::delayExtend);
+        }
+        else
+        {
+            extend();
         }
     }   //extend
+
+    /**
+     * This method is called after the delay timer has expired to perform the extend operation.
+     *
+     * @param context not used.
+     */
+    private void delayExtend(Object context)
+    {
+        extend();
+    }   //delayExtend
 
     /**
      * This method extends a 1 or 2-channel pneumatic cylinder for the specified period and deactivates it. If an
@@ -424,12 +409,10 @@ public class FrcPneumatic
     public void extend(double period, TrcEvent event)
     {
         final String funcName = "extend";
+
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(
-                    funcName, TrcDbgTrace.TraceLevel.API,
-                    "period=%f,event=%s",
-                    period, event != null? event.toString(): "null");
+            globalTracer.traceInfo(funcName, "period=%f,event=%s", period, event);
         }
 
         if (solenoids.length == 1 || solenoids.length == 2)
@@ -441,11 +424,6 @@ public class FrcPneumatic
             throw new UnsupportedOperationException(
                     "Method supports only one or two-valve cylinders.");
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //extend
 
     /**
@@ -453,12 +431,6 @@ public class FrcPneumatic
      */
     public void retract()
     {
-        final String funcName = "retract";
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         if (solenoids.length == 2)
         {
             //
@@ -479,12 +451,34 @@ public class FrcPneumatic
             throw new UnsupportedOperationException(
                     "Method supports only one or two-valve cylinders.");
         }
+    }   //retract
 
-        if (debugEnabled)
+    /**
+     * This method retracts a 1 or 2-channel pneumatic cylinder.
+     *
+     * @param delay specifies delay in seconds to perform the retract.
+     */
+    public void retract(double delay)
+    {
+        if (delay > 0.0)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+            delayTimer.set(delay, this::delayRetract);
+        }
+        else
+        {
+            retract();
         }
     }   //retract
+
+    /**
+     * This method is called after the delay timer has expired to perform the retract operation.
+     *
+     * @param context not used.
+     */
+    private void delayRetract(Object context)
+    {
+        retract();
+    }   //delayRetract
 
     /**
      * This method retracts a 1 or 2-channel pneumatic cylinder for the specified period and deactivates it. If an
@@ -496,12 +490,10 @@ public class FrcPneumatic
     public void retract(double period, TrcEvent event)
     {
         final String funcName = "retract";
+
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(
-                    funcName, TrcDbgTrace.TraceLevel.API,
-                    "period=%f,event=%s",
-                    period, event != null? event.toString(): "null");
+            globalTracer.traceInfo(funcName, "period=%f,event=%s", period, event);
         }
 
         if (solenoids.length == 2)
@@ -516,11 +508,6 @@ public class FrcPneumatic
         {
             throw new UnsupportedOperationException(
                     "Method supports only two-valve cylinders.");
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //extend
 
@@ -538,8 +525,8 @@ public class FrcPneumatic
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "extendPeriod=%.3f,retractPeriod=%.3f,event=%s",
-                extendPeriod, retractPeriod, event);
+            globalTracer.traceInfo(
+                funcName, "extendPeriod=%.3f,retractPeriod=%.3f,event=%s", extendPeriod, retractPeriod, event);
         }
 
         if (solenoids.length == 2)
@@ -553,11 +540,6 @@ public class FrcPneumatic
         else
         {
             throw new UnsupportedOperationException("Method supports only two-valve cylinders.");
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //timedExtend
 
@@ -581,11 +563,6 @@ public class FrcPneumatic
         final String funcName = "isExtended";
         boolean state = false;
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         if (solenoids.length <= 2)
         {
             state = cylinderExtended;
@@ -597,7 +574,7 @@ public class FrcPneumatic
 
         if (debugEnabled)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", state);
+            globalTracer.traceInfo(funcName, "=%s", state);
         }
 
         return state;
@@ -611,9 +588,10 @@ public class FrcPneumatic
     private void setTaskEnabled(boolean enabled)
     {
         final String funcName = "setTaskEnabled";
+
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.FUNC, "enabled=%b", enabled);
+            globalTracer.traceInfo(funcName, "enabled=%b", enabled);
         }
 
         if (enabled)
@@ -624,11 +602,6 @@ public class FrcPneumatic
         {
             pneumaticTaskObj.unregisterTask();
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.FUNC);
-        }
     }   //setTaskEnabled
 
     /**
@@ -636,22 +609,11 @@ public class FrcPneumatic
      */
     private void cancel()
     {
-        final String funcName = "cancel";
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.FUNC);
-        }
-
         if (solSM.isEnabled())
         {
             setTaskEnabled(false);
             solTimer.cancel();
             solSM.stop();
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.FUNC);
         }
     }   //cancel
 
@@ -669,15 +631,16 @@ public class FrcPneumatic
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
+            globalTracer.traceVerbose(funcName, "taskType=%s,runMode=%s", taskType, runMode);
         }
 
         if (solSM.isReady())
         {
             State state = solSM.getState();
+
             if (debugEnabled)
             {
-                dbgTrace.traceInfo(funcName, "Executing state %d.", state);
+                globalTracer.traceInfo(funcName, "Executing state %d.", state);
             }
 
             switch (state)
@@ -690,11 +653,9 @@ public class FrcPneumatic
                         //
                         if (debugEnabled)
                         {
-                            dbgTrace.traceInfo(
-                                    funcName,
-                                    "[%f] Executing action %d/%d",
-                                    TrcTimer.getCurrentTime(),
-                                    actionIndex, numActions);
+                            globalTracer.traceInfo(
+                                funcName, "[%f] Executing action %d/%d",
+                                TrcTimer.getCurrentTime(), actionIndex, numActions);
                         }
 
                         for (int i = 0; i < solenoids.length; i++)
@@ -704,8 +665,7 @@ public class FrcPneumatic
                                 solenoids[i].set(true);
                                 if (debugEnabled)
                                 {
-                                    dbgTrace.traceInfo(
-                                            funcName, "Set solenoid %d ON.", i);
+                                    globalTracer.traceInfo(funcName, "Set solenoid %d ON.", i);
                                 }
                             }
                             else
@@ -714,8 +674,7 @@ public class FrcPneumatic
                                 set(false);
                                 if (debugEnabled)
                                 {
-                                    dbgTrace.traceInfo(
-                                            funcName, "Set solenoid %d OFF.", i);
+                                    globalTracer.traceInfo(funcName, "Set solenoid %d OFF.", i);
                                 }
                             }
                         }
@@ -741,10 +700,8 @@ public class FrcPneumatic
                         {
                             if (debugEnabled)
                             {
-                                dbgTrace.traceInfo(
-                                        funcName,
-                                        "Set timer for %f",
-                                        actionList[actionIndex].period);
+                                globalTracer.traceInfo(
+                                    funcName, "Set timer for %f", actionList[actionIndex].period);
                             }
                             solTimer.set(
                                     actionList[actionIndex].period,
@@ -777,7 +734,7 @@ public class FrcPneumatic
                     //
                     if (debugEnabled)
                     {
-                        dbgTrace.traceInfo(funcName, "Done!");
+                        globalTracer.traceInfo(funcName, "Done!");
                     }
                     setTaskEnabled(false);
                     if (notifyEvent != null)
@@ -792,11 +749,6 @@ public class FrcPneumatic
                     solSM.stop();
                     break;
             }
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
         }
     }   //pneumaticTask
 
