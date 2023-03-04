@@ -612,7 +612,8 @@ public abstract class FrcRobotBase extends RobotBase
             if (elapsedTime > taskTimeThreshold)
             {
                 globalTracer.traceWarn(
-                    funcName, "%s.prePeriodicTasks took too long (%.3fs)", currMode, elapsedTime);
+                    funcName, "%s.prePeriodicTasks took too long (%.3fs/%.3fs)",
+                    currMode, elapsedTime, taskTimeThreshold);
             }
             //
             // Perform event callback here because pre-periodic tasks have finished processing sensor inputs and
@@ -658,14 +659,14 @@ public abstract class FrcRobotBase extends RobotBase
             if (debugPerformanceEnabled)
             {
                 globalTracer.traceInfo(
-                    funcName, "[%.3f] %s.fastPeriodicElapsedTime=%.6f/%.6f/%.6fs",
+                    funcName, "[%.3f] %s.periodicElapsedTime=%.6f/%.6f/%.6fs",
                     TrcTimer.getModeElapsedTime(), currMode, elapsedTime, periodicTotalElapsedTime/loopCounter,
                     periodicMaxElapsedTime);
             }
             if (elapsedTime > taskTimeThreshold)
             {
                 globalTracer.traceWarn(
-                    funcName, "%s.fastPeriodic took too long (%.3fs)", currMode, elapsedTime);
+                    funcName, "%s.periodic took too long (%.3fs/%.3fs)", currMode, elapsedTime, taskTimeThreshold);
             }
             //
             // PostPeriodic.
@@ -690,7 +691,8 @@ public abstract class FrcRobotBase extends RobotBase
             if (elapsedTime > taskTimeThreshold)
             {
                 globalTracer.traceWarn(
-                    funcName, "%s.fastPostPeriodicTasks took too long (%.3fs)", currMode, elapsedTime);
+                    funcName, "%s.postPeriodicTasks took too long (%.3fs/%.3fs)",
+                    currMode, elapsedTime, taskTimeThreshold);
             }
 
             startTime = TrcTimer.getCurrentTime();
@@ -720,7 +722,7 @@ public abstract class FrcRobotBase extends RobotBase
             if (elapsedTime > taskTimeThreshold)
             {
                 globalTracer.traceWarn(
-                    funcName, "%s.updates took too long (%.3fs)", currMode, elapsedTime);
+                    funcName, "%s.updates took too long (%.3fs/%.3fs)", currMode, elapsedTime, taskTimeThreshold);
             }
 
             robotThreadWatchdog.sendHeartBeat();
