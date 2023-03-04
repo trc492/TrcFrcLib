@@ -54,6 +54,7 @@ public class FrcXboxController extends XboxController
 
     private final String instanceName;
     private final int port;
+    private final TrcTaskMgr.TaskObject buttonEventTaskObj;
     private int prevButtons;
     private FrcButtonHandler buttonHandler = null;
     private int leftYSign = 1;
@@ -72,12 +73,9 @@ public class FrcXboxController extends XboxController
 
         this.port = port;
         this.instanceName = instanceName;
+        buttonEventTaskObj = TrcTaskMgr.createTask(instanceName + ".buttonEvent", this::buttonEventTask);
         prevButtons = DriverStation.getStickButtons(port);
-
-        TrcTaskMgr.TaskObject buttonEventTaskObj = TrcTaskMgr.createTask(
-            instanceName + ".buttonEvent", this::buttonEventTask);
-        buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.PRE_PERIODIC_TASK);
-    }
+    }   //FrcXboxController
 
     /**
      * This method returns the instance name.
@@ -110,6 +108,14 @@ public class FrcXboxController extends XboxController
     public void setButtonHandler(FrcButtonHandler buttonHandler)
     {
         this.buttonHandler = buttonHandler;
+        if (buttonHandler != null)
+        {
+            buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.PRE_PERIODIC_TASK);
+        }
+        else
+        {
+            buttonEventTaskObj.unregisterTask();
+        }
     }   //setButtonHandler
 
     /**

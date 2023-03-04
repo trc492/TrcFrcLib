@@ -121,6 +121,7 @@ public class FrcJoystick extends Joystick
 
     private final String instanceName;
     private final int port;
+    private final TrcTaskMgr.TaskObject buttonEventTaskObj;
     private int prevButtons;
     private FrcButtonHandler buttonHandler = null;
     private int ySign = 1;
@@ -138,11 +139,8 @@ public class FrcJoystick extends Joystick
 
         this.instanceName = instanceName;
         this.port = port;
+        buttonEventTaskObj = TrcTaskMgr.createTask(instanceName + ".buttonEvent", this::buttonEventTask);
         prevButtons = DriverStation.getStickButtons(port);
-
-        TrcTaskMgr.TaskObject buttonEventTaskObj = TrcTaskMgr.createTask(
-            instanceName + ".buttonEvent", this::buttonEventTask);
-        buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.PRE_PERIODIC_TASK);
     }   //FrcJoystick
 
     /**
@@ -189,6 +187,14 @@ public class FrcJoystick extends Joystick
     public void setButtonHandler(FrcButtonHandler buttonHandler)
     {
         this.buttonHandler = buttonHandler;
+        if (buttonHandler != null)
+        {
+            buttonEventTaskObj.registerTask(TrcTaskMgr.TaskType.PRE_PERIODIC_TASK);
+        }
+        else
+        {
+            buttonEventTaskObj.unregisterTask();
+        }
     }   //setButtonHandler
 
     /**
