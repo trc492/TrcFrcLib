@@ -51,6 +51,9 @@ import edu.wpi.first.math.geometry.Transform3d;
  */
 public class FrcPhotonVision extends PhotonCamera
 {
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
+    private static final boolean debugEnabled = false;
+
     /**
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
      * it to provide a method to return the detected object rect and area.
@@ -102,19 +105,47 @@ public class FrcPhotonVision extends PhotonCamera
         @Override
         public Rect getRect()
         {
+            final String funcName = "getRect";
             Rect rect = null;
             List<TargetCorner> corners = target.getDetectedCorners();
+            TargetCorner lowerLeftCorner = null;
+            TargetCorner lowerRightCorner = null;
+            TargetCorner upperLeftCorner = null;
+            TargetCorner upperRightCorner = null;
 
             if (corners != null && corners.size() >= 4)
             {
-                TargetCorner lowerLeftCorner = corners.get(0);
-                TargetCorner lowerRightCorner = corners.get(1);
-                TargetCorner upperRightCorner = corners.get(2);
-                TargetCorner upperLeftCorner = corners.get(3);
-                double width = ((upperRightCorner.x - upperLeftCorner.x) + (lowerRightCorner.x - lowerLeftCorner.x))/2.0;
-                double height = ((lowerLeftCorner.y - upperLeftCorner.y) + (lowerRightCorner.y - upperRightCorner.y))/2.0;
+                lowerLeftCorner = corners.get(0);
+                lowerRightCorner = corners.get(1);
+                upperRightCorner = corners.get(2);
+                upperLeftCorner = corners.get(3);
+            }
+            else if ((corners = target.getMinAreaRectCorners()) != null && corners.size() >= 4)
+            {
+                upperLeftCorner = corners.get(0);
+                upperRightCorner = corners.get(1);
+                lowerRightCorner = corners.get(2);
+                lowerLeftCorner = corners.get(3);
+            }
 
+            if (upperLeftCorner != null)
+            {
+                double width =
+                    ((upperRightCorner.x - upperLeftCorner.x) + (lowerRightCorner.x - lowerLeftCorner.x))/2.0;
+                double height =
+                    ((lowerLeftCorner.y - upperLeftCorner.y) + (lowerRightCorner.y - upperRightCorner.y))/2.0;
                 rect = new Rect((int)upperLeftCorner.x, (int)upperLeftCorner.y, (int)width, (int)height);
+                if (debugEnabled)
+                {
+                    globalTracer.traceInfo(
+                        funcName, " UpperLeft: x=%.1f, y=%.1f", upperLeftCorner.x, upperLeftCorner.y);
+                    globalTracer.traceInfo(
+                        funcName, "UpperRight: x=%.1f, y=%.1f", upperRightCorner.x, upperRightCorner.y);
+                    globalTracer.traceInfo(
+                        funcName, " LowerLeft: x=%.1f, y=%.1f", lowerLeftCorner.x, lowerLeftCorner.y);
+                    globalTracer.traceInfo(
+                        funcName, "LowerRight: x=%.1f, y=%.1f", lowerRightCorner.x, lowerRightCorner.y);
+                }
             }
 
             return rect;
