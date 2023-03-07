@@ -128,7 +128,7 @@ public class FrcCANSparkMax extends TrcMotor
     //
 
     /**
-     * This method is used to check if the motor controller supports close loop control internally.
+     * This method is used to check if the motor controller supports close loop control natively.
      *
      * @return true if motor controller supports close loop control, false otherwise.
      */
