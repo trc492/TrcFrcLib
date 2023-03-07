@@ -59,10 +59,10 @@ public class FrcCANTalonLimitSwitch extends TrcDigitalInput
      * @return true if the digital input sensor is active, false otherwise.
      */
     @Override
-    public boolean isActive()
+    public boolean getInputState()
     {
         return upperLimitSwitch? canTalon.isUpperLimitSwitchActive(): canTalon.isLowerLimitSwitchActive();
-    }   //isActive
+    }   //getInputState
 
     /**
      * This method inverts the polarity of the limit switch by configuring it to be normally open (non-inverted) or
@@ -70,6 +70,7 @@ public class FrcCANTalonLimitSwitch extends TrcDigitalInput
      *
      * @param inverted specifies true to invert and false otherwise.
      */
+    @Override
     public void setInverted(boolean inverted)
     {
         if (upperLimitSwitch)
