@@ -164,6 +164,16 @@ public abstract class FrcRobotBase extends RobotBase
     }   //toString
 
     /**
+     * This method returns the dashboard object.
+     *
+     * @return dashboard object.
+     */
+    public FrcDashboard getDashboard()
+    {
+        return dashboard;
+    }   //getDashboard
+
+    /**
      * This method returns the loop counter. This is very useful for code to determine if it is called
      * multiple times in the same loop. For example, it can be used to optimize sensor access so that if
      * the sensor is accessed in the same loop, there is no reason to create a new bus transaction to get "fresh"
