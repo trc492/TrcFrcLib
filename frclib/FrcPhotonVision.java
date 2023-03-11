@@ -153,13 +153,13 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param trcPose2D specifies the TrcPose2D to be translated.
          * @return translated Photon Pose3d object.
          */
-        public static Pose3d trcPose2DToPose3d(TrcPose2D pose2d)
+        public static Pose3d trcPose2DToPose3d(TrcPose2D trcPose)
         {
             return new Pose3d(
-                pose2d.y*TrcUtil.METERS_PER_INCH,
-                -pose2d.x*TrcUtil.METERS_PER_INCH,
+                trcPose.y*TrcUtil.METERS_PER_INCH,
+                -trcPose.x*TrcUtil.METERS_PER_INCH,
                 0.0,
-                new Rotation3d(0.0, 0.0, Math.toRadians(-pose2d.angle)));
+                new Rotation3d(0.0, 0.0, Math.toRadians(-trcPose.angle)));
         }   //trcPose2DToPose3d
 
         /**
