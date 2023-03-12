@@ -44,6 +44,8 @@ import TrcCommonLib.trclib.TrcVisionTargetInfo;
 import TrcCommonLib.trclib.TrcTaskMgr.TaskType;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 
 /**
  * This class implements vision detection using PhotonLib extending PhotonCamera.
@@ -74,6 +76,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         public final double timestamp;
         public final PhotonTrackedTarget target;
         public final TrcPose2D targetPose;
+        public final Pose3d targetPose3d;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -92,6 +95,14 @@ public abstract class FrcPhotonVision extends PhotonCamera
             this.timestamp = timestamp;
             this.target = target;
             targetPose = getTargetPose(target.getYaw(), target.getPitch(), targetHeight);
+            Transform3d targetTransform3d = target.getBestCameraToTarget();
+            Translation3d targetTranslation3d = targetTransform3d.getTranslation();
+
+            targetPose3d = new Pose3d(
+                -targetTranslation3d.getY()*TrcUtil.INCHES_PER_METER,
+                targetTranslation3d.getX()*TrcUtil.INCHES_PER_METER,
+                targetTranslation3d.getZ()*TrcUtil.INCHES_PER_METER,
+                new Rotation3d(0.0, 0.0, targetTransform3d.getRotation().getZ()));
         }   //DetectedObject
 
         /**
@@ -102,7 +113,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         @Override
         public String toString()
         {
-            return String.format(Locale.US, "{time=%.3f,pose=%s,target=%s}", timestamp, targetPose, target);
+            return String.format(Locale.US, "{time=%.3f,pose=%s,pose3d=%s}", timestamp, targetPose, targetPose3d);
         }   //toString
 
         /**
