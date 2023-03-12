@@ -137,10 +137,12 @@ public abstract class FrcPhotonVision extends PhotonCamera
         }   //getTargetPose
 
         /**
-         * This method translates a Photon Pose3d to the TrcPose2D. Photon Pose3d is on the Math coordinate system
-         * where X-axis is straight ahead, Y-axis is to the robot's left, Z-axis is up and positive angle is
-         * anti-clockwise. Our TrcPose2D is on typical robotics coordinate system where X-axis is to the robot's
-         * right, Y-axis is straigh ahead, no Z-axis and positive angle is clockwise.
+         * This method translates a Photon Pose3d to the TrcPose2D by projecting the 3D pose on the floor to obtain
+         * a 2D pose. Also, Photon Pose3d is on the Math coordinate system where X-axis is straight ahead, Y-axis is
+         * to the robot's left, Z-axis is up and positive angle is anti-clockwise. Our TrcPose2D is on typical
+         * robotics coordinate system where X-axis is to the robot's right, Y-axis is straigh ahead, no Z-axis and
+         * positive angle is clockwise. This method translates the Photon coorindate system to our robot coordinate
+         * system.
          *
          * @param pose3d specifies the Photon Pose3d to be translated.
          * @return translated TrcPose2D object.
@@ -159,7 +161,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * This method translates a TrcPose2D to the Photon Pose3d. Photon Pose3d is on the Math coordinate system
          * where X-axis is straight ahead, Y-axis is to the robot's left, Z-axis is up and positive angle is
          * anti-clockwise. Our TrcPose2D is on typical robotics coordinate system where X-axis is to the robot's
-         * right, Y-axis is straigh ahead, no Z-axis and positive angle is clockwise.
+         * right, Y-axis is straigh ahead, no Z-axis and positive angle is clockwise. To translate a 2D pose to
+         * 3D, it assume the pose is on the ground and only has yaw as its rotation.
          *
          * @param trcPose2D specifies the TrcPose2D to be translated.
          * @return translated Photon Pose3d object.
