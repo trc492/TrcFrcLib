@@ -75,8 +75,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
     {
         public final double timestamp;
         public final PhotonTrackedTarget target;
-        public final TrcPose2D targetPose;
-        public final Pose3d targetPose3d;
+        public final TrcPose2D targetPoseFrom2D;
+        public final TrcPose2D targetPoseFrom3D;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -94,15 +94,14 @@ public abstract class FrcPhotonVision extends PhotonCamera
 
             this.timestamp = timestamp;
             this.target = target;
-            targetPose = getTargetPose(target.getYaw(), target.getPitch(), targetHeight);
+            targetPoseFrom2D = getTargetPose(target.getYaw(), target.getPitch(), targetHeight);
             Transform3d targetTransform3d = target.getBestCameraToTarget();
             Translation3d targetTranslation3d = targetTransform3d.getTranslation();
 
-            targetPose3d = new Pose3d(
+            targetPoseFrom3D = new TrcPose2D(
                 -targetTranslation3d.getY()*TrcUtil.INCHES_PER_METER,
                 targetTranslation3d.getX()*TrcUtil.INCHES_PER_METER,
-                targetTranslation3d.getZ()*TrcUtil.INCHES_PER_METER,
-                new Rotation3d(0.0, 0.0, targetTransform3d.getRotation().getZ()));
+                target.getYaw());
         }   //DetectedObject
 
         /**
@@ -113,7 +112,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
         @Override
         public String toString()
         {
-            return String.format(Locale.US, "{time=%.3f,pose=%s,pose3d=%s}", timestamp, targetPose, targetPose3d);
+            return String.format(
+                Locale.US, "{time=%.3f,poseFrom2d=%s,poseFrom3d=%s}", timestamp, targetPoseFrom2D, targetPoseFrom3D);
         }   //toString
 
         /**
