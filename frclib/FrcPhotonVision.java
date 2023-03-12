@@ -42,10 +42,10 @@ import TrcCommonLib.trclib.TrcUtil;
 import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
 import TrcCommonLib.trclib.TrcTaskMgr.TaskType;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
 
 /**
  * This class implements vision detection using PhotonLib extending PhotonCamera.
@@ -92,16 +92,14 @@ public abstract class FrcPhotonVision extends PhotonCamera
                 throw new IllegalStateException("Must not instantiate DetectedObject before FrcPhotonVision.");
             }
 
+            Transform3d targetTransform3d = target.getBestCameraToTarget();
+            Pose3d targetPose3d = new Pose3d(targetTransform3d.getTranslation(), targetTransform3d.getRotation());
+
             this.timestamp = timestamp;
             this.target = target;
-            targetPoseFrom2D = getTargetPose(target.getYaw(), target.getPitch(), targetHeight);
-            Transform3d targetTransform3d = target.getBestCameraToTarget();
-            Translation3d targetTranslation3d = targetTransform3d.getTranslation();
 
-            targetPoseFrom3D = new TrcPose2D(
-                -targetTranslation3d.getY()*TrcUtil.INCHES_PER_METER,
-                targetTranslation3d.getX()*TrcUtil.INCHES_PER_METER,
-                target.getYaw());
+            targetPoseFrom2D = getTargetPose(target.getYaw(), target.getPitch(), targetHeight);
+            targetPoseFrom3D = pose3dToTrcPose2D(targetPose3d);
         }   //DetectedObject
 
         /**
@@ -149,10 +147,12 @@ public abstract class FrcPhotonVision extends PhotonCamera
          */
         public static TrcPose2D pose3dToTrcPose2D(Pose3d pose3d)
         {
+            Pose2d pose2d = pose3d.toPose2d();
+
             return new TrcPose2D(
-                -pose3d.getY()*TrcUtil.INCHES_PER_METER,
-                pose3d.getX()*TrcUtil.INCHES_PER_METER,
-                -Math.toDegrees(pose3d.getRotation().getZ()));
+                -pose2d.getY()*TrcUtil.INCHES_PER_METER,
+                pose2d.getX()*TrcUtil.INCHES_PER_METER,
+                -pose2d.getRotation().getDegrees());
         }   //pose3dToTrcPose2D
 
         /**
