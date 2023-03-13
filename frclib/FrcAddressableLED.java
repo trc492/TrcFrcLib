@@ -34,7 +34,7 @@ import TrcCommonLib.trclib.TrcColor;
  */
 public class FrcAddressableLED extends TrcAddressableLED
 {
-    private static final Color offColor = new Color(0.0, 0.0, 0.0);
+    private static final Color offColor = new Color(0, 0, 0);
     private final AddressableLED led;
     private final AddressableLEDBuffer ledBuffer;
 
