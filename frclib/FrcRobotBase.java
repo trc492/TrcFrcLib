@@ -744,7 +744,7 @@ public abstract class FrcRobotBase extends RobotBase
             if (periodicInterval > 0.0)
             {
                 double loopTime = TrcTimer.getCurrentTime() - loopStartTime;
-                if (loopTime >= periodicInterval)
+                if (loopTime >= periodicInterval*2.0)
                 {
                     globalTracer.traceWarn(
                         funcName, "%s took too long (%.3f/%.3f)", currMode, loopTime, periodicInterval);
