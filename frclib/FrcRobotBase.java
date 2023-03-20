@@ -135,8 +135,6 @@ public abstract class FrcRobotBase extends RobotBase
 
         this.robotName = robotName;
         FrcRobotBase.instance = this;
-        // Initialize modeStartTime just in case somebody's calling TrcUtil.getModeElapsedTime before it's initialized.
-        TrcTimer.recordModeStartTime();
         dashboard.clearDisplay();
     }   //FrcRobotBase
 
@@ -329,7 +327,7 @@ public abstract class FrcRobotBase extends RobotBase
             bannerPrefix +
             "\n****************************************\n" +
             " Host Name: %s\n" +
-            "Robot Name: %s\n"+
+            " Robot Name: %s\n"+
             "\n****************************************\n" +
             bannerSuffix,
             getHostName(), robotName);
@@ -406,7 +404,6 @@ public abstract class FrcRobotBase extends RobotBase
                 // Detected mode transition.
                 //
                 globalTracer.traceInfo(funcName, "*** Transitioning from %s to %s ***", prevMode, currMode);
-                TrcTimer.recordModeStartTime();
 
                 if (prevMode != RunMode.INVALID_MODE)
                 {
@@ -484,6 +481,7 @@ public abstract class FrcRobotBase extends RobotBase
                 }
 
                 TrcRobot.setRunMode(currMode);
+                TrcTimer.recordModeStartTime();
                 if (currMode != RunMode.INVALID_MODE)
                 {
                     //
@@ -779,6 +777,7 @@ public abstract class FrcRobotBase extends RobotBase
      */
     public void printPerformanceMetrics(TrcDbgTrace tracer)
     {
+        tracer.traceInfo(moduleName, "***** Performance Metrics *****");
         tracer.traceInfo(
             moduleName, "(%s->%s) Performance Metrics: LoopCount=%d", prevMode, currMode, loopCounter);
         tracer.traceInfo(
