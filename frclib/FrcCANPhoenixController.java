@@ -539,7 +539,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         recordResponseCode(
             "configSupplyCurrentLimit",
             motor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(
-                true, currentLimit, triggerThresholdCurrent, triggerThresholdTime), 10));
+                true, currentLimit, triggerThresholdCurrent, triggerThresholdTime), 30));
     }   //setCurrentLimit
 
 }   //class FrcCANPhoenixController

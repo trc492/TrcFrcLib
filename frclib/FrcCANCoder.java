@@ -108,7 +108,7 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
     {
         final String funcName = "setInverted";
         // Configure the sensor direction to match the steering motor direction.
-        ErrorCode errCode = super.configSensorDirection(inverted, 10);
+        ErrorCode errCode = super.configSensorDirection(inverted, 30);
 
         if (errCode != ErrorCode.OK)
         {
