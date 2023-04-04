@@ -115,4 +115,5 @@ public class FrcAddressableLED extends TrcAddressableLED
             led.setData(ledBuffer);
         }
     }   //updateLED
+
 }   //class FrcAddressableLED
