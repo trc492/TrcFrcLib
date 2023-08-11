@@ -32,7 +32,6 @@ import TrcCommonLib.trclib.TrcAnalogInput.DataType;
  */
 public class FrcAnalogEncoder implements FrcEncoder
 {
-    private final String instanceName;
     private final FrcAnalogInput analogInput;
     private final TrcCardinalConverter<TrcAnalogInput.DataType> cardinalConverter;
     private double sign = 1.0;
@@ -48,7 +47,6 @@ public class FrcAnalogEncoder implements FrcEncoder
      */
     public FrcAnalogEncoder(String instanceName, int channel, boolean powerRailIs3V3)
     {
-        this.instanceName = instanceName;
         analogInput = new FrcAnalogInput(instanceName, channel, null, powerRailIs3V3);
         cardinalConverter = new TrcCardinalConverter<TrcAnalogInput.DataType>(
             instanceName, analogInput, TrcAnalogInput.DataType.NORMALIZED_DATA);
@@ -67,17 +65,6 @@ public class FrcAnalogEncoder implements FrcEncoder
     {
         this(instanceName, channel, false);
     }   //FrcAnalogEncoder
-
-    /**
-     * This method returns the instance name.
-     *
-     * @return instance name.
-     */
-    @Override
-    public String toString()
-    {
-        return instanceName;
-    }   //toString
 
     /**
      * This method enables/disables the Cardinal Converter task.
