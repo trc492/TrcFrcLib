@@ -22,7 +22,7 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.first.wpilibj.Encoder;
+import TrcCommonLib.trclib.TrcEncoder;
 import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX;
 
 public class FrcPWMVictorSPX extends FrcPWMMotorController<PWMVictorSPX>
@@ -32,14 +32,14 @@ public class FrcPWMVictorSPX extends FrcPWMMotorController<PWMVictorSPX>
      *
      * @param instanceName specifies the instance name.
      * @param pwmChannel specifies the PWM channel number of the motor.
-     * @param encoder specifies the encoder object, can be null if not provided.
      * @param revLimitSw specifies the reverse limit switch, can be null if not provided.
      * @param fwdLimitSw specifies the forward limit switch, can be null if not provided.
+     * @param encoder specifies the encoder object, can be null if not provided.
      */
     public FrcPWMVictorSPX(
-        String instanceName, int pwmChannel, Encoder encoder, FrcDigitalInput revLimitSw, FrcDigitalInput fwdLimitSw)
+        String instanceName, int pwmChannel, FrcDigitalInput revLimitSw, FrcDigitalInput fwdLimitSw, TrcEncoder encoder)
     {
-        super(instanceName, new PWMVictorSPX(pwmChannel), encoder, revLimitSw, fwdLimitSw);
+        super(instanceName, new PWMVictorSPX(pwmChannel), revLimitSw, fwdLimitSw, encoder);
     }   //FrcPWMVictorSPX
 
 }   //class FrcPWMVictorSPX

@@ -30,11 +30,11 @@ public class FrcCANFalcon extends FrcCANPhoenixController<TalonFX>
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param deviceNumber specifies the CAN ID of the device.
+     * @param canId specifies the CAN ID of the device.
      */
-    public FrcCANFalcon(final String instanceName, int deviceNumber)
+    public FrcCANFalcon(String instanceName, int canId)
     {
-        super(instanceName, new TalonFX(deviceNumber));
+        super(instanceName, new TalonFX(canId));
     }   //FrcCANFalcon
 
 }   //class FrcCANFalcon

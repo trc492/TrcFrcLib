@@ -26,12 +26,13 @@ import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.sensors.CANCoder;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcEncoder;
 
 /**
  * This class extends CANCoder and implements the FrcEncoder interface to allow compatibility to other types of
  * encoders.
  */
-public class FrcCANCoder extends CANCoder implements FrcEncoder
+public class FrcCANCoder extends CANCoder implements TrcEncoder
 {
     private final String instanceName;
     private double scale = 1.0;
@@ -116,6 +117,17 @@ public class FrcCANCoder extends CANCoder implements FrcEncoder
                 funcName, "%s: CANcoder.configSensorDirection failed (code=%s).", instanceName, errCode);
         }
     }   //setInverted
+
+    /**
+     * This method checks if the encoder direction is inverted.
+     *
+     * @return true if encoder direction is rerversed, false otherwise.
+     */
+    @Override
+    public boolean isInverted()
+    {
+        return super.configGetSensorDirection();
+    }   //isInverted
 
     /**
      * This method sets the encoder scale and offset.

@@ -22,37 +22,71 @@
 
 package TrcFrcLib.frclib;
 
+import TrcCommonLib.trclib.TrcEncoder;
+import edu.wpi.first.wpilibj.Encoder;
+
 /**
  * This interface specifies a common implementation of a generic encoder with which makes different tpes of encoders
  * compatible with each other.
  */
-public interface FrcEncoder
+public class FrcEncoder extends Encoder implements TrcEncoder
 {
-    /**
-     * This method resets the encoder position.
-     */
-    void reset();
+    private double sign = 1.0;
+    private double scale = 1.0;
+    private double offset = 0.0;
+
+    public FrcEncoder(int channelA, int channelB, EncodingType encodingType)
+    {
+        super(channelA, channelB, false, encodingType);
+    }   //FrcEncoder
+
+    //
+    // Implements TrcEncoder interface.
+    //
 
     /**
      * This method reads the absolute position of the encoder.
      *
      * @return absolute position of the encoder.
      */
-    double getRawPosition();
+    @Override
+    public double getRawPosition()
+    {
+        return get();
+    }   //getRawPosition
 
     /**
      * This method returns the encoder position adjusted by scale and offset.
      *
      * @return encoder position adjusted by scale and offset.
      */
-    double getPosition();
+    @Override
+    public double getPosition()
+    {
+        return sign * (get() * scale + offset);
+    }   //getPosition
 
     /**
      * This method reverses the direction of the encoder.
      *
      * @param inverted specifies true to reverse the encoder direction, false otherwise.
      */
-    void setInverted(boolean inverted);
+    @Override
+    public void setInverted(boolean inverted)
+    {
+        sign = inverted ? -1.0 : 1.0;
+    }   //setInverted
+
+    /**
+     * This method checks if the encoder direction is inverted.
+     *
+     * @return true if encoder direction is rerversed, false otherwise.
+     */
+    @Override
+    public boolean isInverted()
+    {
+        return sign == -1.0;
+    }   //isInverted
 
     /**
      * This method sets the encoder scale and offset.
@@ -60,5 +94,11 @@ public interface FrcEncoder
      * @param scale specifies the scale value.
      * @param offset specifies the offset value.
      */
-    void setScaleAndOffset(double scale, double offset);
+    @Override
+    public void setScaleAndOffset(double scale, double offset)
+    {
+        this.scale = scale;
+        this.offset = offset;
+    }   //setScaleAndOffset
+
 }   //interface FrcEncoder

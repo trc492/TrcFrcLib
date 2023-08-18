@@ -24,18 +24,17 @@ package TrcFrcLib.frclib;
 
 import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.ParamEnum;
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.BaseTalon;
+
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
-import TrcCommonLib.trclib.TrcDbgTrace;
-import TrcCommonLib.trclib.TrcMotor;
+import TrcCommonLib.trclib.TrcDbgTrace;import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
 
 public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMotor
@@ -60,10 +59,9 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //class EncoderInfo
 
     public final T motor;
-    private Double motorPower = null;
-    private boolean revLimitSwitchInverted = false;
-    private boolean fwdLimitSwitchInverted = false;
-    private FeedbackDevice feedbackDeviceType = FeedbackDevice.QuadEncoder;
+    private FeedbackDevice feedbackDeviceType;
+    private boolean revLimitSwitchInverted;
+    private boolean fwdLimitSwitchInverted;
 
     // The number of non-success error codes reported by the device after sending a command.
     private int errorCount = 0;
@@ -75,10 +73,11 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * @param instanceName specifies the instance name.
      * @param baseTalon the base talon object.
      */
-    public FrcCANPhoenixController(final String instanceName, T baseTalon)
+    public FrcCANPhoenixController(String instanceName, T baseTalon)
     {
-        super(instanceName);
+        super(instanceName, null, null, null);
         motor = baseTalon;
+        readConfig();
     }   //FrcCANPhoenixController
 
     /**
@@ -143,19 +142,44 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         recordResponseCode("configSelectedFeedbackSensor", motor.configSelectedFeedbackSensor(devType));
     }   //setFeedbackDevice
 
+    /**
+     * This method reads the configuration of the phoenix controller.
+     */
+    private void readConfig()
+    {
+        feedbackDeviceType = FeedbackDevice.valueOf(motor.configGetParameter(ParamEnum.eFeedbackSensorType, 0, 10));
+        fwdLimitSwitchInverted = LimitSwitchNormal.NormallyClosed == LimitSwitchNormal.valueOf(
+            motor.configGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 0, 10));
+        revLimitSwitchInverted = LimitSwitchNormal.NormallyClosed == LimitSwitchNormal.valueOf(
+            motor.configGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 1, 10));
+    }   //readConfig
+
     //
     // Implements TrcMotorController interface.
     //
 
-    /**
-     * This method is used to check if the motor controller supports close loop control natively.
-     *
-     * @return true if motor controller supports close loop control, false otherwise.
-     */
-    public boolean supportCloseLoopControl()
-    {
-        return true;
-    }   // supportCloseLoopControl
+    // /**
+    //  * This method is used to check if the motor controller supports close loop control natively.
+    //  *
+    //  * @return true if motor controller supports close loop control, false otherwise.
+    //  */
+    // @Override
+    // public boolean supportCloseLoopControl()
+    // {
+    //     return true;
+    // }   // supportCloseLoopControl
+
+    // /**
+    //  * This method checks if the device is connected to the robot.
+    //  *
+    //  * @return true if the device is connected, false otherwise.
+    //  */
+    // @Override
+    // public boolean isConnected()
+    // {
+    //     // Hacky, but should work
+    //     return motor.getBusVoltage() > 0.0;
+    // }   //isConnected
 
     /**
      * This method resets the motor controller configurations to factory default so that everything is at known state.
@@ -164,39 +188,8 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public void resetFactoryDefault()
     {
         recordResponseCode("configFactoryDefault", motor.configFactoryDefault());
+        readConfig();
     }   //resetFactoryDefault
-
-    /**
-     * This method checks if the device is connected to the robot.
-     *
-     * @return true if the device is connected, false otherwise.
-     */
-    @Override
-    public boolean isConnected()
-    {
-        // Hacky, but should work
-        return motor.getBusVoltage() > 0.0;
-    }   //isConnected
-
-    /**
-     * This method sets this motor to follow another motor.
-     *
-     * @param otherMotor specifies the other motor to follow.
-     */
-    @Override
-    public void followMotor(TrcMotor otherMotor)
-    {
-        if (otherMotor instanceof FrcCANPhoenixController)
-        {
-            // Can only follow the same type of motor natively.
-            motor.follow(((FrcCANPhoenixController<?>) otherMotor).motor);
-        }
-        else
-        {
-            // Not the same type of motor, let TrcMotor simulates it.
-            otherMotor.addFollowingMotor(this);
-        }
-    }   //followMotor
 
     /**
      * This method returns the bus voltage of the motor controller.
@@ -209,38 +202,58 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         return motor.getBusVoltage();
     }   //getBusVoltage
 
-    /**
-     * This method enables voltage compensation so that it will maintain the motor output regardless of battery
-     * voltage.
+   /**
+     * This method sets the current limit of the motor.
      *
-     * @param batteryNominalVoltage specifies the nominal voltage of the battery.
+     * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
+     * @param triggerThresholdCurrent specifies threshold current in amperes to be exceeded before limiting occurs.
+     *        If this value is less than currentLimit, then currentLimit is used as the threshold.
+     * @param triggerThresholdTime specifies how long current must exceed threshold (seconds) before limiting occurs.
      */
     @Override
-    public void enableVoltageCompensation(double batteryNominalVoltage)
+    public void setCurrentLimit(double currentLimit, double triggerThresholdCurrent, double triggerThresholdTime)
     {
-        recordResponseCode("configVoltageCompSaturation", motor.configVoltageCompSaturation(batteryNominalVoltage));
-        motor.enableVoltageCompensation(true);
-    }   //enableVoltageCompensation
+        recordResponseCode(
+            "configSupplyCurrentLimit",
+            motor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(
+                true, currentLimit, triggerThresholdCurrent, triggerThresholdTime), 30));
+    }   //setCurrentLimit
+
+    // /**
+    //  * This method sets the close loop percentage output limits. By default the limits are set to the max at -1 to 1.
+    //  * By setting a non-default limits, it effectively limits the output power of the close loop control.
+    //  *
+    //  * @param revLimit specifies the percentage output limit of the reverse direction.
+    //  * @param fwdLimit specifies the percentage output limit of the forward direction.
+    //  */
+    // @Override
+    // public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
+    // {
+    //     recordResponseCode("configPeakOutputReverse", motor.configPeakOutputReverse(Math.abs(revLimit)));
+    //     recordResponseCode("configPeakOutputForward", motor.configPeakOutputForward(Math.abs(fwdLimit)));
+    // }   //setCloseLoopOutputLimits
 
     /**
-     * This method disables voltage compensation
+     * This method sets the close loop ramp rate.
+     *
+     * @param rampTime specifies the ramp time in seconds from neutral to full speed.
      */
     @Override
-    public void disableVoltageCompensation()
+    public void setCloseLoopRampRate(double rampTime)
     {
-        motor.enableVoltageCompensation(false);
-    }   //disableVoltageCompensation
+        recordResponseCode("configClosedloopRamp", motor.configClosedloopRamp(rampTime));
+    }   //setCloseLoopRampRate
 
     /**
-     * This method checks if voltage compensation is enabled.
+     * This method sets the open loop ramp rate.
      *
-     * @return true if voltage compensation is enabled, false if disabled.
+     * @param rampTime specifies the ramp time in seconds from neutral to full speed.
      */
     @Override
-    public boolean isVoltageCompensationEnabled()
+    public void setOpenLoopRampRate(double rampTime)
     {
-        return motor.isVoltageCompensationEnabled();
-    }   //isVoltageCompensationEnabled
+        recordResponseCode("configOpenloopRamp", motor.configOpenloopRamp(rampTime));
+    }   //setOpenLoopRampRate
 
     /**
      * This method enables/disables motor brake mode. In motor brake mode, set power to 0 would stop the motor very
@@ -257,51 +270,20 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setBrakeModeEnabled
 
     /**
-     * This method sets the PID coefficients of the motor's PID controller.
-     *
-     * @param pidCoeff specifies the PID coefficients to set.
-     */
-    @Override
-    public void setPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
-    {
-        recordResponseCode("config_kP", motor.config_kP(0, pidCoeff.kP));
-        recordResponseCode("config_kI", motor.config_kI(0, pidCoeff.kI));
-        recordResponseCode("config_kD", motor.config_kD(0, pidCoeff.kD));
-        recordResponseCode("config_kF", motor.config_kF(0, pidCoeff.kF));
-        recordResponseCode("config_IntegralZone", motor.config_IntegralZone(0, pidCoeff.iZone));
-    }   //setPidCoefficients
-
-    /**
-     * This method returns the PID coefficients of the motor's PID controller.
-     *
-     * @return PID coefficients of the motor's PID controller.
-     */
-    @Override
-    public TrcPidController.PidCoefficients getPidCoefficients()
-    {
-        return new TrcPidController.PidCoefficients(
-            motor.configGetParameter(ParamEnum.eProfileParamSlot_P, 0),
-            motor.configGetParameter(ParamEnum.eProfileParamSlot_I, 0),
-            motor.configGetParameter(ParamEnum.eProfileParamSlot_D, 0),
-            motor.configGetParameter(ParamEnum.eProfileParamSlot_F, 0),
-            motor.configGetParameter(ParamEnum.eProfileParamSlot_IZone, 0));
-    }   //getPidCoefficients
-
-    /**
      * This method inverts the active state of the reverse limit switch, typically reflecting whether the switch is
      * wired normally open or normally close.
      *
      * @param inverted specifies true to invert the limit switch, false otherwise.
      */
     @Override
-    public void setRevLimitSwitchInverted(boolean inverted)
+    public void setMotorRevLimitSwitchInverted(boolean inverted)
     {
         revLimitSwitchInverted = inverted;
         recordResponseCode("configReverseLimitSwitchSource",
             motor.configReverseLimitSwitchSource(
                 LimitSwitchSource.FeedbackConnector,
                 inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen));
-    }   //setRevLimitSwitchInverted
+    }   //setMotorRevLimitSwitchInverted
 
     /**
      * This method inverts the active state of the forward limit switch, typically reflecting whether the switch is
@@ -310,14 +292,14 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * @param inverted specifies true to invert the limit switch, false otherwise.
      */
     @Override
-    public void setFwdLimitSwitchInverted(boolean inverted)
+    public void setMotorFwdLimitSwitchInverted(boolean inverted)
     {
         fwdLimitSwitchInverted = inverted;
         recordResponseCode("configForwardLimitSwitchSource",
             motor.configForwardLimitSwitchSource(
                 LimitSwitchSource.FeedbackConnector,
                 inverted? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen));
-    }   //setFwdLimitSwitchInverted
+    }   //setMotorFwdLimitSwitchInverted
 
     /**
      * This method returns the state of the reverse limit switch.
@@ -325,10 +307,10 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * @return true if reverse limit switch is active, false otherwise.
      */
     @Override
-    public boolean isRevLimitSwitchActive()
+    public boolean isMotorRevLimitSwitchActive()
     {
         return revLimitSwitchInverted ^ (motor.isRevLimitSwitchClosed() == 1);
-    }   //isRevLimitSwitchActive
+    }   //isMotorRevLimitSwitchActive
 
     /**
      * This method returns the state of the forward limit switch.
@@ -336,10 +318,48 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * @return true if forward limit switch is active, false otherwise.
      */
     @Override
-    public boolean isFwdLimitSwitchActive()
+    public boolean isMotorFwdLimitSwitchActive()
     {
         return fwdLimitSwitchInverted ^ (motor.isFwdLimitSwitchClosed() == 1);
-    }   //isFwdLimitSwitchActive
+    }   //isMotorFwdLimitSwitchActive
+
+    /**
+     * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
+     * encoder may be mounted somewhere in the power train that it rotates opposite to the motor rotation. This will
+     * cause the encoder reading to go down when the motor is receiving positive power. This method can correct this
+     * situation.
+     *
+     * @param inverted specifies true to invert position sensor direction, false otherwise.
+     */
+    @Override
+    public void setMotorPositionSensorInverted(boolean inverted)
+    {
+        motor.setSensorPhase(inverted);
+    }   //setMotorPositionSensorInverted
+
+    /**
+     * This method returns the state of the position sensor direction.
+     *
+     * @return true if the motor direction is inverted, false otherwise.
+     */
+    @Override
+    public boolean isMotorPositionSensorInverted()
+    {
+        // Is this correct?
+        return motor.configGetParameter(ParamEnum.eSensorDirection, 0) > 0.0;
+    }   //isMotorPositionSensorInverted
+
+    /**
+     * This method resets the motor position sensor, typically an encoder.
+     */
+    @Override
+    public void resetMotorPosition()
+    {
+        if (feedbackDeviceType != FeedbackDevice.Analog)
+        {
+            recordResponseCode("setSelectedSensorPosition", motor.setSelectedSensorPosition(0, 0, 30));
+        }
+    }   //resetMotorPosition
 
     /**
      * This method inverts the spinning direction of the motor.
@@ -364,15 +384,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //isMotorInverted
 
     /**
-     * This method stops the motor regardless of what control mode the motor is on.
-     */
-    @Override
-    public void stopMotor()
-    {
-        setMotorPower(0.0);
-    }   //stopMotor
-
-    /**
      * This method sets the motor power.
      *
      * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
@@ -380,12 +391,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void setMotorPower(double power)
     {
-        // Do this only if power is different from the previous set power.
-        if (motorPower == null || motorPower != power)
-        {
-            motor.set(ControlMode.PercentOutput, power);
-            motorPower = power;
-        }
+        motor.set(com.ctre.phoenix.motorcontrol.ControlMode.PercentOutput, power);
     }   //setMotorPower
 
     /**
@@ -397,46 +403,44 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     public double getMotorPower()
     {
         // Motor power might have changed by closed loop controls, so get it directly from the motor.
-        motorPower = motor.getMotorOutputPercent();
-        return motorPower;
+        return motor.getMotorOutputPercent();
     }   //getMotorPower
 
     /**
-     * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
-     * encoder may be mounted somewhere in the power train that it rotates opposite to the motor rotation. This will
-     * cause the encoder reading to go down when the motor is receiving positive power. This method can correct this
-     * situation.
+     * This method commands the motor to spin at the given velocity using close loop control.
      *
-     * @param inverted specifies true to invert position sensor direction, false otherwise.
+     * @param velocity specifies the motor velocity in sensor units per second.
      */
     @Override
-    public void setPositionSensorInverted(boolean inverted)
+    public void setMotorVelocity(double velocity)
     {
-        motor.setSensorPhase(inverted);
-    }   //setPositionSensorInverted
+        // set takes a velocity value in sensor units per 100 msec.
+        motor.set(com.ctre.phoenix.motorcontrol.ControlMode.Velocity, velocity/10.0);
+    }   //setMotorVelocity
 
     /**
-     * This method returns the state of the position sensor direction.
+     * This method returns the current motor velocity.
      *
-     * @return true if the motor direction is inverted, false otherwise.
+     * @return current motor velocity in sensor units per sec.
      */
     @Override
-    public boolean isPositionSensorInverted()
+    public double getMotorVelocity()
     {
-        // Is this correct?
-        return motor.configGetParameter(ParamEnum.eSensorDirection, 0) > 0.0;
-    }   //isPositionSensorInverted
+        // getSelectedSensorVelocity returns value in sensor units per 100 msec.
+        return motor.getSelectedSensorVelocity()*10.0;
+    }   //getMotorVelocity
 
     /**
      * This method commands the motor to go to the given position using close loop control.
      *
-     * @param position specifies the motor position in raw sensor units.
+     * @param position specifies the position in sensor units.
+     * @param powerLimit specifies the maximum power output limits.
      */
     @Override
-    public void setMotorPosition(double position)
+    public void setMotorPosition(double position, double powerLimit)
     {
-        motor.set(ControlMode.Position, position);
-        motorPower = null;
+        motor.configClosedLoopPeakOutput(0, powerLimit);
+        motor.set(com.ctre.phoenix.motorcontrol.ControlMode.Position, position);
     }   //setMotorPosition
 
     /**
@@ -452,43 +456,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //getMotorPosition
 
     /**
-     * This method resets the motor position sensor, typically an encoder.
-     */
-    @Override
-    public void resetMotorPosition()
-    {
-        if (feedbackDeviceType != FeedbackDevice.Analog)
-        {
-            recordResponseCode("setSelectedSensorPosition", motor.setSelectedSensorPosition(0, 0, 30));
-        }
-    }   //resetMotorPosition
-
-    /**
-     * This method commands the motor to spin at the given velocity using close loop control.
-     *
-     * @param velocity specifies the motor velocity in raw sensor units per second.
-     */
-    @Override
-    public void setMotorVelocity(double velocity)
-    {
-        // set takes a velocity value in sensor units per 100 msec.
-        motor.set(ControlMode.Velocity, velocity/10.0);
-        motorPower = null;
-    }   //setMotorVelocity
-
-    /**
-     * This method returns the current motor velocity.
-     *
-     * @return current motor velocity in raw sensor units per sec.
-     */
-    @Override
-    public double getMotorVelocity()
-    {
-        // getSelectedSensorVelocity returns value in sensor units per 100 msec.
-        return motor.getSelectedSensorVelocity()*10.0;
-    }   //getMotorVelocity
-
-    /**
      * This method commands the motor to spin at the given current value using close loop control.
      *
      * @param current specifies current in amperes.
@@ -496,8 +463,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void setMotorCurrent(double current)
     {
-        motor.set(ControlMode.Current, current);
-        motorPower = null;
+        motor.set(com.ctre.phoenix.motorcontrol.ControlMode.Current, current);
     }   //setMotorCurrent
 
     /**
@@ -512,34 +478,275 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //getMotorCurrent
 
     /**
-     * This method sets the close loop percentage output limits. By default the limits are set to the max at -1 to 1.
-     * By setting a non-default limits, it effectively limits the output power of the close loop control.
+     * This method sets the PID coefficients of the the specified slot.
      *
-     * @param revLimit specifies the percentage output limit of the reverse direction.
-     * @param fwdLimit specifies the percentage output limit of the forward direction.
+     * @param slotIdx specifies the slot index.
+     * @param pidCoeff specifies the PID coefficients to set.
      */
-    @Override
-    public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
+    private void setPidCoefficients(int slotIdx, TrcPidController.PidCoefficients pidCoeff)
     {
-        recordResponseCode("configPeakOutputReverse", motor.configPeakOutputReverse(revLimit));
-        recordResponseCode("configPeakOutputForward", motor.configPeakOutputForward(fwdLimit));
-    }   //setCloseLoopOutputLimits
+        recordResponseCode("config_kP", motor.config_kP(slotIdx, pidCoeff.kP));
+        recordResponseCode("config_kI", motor.config_kI(slotIdx, pidCoeff.kI));
+        recordResponseCode("config_kD", motor.config_kD(slotIdx, pidCoeff.kD));
+        recordResponseCode("config_kF", motor.config_kF(slotIdx, pidCoeff.kF));
+        recordResponseCode("config_iZone", motor.config_IntegralZone(slotIdx, pidCoeff.iZone));
+    }   //setPidCoefficients
 
-   /**
-     * This method sets the current limit of the motor.
+    /**
+     * This method returns the PID coefficients of the specified slot.
      *
-     * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
-     * @param triggerThresholdCurrent specifies threshold current in amperes to be exceeded before limiting occurs.
-     *        If this value is less than currentLimit, then currentLimit is used as the threshold.
-     * @param triggerThresholdTime specifies how long current must exceed threshold (seconds) before limiting occurs.
+     * @param slotIdx specifies the slot index.
+     * @return PID coefficients of the specified slot.
+     */
+    private TrcPidController.PidCoefficients getPidCoefficients(int slotIdx)
+    {
+        return new TrcPidController.PidCoefficients(
+            motor.configGetParameter(ParamEnum.eProfileParamSlot_P, slotIdx),
+            motor.configGetParameter(ParamEnum.eProfileParamSlot_I, slotIdx),
+            motor.configGetParameter(ParamEnum.eProfileParamSlot_D, slotIdx),
+            motor.configGetParameter(ParamEnum.eProfileParamSlot_F, slotIdx),
+            motor.configGetParameter(ParamEnum.eProfileParamSlot_IZone, slotIdx));
+    }   //getPidCoefficients
+
+    /**
+     * This method sets the PID tolerance of the the specified slot.
+     *
+     * @param slotIdx specifies the slot index.
+     * @param tolerance specifies PID tolerance.
+     */
+    private void setPidTolerance(int slotIdx, double tolerance)
+    {
+        recordResponseCode("configAllowableClosedloopError", motor.configAllowableClosedloopError(slotIdx, tolerance));
+    }   //setPidTolerance
+
+    /**
+     * This method returns the PID tolerance of the specified slot.
+     *
+     * @param slotIdx specifies the slot index.
+     * @return PID tolerance of the specified slot.
+     */
+    private double getPidTolerance(int slotIdx)
+    {
+        return motor.configGetParameter(ParamEnum.eProfileParamSlot_AllowableErr, slotIdx);
+    }   //getPidTolerance
+
+    /**
+     * This method sets the PID coefficients of the motor controller's velocity PID controller.
+     *
+     * @param pidCoeff specifies the PID coefficients to set.
      */
     @Override
-    public void setCurrentLimit(double currentLimit, double triggerThresholdCurrent, double triggerThresholdTime)
+    public void setMotorVelocityPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        recordResponseCode(
-            "configSupplyCurrentLimit",
-            motor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(
-                true, currentLimit, triggerThresholdCurrent, triggerThresholdTime), 30));
-    }   //setCurrentLimit
+        setPidCoefficients(1, pidCoeff);
+    }   //setMotorVelocityPidCoefficients
+
+    /**
+     * This method returns the PID coefficients of the motor controller's velocity PID controller.
+     *
+     * @return PID coefficients of the motor's veloicty PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorVelocityPidCoefficients()
+    {
+        return getPidCoefficients(1);
+    }   //getMotorVelocityPidCoefficients
+
+    /**
+     * This method sets the PID tolerance of the motor controller's velocity PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorVelocityPidTolerance(double tolerance)
+    {
+        setPidTolerance(1, tolerance);
+    }   //setMotorVelocityPidTolerance
+
+    /**
+     * This method checks if the motor is at the set velocity.
+     *
+     * @return true if motor is on target, false otherwise.
+     */
+    @Override
+    public boolean getMotorVelocityOnTarget()
+    {
+        return motor.getClosedLoopError(1) <= getPidTolerance(1);
+    }   //getMotorVelocityOnTarget
+
+    /**
+     * This method sets the PID coefficients of the motor controller's position PID controller.
+     *
+     * @param pidCoeff specifies the PID coefficients to set.
+     */
+    @Override
+    public void setMotorPositionPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
+    {
+        setPidCoefficients(0, pidCoeff);
+    }   //setMotorPositionPidCoefficients
+
+    /**
+     * This method returns the PID coefficients of the motor controller's position PID controller.
+     *
+     * @return PID coefficients of the motor's position PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorPositionPidCoefficients()
+    {
+        return getPidCoefficients(0);
+    }   //getMotorPositionPidCoefficients
+
+    /**
+     * This method sets the PID tolerance of the motor controller's position PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorPositionPidTolerance(double tolerance)
+    {
+        setPidTolerance(0, tolerance);
+    }   //setMotorPositionPidTolerance
+
+    /**
+     * This method checks if the motor is at the set position.
+     *
+     * @return true if motor is on target, false otherwise.
+     */
+    @Override
+    public boolean getMotorPositionOnTarget()
+    {
+        return motor.getClosedLoopError(0) <= getPidTolerance(0);
+    }   //getMotorPositionOnTarget
+
+    /**
+     * This method sets the PID coefficients of the motor controller's current PID controller.
+     *
+     * @param pidCoeff specifies the PID coefficients to set.
+     */
+    @Override
+    public void setMotorCurrentPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
+    {
+        setPidCoefficients(2, pidCoeff);
+    }   //setMotorCurrentPidCoefficients
+
+    /**
+     * This method returns the PID coefficients of the motor controller's current PID controller.
+     *
+     * @return PID coefficients of the motor's current PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
+    {
+        return getPidCoefficients(2);
+    }   //geteMotorCurrentPidCoefficients
+
+    /**
+     * This method sets the PID tolerance of the motor controller's current PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorCurrentPidTolerance(double tolerance)
+    {
+        setPidTolerance(2, tolerance);
+    }   //setMotorCurrentPidTolerance
+
+    /**
+     * This method checks if the motor is at the set current.
+     *
+     * @return true if motor is on target, false otherwise.
+     */
+    @Override
+    public boolean getMotorCurrentOnTarget()
+    {
+        return motor.getClosedLoopError(2) <= getPidTolerance(2);
+    }   //getMotorCurrentOnTarget
+
+    //
+    // The following methods override the software simulation in TrcMotor providing direct support in hardware.
+    //
+
+    /**
+     * This method enables/disables voltage compensation so that it will maintain the motor output regardless of
+     * battery voltage.
+     *
+     * @param batteryNominalVoltage specifies the nominal voltage of the battery to enable, null to disable.
+     */
+    @Override
+    public void setVoltageCompensationEnabled(Double batteryNominalVoltage)
+    {
+        if (batteryNominalVoltage != null)
+        {
+            recordResponseCode("configVoltageCompSaturation", motor.configVoltageCompSaturation(batteryNominalVoltage));
+            motor.enableVoltageCompensation(true);
+        }
+        else
+        {
+            motor.enableVoltageCompensation(false);
+        }
+    }   //setVoltageCompensationEnabled
+
+    /**
+     * This method checks if voltage compensation is enabled.
+     *
+     * @return true if voltage compensation is enabled, false if disabled.
+     */
+    @Override
+    public boolean isVoltageCompensationEnabled()
+    {
+        return motor.isVoltageCompensationEnabled();
+    }   //isVoltageCompensationEnabled
+
+    /**
+     * This method sets the lower and upper soft limits.
+     *
+     * @param lowerLimit specifies the position of the lower limit, null to disable lower limit.
+     * @param upperLimit specifies the position of the upper limit, null to disable upper limit.
+     */
+    @Override
+    public void setSoftLimits(Double lowerLimit, Double upperLimit)
+    {
+        // TODO: Reverse may not be lower if limit swtiches are swapped but we have no knowledge of
+        // the swap. Only TrcMotor knows about it. Need to rethink this a bit more.
+        if (lowerLimit != null)
+        {
+            motor.configReverseSoftLimitThreshold(lowerLimit);
+            motor.configReverseSoftLimitEnable(true);
+        }
+        else
+        {
+            motor.configReverseSoftLimitEnable(false);
+        }
+
+        if (upperLimit != null)
+        {
+            motor.configForwardSoftLimitThreshold(upperLimit);
+            motor.configForwardSoftLimitEnable(true);
+        }
+        else
+        {
+            motor.configForwardSoftLimitEnable(false);
+        }
+    }   //setSoftLimits
+
+    /**
+     * This method sets this motor to follow another motor.
+     *
+     * @param otherMotor specifies the other motor to follow.
+     */
+    @Override
+    public void followMotor(TrcMotor otherMotor)
+    {
+        if (otherMotor instanceof FrcCANPhoenixController)
+        {
+            // Can only follow the same type of motor natively.
+            motor.follow(((FrcCANPhoenixController<?>) otherMotor).motor);
+        }
+        else
+        {
+            // Not the same type of motor, let TrcMotor simulates it.
+            super.followMotor(otherMotor);
+        }
+    }   //followMotor
 
 }   //class FrcCANPhoenixController

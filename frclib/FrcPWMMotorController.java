@@ -22,38 +22,37 @@
 
 package TrcFrcLib.frclib;
 
+import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
 
 public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMotor
 {
     public final T motor;
-    private final Encoder encoder;
-    private final FrcDigitalInput revLimitSwitch, fwdLimitSwitch;
-    private double batteryNominalVoltage = 0.0;
-    private Double motorPower = null;
+    private final FrcDigitalInput revLimitSwitch;
+    private final FrcDigitalInput fwdLimitSwitch;
+    private final TrcEncoder encoder;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
      * @param pwmMotor specifies the pwm motor object.
-     * @param encoder specifies the encoder object, can be null if not provided.
      * @param revLimitSwitch specifies the reverse limit switch, can be null if not provided.
      * @param fwdLimitSwitch specifies the forward limit switch, can be null if not provided.
+     * @param encoder specifies the encoder object, can be null if not provided.
      */
     public FrcPWMMotorController(
-        String instanceName, T pwmMotor, Encoder encoder,
-        FrcDigitalInput revLimitSwitch, FrcDigitalInput fwdLimitSwitch)
+        String instanceName, T pwmMotor, FrcDigitalInput revLimitSwitch, FrcDigitalInput fwdLimitSwitch,
+        TrcEncoder encoder)
     {
-        super(instanceName);
+        super(instanceName, revLimitSwitch, fwdLimitSwitch, encoder);
         motor = pwmMotor;
-        this.encoder = encoder;
         this.revLimitSwitch = revLimitSwitch;
         this.fwdLimitSwitch = fwdLimitSwitch;
+        this.encoder = encoder;
     }   //FrcPWMMotorController
 
     /**
@@ -71,15 +70,27 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     // Implements TrcMotorController interface.
     //
 
-    /**
-     * This method is used to check if the motor controller supports close loop control natively.
-     *
-     * @return true if motor controller supports close loop control, false otherwise.
-     */
-    public boolean supportCloseLoopControl()
-    {
-        return false;
-    }   // supportCloseLoopControl
+    // /**
+    //  * This method is used to check if the motor controller supports close loop control natively.
+    //  *
+    //  * @return true if motor controller supports close loop control, false otherwise.
+    //  */
+    // public boolean supportCloseLoopControl()
+    // {
+    //     return false;
+    // }   // supportCloseLoopControl
+
+    // /**
+    //  * This method checks if the device is connected to the robot. PWM motor controllers have no feedback
+    //  * communication. There is no simple way to check this. Therefore, we will just say it's always connected.
+    //  *
+    //  * @return true always.
+    //  */
+    // @Override
+    // public boolean isConnected()
+    // {
+    //     return true;
+    // } //isConnected
 
     /**
      * This method resets the motor controller configurations to factory default so that everything is at known state.
@@ -87,31 +98,8 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void resetFactoryDefault()
     {
-        throw new UnsupportedOperationException("PWM motor controllers do not support this operation.");
+        throw new UnsupportedOperationException("PWM motor controllers do not support resetFactoryDefault.");
     }   //resetFactoryDefault
-
-    /**
-     * This method checks if the device is connected to the robot. PWM motor controllers have no feedback
-     * communication. There is no simple way to check this. Therefore, we will just say it's always connected.
-     *
-     * @return true always.
-     */
-    @Override
-    public boolean isConnected()
-    {
-        return true;
-    } //isConnected
-
-    /**
-     * This method sets this motor to follow another motor.
-     *
-     * @param otherMotor specifies the other motor to follow.
-     */
-    @Override
-    public void followMotor(TrcMotor otherMotor)
-    {
-        otherMotor.addFollowingMotor(this);
-    }   //followMotor
 
     /**
      * This method returns the bus voltage of the motor controller. PWM motor controllers do not really support this,
@@ -125,37 +113,53 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
         return RobotController.getBatteryVoltage();
     }   //getBusVoltage
 
-    /**
-     * This method enables voltage compensation so that it will maintain the motor output regardless of battery
-     * voltage.
+   /**
+     * This method sets the current limit of the motor.
      *
-     * @param batteryNominalVoltage specifies the nominal voltage of the battery.
+     * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
+     * @param triggerThresholdCurrent not used. SparkMax does not support this.
+     * @param triggerThresholdTime not used. SparkMax does not support this.
      */
     @Override
-    public void enableVoltageCompensation(double batteryNominalVoltage)
+    public void setCurrentLimit(double currentLimit, double triggerThresholdCurrent, double triggerThresholdTime)
     {
-        this.batteryNominalVoltage = batteryNominalVoltage;
-    }   //enableVoltageCompensation
+        throw new UnsupportedOperationException("PWM motor controller does not support setCurrentLimit.");
+    }   //setCurrentLimit
+
+    // /**
+    //  * This method sets the close loop percentage output limits. By default the limits are set to the max at -1 to 1.
+    //  * By setting a non-default limits, it effectively limits the output power of the close loop control.
+    //  *
+    //  * @param revLimit specifies the percentage output limit of the reverse direction.
+    //  * @param fwdLimit specifies the percentage output limit of the forward direction.
+    //  */
+    // @Override
+    // public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
+    // {
+    //     throw new UnsupportedOperationException("PWM motor controller does not support setCloseLoopOutputLimits.");
+    // }   //setCloseLoopOutputLimits
 
     /**
-     * This method disables voltage compensation
+     * This method sets the close loop ramp rate.
+     *
+     * @param rampTime specifies the ramp time in seconds from neutral to full speed.
      */
     @Override
-    public void disableVoltageCompensation()
+    public void setCloseLoopRampRate(double rampTime)
     {
-        batteryNominalVoltage = 0.0;
-    }   //disableVoltageCompensation
+        throw new UnsupportedOperationException("PWM motor controller does not support setCloseLoopRampRate.");
+    }   //setCloseLoopRampRate
 
     /**
-     * This method checks if voltage compensation is enabled.
+     * This method sets the open loop ramp rate.
      *
-     * @return true if voltage compensation is enabled, false if disabled.
+     * @param rampTime specifies the ramp time in seconds from neutral to full speed.
      */
     @Override
-    public boolean isVoltageCompensationEnabled()
+    public void setOpenLoopRampRate(double rampTime)
     {
-        return batteryNominalVoltage != 0.0;
-    }   //isVoltageCompensationEnabled
+        throw new UnsupportedOperationException("PWM motor controller does not support setOpenLoopRampRate.");
+    }   //setOpenLoopRampRate
 
     /**
      * This method enables/disables motor brake mode. In motor brake mode, set power to 0 would stop the motor very
@@ -168,30 +172,8 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void setBrakeModeEnabled(boolean enabled)
     {
-        throw new UnsupportedOperationException("PWM motor controllers do not support this operation.");
+        throw new UnsupportedOperationException("PWM motor controllers do not support setBrakeModeEnabled.");
     }   //setBrakeModeEnabled
-
-    /**
-     * This method sets the PID coefficients of the motor's PID controller.
-     *
-     * @param pidCoeff specifies the PID coefficients to set.
-     */
-    @Override
-    public void setPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
-    {
-        throw new UnsupportedOperationException("PWM motor controllers do not support this operation.");
-    }   //setPidCoefficients
-
-    /**
-     * This method returns the PID coefficients of the motor's PID controller.
-     *
-     * @return PID coefficients of the motor's PID controller.
-     */
-    @Override
-    public TrcPidController.PidCoefficients getPidCoefficients()
-    {
-        throw new UnsupportedOperationException("PWM motor controllers do not support this operation.");
-    }   //getPidCoefficients
 
     /**
      * This method inverts the active state of the reverse limit switch, typically reflecting whether the switch is
@@ -200,13 +182,17 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
      * @param inverted specifies true to invert the limit switch, false otherwise.
      */
     @Override
-    public void setRevLimitSwitchInverted(boolean inverted)
+    public void setMotorRevLimitSwitchInverted(boolean inverted)
     {
         if (revLimitSwitch != null)
         {
             revLimitSwitch.setInverted(inverted);
         }
-    }   //setRevLimitSwitchInverted
+        else
+        {
+            throw new UnsupportedOperationException("Motor controller does not have reverse limit switch.");
+        }
+    }   //setMotorRevLimitSwitchInverted
 
     /**
      * This method inverts the active state of the forward limit switch, typically reflecting whether the switch is
@@ -215,13 +201,17 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
      * @param inverted specifies true to invert the limit switch, false otherwise.
      */
     @Override
-    public void setFwdLimitSwitchInverted(boolean inverted)
+    public void setMotorFwdLimitSwitchInverted(boolean inverted)
     {
         if (fwdLimitSwitch != null)
         {
             fwdLimitSwitch.setInverted(inverted);
         }
-    }   //setFwdLimitSwitchInverted
+        else
+        {
+            throw new UnsupportedOperationException("Motor controller does not have forward limit switch.");
+        }
+    }   //setMotorFwdLimitSwitchInverted
 
     /**
      * This method returns the state of the reverse limit switch.
@@ -229,10 +219,17 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
      * @return true if reverse limit switch is active, false otherwise.
      */
     @Override
-    public boolean isRevLimitSwitchActive()
+    public boolean isMotorRevLimitSwitchActive()
     {
-        return revLimitSwitch != null && revLimitSwitch.isActive();
-    }   //isRevLimitSwitchClosed
+        if (revLimitSwitch != null)
+        {
+            return revLimitSwitch.isActive();
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Motor controller does not have reverse limit switch.");
+        }
+    }   //isMotorRevLimitSwitchActive
 
     /**
      * This method returns the state of the forward limit switch.
@@ -240,10 +237,72 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
      * @return true if forward limit switch is active, false otherwise.
      */
     @Override
-    public boolean isFwdLimitSwitchActive()
+    public boolean isMotorFwdLimitSwitchActive()
     {
-        return fwdLimitSwitch != null && fwdLimitSwitch.isActive();
-    }   //isFwdLimitSwitchActive
+        if (fwdLimitSwitch != null)
+        {
+            return fwdLimitSwitch.isActive();
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Motor controller does not have forward limit switch.");
+        }
+    }   //isMotorFwdLimitSwitchActive
+
+    /**
+     * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
+     * encoder may be mounted somewhere in the power train that it rotates opposite to the motor rotation. This will
+     * cause the encoder reading to go down when the motor is receiving positive power. This method can correct this
+     * situation.
+     *
+     * @param inverted specifies true to invert position sensor direction, false otherwise.
+     */
+    @Override
+    public void setMotorPositionSensorInverted(boolean inverted)
+    {
+        if (encoder != null)
+        {
+            encoder.setInverted(inverted);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Motor controller does not have position sensor.");
+        }
+    }   //setMotorPositionSensorInverted
+
+    /**
+     * This method returns the state of the position sensor direction.
+     *
+     * @return true if the motor direction is inverted, false otherwise.
+     */
+    @Override
+    public boolean isMotorPositionSensorInverted()
+    {
+        if (encoder != null)
+        {
+            return encoder.isInverted();
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Motor controller does not have position sensor.");
+        }
+    }   //isMotorPositionSensorInverted
+
+    /**
+     * This method resets the motor position sensor, typically an encoder.
+     */
+    @Override
+    public void resetMotorPosition()
+    {
+        if (encoder != null)
+        {
+            encoder.reset();
+        }
+        else
+        {
+            throw new UnsupportedOperationException("This motor controller does not have an encoder.");
+        }
+    }   //resetMotorPosition
 
     /**
      * This method inverts the spinning direction of the motor.
@@ -268,18 +327,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     }   //isMotorInverted
 
     /**
-     * This method stops the motor regardless of what control mode the motor is on.
-     */
-    public void stopMotor()
-    {
-        if (motorPower == null || motorPower != 0.0)
-        {
-            motor.stopMotor();
-            motorPower = 0.0;
-        }
-    }   //stopMotor
-
-    /**
      * This method sets the raw motor power.
      *
      * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
@@ -287,12 +334,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void setMotorPower(double power)
     {
-        // Do this only if power is different from the previous set power.
-        if (motorPower == null || motorPower != power)
-        {
-            motor.set(power);
-            motorPower = power;
-        }
+        motor.set(power);
     }   //setMotorPower
 
     /**
@@ -303,48 +345,41 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public double getMotorPower()
     {
-        // Motor power might have changed by closed loop controls, so get it directly from the motor.
-        motorPower = motor.get();
-        return motorPower;
+        return motor.get();
     }   //getMotorPower
 
     /**
-     * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
-     * encoder may be mounted somewhere in the power train that it rotates opposite to the motor rotation. This will
-     * cause the encoder reading to go down when the motor is receiving positive power. This method can correct this
-     * situation.
+     * This method commands the motor to spin at the given velocity using close loop control.
      *
-     * @param inverted specifies true to invert position sensor direction, false otherwise.
+     * @param velocity specifies the motor velocity in rotations per second.
      */
     @Override
-    public void setPositionSensorInverted(boolean inverted)
+    public void setMotorVelocity(double velocity)
     {
-        if (encoder != null)
-        {
-            encoder.setReverseDirection(inverted);
-        }
-    }   //setPositionSensorInverted
+        throw new UnsupportedOperationException("PWM motor controllers do not support setMotorVelocity.");
+    }   //setMotorVelocity
 
     /**
-     * This method returns the state of the position sensor direction.
+     * This method returns the current motor velocity.
      *
-     * @return true if the motor direction is inverted, false otherwise.
+     * @return current motor velocity in sensor units per second.
      */
     @Override
-    public boolean isPositionSensorInverted()
+    public double getMotorVelocity()
     {
-        return encoder != null && encoder.getDirection();
-    }   //isPositionSensorInverted
+        throw new UnsupportedOperationException("PWM motor controllers do not support getMotorVelocity.");
+    }   //getMotorVelocity
 
     /**
      * This method commands the motor to go to the given position using close loop control.
      *
      * @param position specifies the motor position in number of rotations.
+     * @param powerLimit specifies the maximum power output limits.
      */
     @Override
-    public void setMotorPosition(double position)
+    public void setMotorPosition(double position, double powerLimit)
     {
-        throw new UnsupportedOperationException("PWM motor controllers do not support this operation.");
+        throw new UnsupportedOperationException("PWM motor controllers do not support setMotorPosition.");
     }   //setMotorPosition
 
     /**
@@ -355,42 +390,15 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public double getMotorPosition()
     {
-        return encoder != null? encoder.get(): 0.0;
-    }   //getMotorPosition
-
-    /**
-     * This method resets the motor position sensor, typically an encoder.
-     */
-    @Override
-    public void resetMotorPosition()
-    {
         if (encoder != null)
         {
-            encoder.reset();
+            return encoder.getPosition();
         }
-    }   //resetMotorPosition
-
-    /**
-     * This method commands the motor to spin at the given velocity using close loop control.
-     *
-     * @param velocity specifies the motor velocity in rotations per second.
-     */
-    @Override
-    public void setMotorVelocity(double velocity)
-    {
-        throw new UnsupportedOperationException("PWM motor controllers do not support this operation.");
-    }   //setMotorVelocity
-
-    /**
-     * This method returns the current motor velocity.
-     *
-     * @return current motor velocity in counts per second.
-     */
-    @Override
-    public double getMotorVelocity()
-    {
-        return encoder != null? encoder.getRate()/encoder.getDistancePerPulse(): 0.0;
-    }   //getMotorVelocity
+        else
+        {
+            throw new UnsupportedOperationException("This motor controller does not have an encoder.");
+        }
+    }   //getMotorPosition
 
     /**
      * This method commands the motor to spin at the given current value using close loop control.
@@ -400,7 +408,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void setMotorCurrent(double current)
     {
-        throw new UnsupportedOperationException("PWM motor controllers do not support this operation.");
+        throw new UnsupportedOperationException("PWM motor controllers do not support setMotorCurrent.");
     }   //setMotorCurrent
 
     /**
@@ -411,33 +419,155 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public double getMotorCurrent()
     {
-        throw new UnsupportedOperationException("PWM motor controllers do not support this operation.");
+        throw new UnsupportedOperationException("PWM motor controllers do not support getMotorCurrent.");
     }   //getMotorCurrent
 
     /**
-     * This method sets the close loop percentage output limits. By default the limits are set to the max at -1 to 1.
-     * By setting a non-default limits, it effectively limits the output power of the close loop control.
+     * This method sets the PID coefficients of the motor controller's velocity PID controller.
      *
-     * @param revLimit specifies the percentage output limit of the reverse direction.
-     * @param fwdLimit specifies the percentage output limit of the forward direction.
+     * @param pidCoeff specifies the PID coefficients to set.
      */
     @Override
-    public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
+    public void setMotorVelocityPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        throw new UnsupportedOperationException("PWM motor controller does not support this operation.");
-    }   //setCloseLoopOutputLimits
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support setMotorVelocityPidCoefficients.");
+    }   //setMotorVelocityPidCoefficients
 
-   /**
-     * This method sets the current limit of the motor.
+    /**
+     * This method returns the PID coefficients of the motor controller's velocity PID controller.
      *
-     * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
-     * @param triggerThresholdCurrent not used. SparkMax does not support this.
-     * @param triggerThresholdTime not used. SparkMax does not support this.
+     * @return PID coefficients of the motor's veloicty PID controller.
      */
     @Override
-    public void setCurrentLimit(double currentLimit, double triggerThresholdCurrent, double triggerThresholdTime)
+    public TrcPidController.PidCoefficients getMotorVelocityPidCoefficients()
     {
-        throw new UnsupportedOperationException("PWM motor controller does not support this operation.");
-    }   //setCurrentLimit
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support getMotorVelocityPidCoefficients.");
+    }   //getMotorVelocityPidCoefficients
+
+    /**
+     * This method sets the PID tolerance of the motor controller's velocity PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorVelocityPidTolerance(double tolerance)
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support setMotorVelocityPidTolerance.");
+    }   //setMotorVelocityPidTolerance
+
+    /**
+     * This method checks if the motor is at the set velocity.
+     *
+     * @return true if motor is on target, false otherwise.
+     */
+    @Override
+    public boolean getMotorVelocityOnTarget()
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support getMotorVelocityOnTarget.");
+    }   //getMotorVelocityOnTarget
+
+    /**
+     * This method sets the PID coefficients of the motor controller's position PID controller.
+     *
+     * @param pidCoeff specifies the PID coefficients to set.
+     */
+    @Override
+    public void setMotorPositionPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support setMotorPositionPidCoefficients.");
+    }   //setMotorPositionPidCoefficients
+
+    /**
+     * This method returns the PID coefficients of the motor controller's position PID controller.
+     *
+     * @return PID coefficients of the motor's position PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorPositionPidCoefficients()
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support getMotorPositionPidCoefficients.");
+    }   //getMotorPositionPidCoefficients
+
+    /**
+     * This method sets the PID tolerance of the motor controller's position PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorPositionPidTolerance(double tolerance)
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support setMotorPositionPidTolerance.");
+    }   //setMotorPositionPidTolerance
+
+    /**
+     * This method checks if the motor is at the set position.
+     *
+     * @return true if motor is on target, false otherwise.
+     */
+    @Override
+    public boolean getMotorPositionOnTarget()
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support getMotorPositionOnTarget.");
+    }   //getMotorPositionOnTarget
+
+    /**
+     * This method sets the PID coefficients of the motor controller's current PID controller.
+     *
+     * @param pidCoeff specifies the PID coefficients to set.
+     */
+    @Override
+    public void setMotorCurrentPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support setMotorCurretPidCoefficients.");
+    }   //setMotorCurrentPidCoefficients
+
+    /**
+     * This method returns the PID coefficients of the motor controller's current PID controller.
+     *
+     * @return PID coefficients of the motor's current PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support getMotorCurretPidCoefficients.");
+    }   //geteMotorCurrentPidCoefficients
+
+    /**
+     * This method sets the PID tolerance of the motor controller's current PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorCurrentPidTolerance(double tolerance)
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support setMotorCurretPidTolerance.");
+    }   //setMotorCurrentPidTolerance
+
+    /**
+     * This method checks if the motor is at the set current.
+     *
+     * @return true if motor is on target, false otherwise.
+     */
+    @Override
+    public boolean getMotorCurrentOnTarget()
+    {
+        throw new UnsupportedOperationException(
+            "PWM motor controllers do not support getMotorCurretOnTarget.");
+    }   //getMotorCurrentOnTarget
+
+    //
+    // The following methods override the software simulation in TrcMotor providing direct support in hardware.
+    //
 
 }   //class FrcPWMMotorController

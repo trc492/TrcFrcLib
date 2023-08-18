@@ -110,6 +110,27 @@ public class FrcFalconServo extends TrcServo
     }   //isInverted
 
     /**
+     * This method resets the position sensor and therefore only applicable if the servo has one.
+     */
+    @Override
+    public void resetPosition()
+    {
+        falcon.resetMotorPosition();
+    }   //resetPosition
+
+    /**
+     * This method sets the position sensor scale and offset and therefore only applicable if the servo has one.
+     *
+     * @param scale specifies the position scale value.
+     * @param offset specifies the optional offset that adds to the final position value.
+     */
+    @Override
+    public void setPositionScaleAndOffset(double scale, double offset)
+    {
+        falcon.setPositionSensorScaleAndOffset(scale, offset);
+    }   //setPositionScaleAndOffset
+
+    /**
      * This method sets the logical position of the servo motor.
      *
      * @param position specifies the logical position of the servo motor in the range of [0.0, 1.0].

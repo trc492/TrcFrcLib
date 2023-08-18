@@ -32,7 +32,7 @@ import TrcCommonLib.trclib.TrcUtil;
 public class FrcTalonServo extends TrcServo
 {
     private FrcCANTalon talon;
-    private double degreesPerTick;
+    private double degreesPerCount;
     private TalonSRXControlMode controlMode = TalonSRXControlMode.Position;
 
     /**
@@ -41,16 +41,16 @@ public class FrcTalonServo extends TrcServo
      * @param instanceName    specifies the instance name of the servo.
      * @param talon           the physical talon motor controller object.
      * @param pidCoefficients the pid coefficients used for motion magic. Don't forget kF!
-     * @param degreesPerTick  degrees per native sensor unit measured by the talon.
+     * @param degreesPerCount degrees per native sensor unit measured by the talon.
      * @param maxSpeed        desired max speed of the motor, in degrees per second.
      * @param maxAccel        desired max acceleration of the motor, in degrees per second per second.
      */
     public FrcTalonServo(String instanceName, FrcCANTalon talon, TrcPidController.PidCoefficients pidCoefficients,
-        double degreesPerTick, double maxSpeed, double maxAccel)
+        double degreesPerCount, double maxSpeed, double maxAccel)
     {
         super(instanceName);
         this.talon = talon;
-        this.degreesPerTick = degreesPerTick;
+        this.degreesPerCount = degreesPerCount;
 
         // Set deadband to super small 0.001 (0.1 %). The default deadband is 0.04 (4 %).
         talon.motor.configNeutralDeadband(0.001, 30);
@@ -70,8 +70,8 @@ public class FrcTalonServo extends TrcServo
         talon.motor.config_kF(0, pidCoefficients.kF, 30);
         talon.motor.config_IntegralZone(0, TrcUtil.round(pidCoefficients.iZone), 30);
         // Set acceleration and vcruise velocity - see documentation.
-        talon.motor.configMotionCruiseVelocity(TrcUtil.round((maxSpeed / degreesPerTick) / 10), 30);
-        talon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerTick) / 10), 30);
+        talon.motor.configMotionCruiseVelocity(TrcUtil.round((maxSpeed / degreesPerCount) / 10), 30);
+        talon.motor.configMotionAcceleration(TrcUtil.round((maxAccel / degreesPerCount) / 10), 30);
     }   //FrcTalonServo
 
     /**
@@ -97,6 +97,27 @@ public class FrcTalonServo extends TrcServo
     }   //isInverted
 
     /**
+     * This method resets the position sensor and therefore only applicable if the servo has one.
+     */
+    @Override
+    public void resetPosition()
+    {
+        talon.resetMotorPosition();
+    }   //resetPosition
+
+    /**
+     * This method sets the position sensor scale and offset and therefore only applicable if the servo has one.
+     *
+     * @param scale specifies the position scale value.
+     * @param offset specifies the optional offset that adds to the final position value.
+     */
+    @Override
+    public void setPositionScaleAndOffset(double scale, double offset)
+    {
+        talon.setPositionSensorScaleAndOffset(scale, offset);
+    }   //setPositionScaleAndOffset
+
+    /**
      * This method sets the logical position of the servo motor.
      *
      * @param position specifies the logical position of the servo motor in the range of [0.0, 1.0].
@@ -104,8 +125,8 @@ public class FrcTalonServo extends TrcServo
     @Override
     public void setLogicalPosition(double position)
     {
-        int ticks = TrcUtil.round(position*360.0 / degreesPerTick);
-        talon.motor.set(controlMode, ticks);
+        int counts = TrcUtil.round(position*360.0 / degreesPerCount);
+        talon.motor.set(controlMode, counts);
     }   //setLogicalPosition
 
     /**
@@ -116,7 +137,7 @@ public class FrcTalonServo extends TrcServo
     @Override
     public double getLogicalPosition()
     {
-        double physicalPos = (talon.getPosition()*degreesPerTick) % 360.0;
+        double physicalPos = (talon.getPosition()*degreesPerCount) % 360.0;
         return physicalPos/360.0;
     }   //getLogicalPosition
 

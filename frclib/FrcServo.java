@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.Servo;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcServo;
 
 /**
@@ -63,14 +62,6 @@ import TrcCommonLib.trclib.TrcServo;
     @Override
     public void setInverted(boolean inverted)
     {
-        final String funcName = "setInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         this.inverted = inverted;
     }   //setInverted
 
@@ -82,16 +73,29 @@ import TrcCommonLib.trclib.TrcServo;
     @Override
     public boolean isInverted()
     {
-        final String funcName = "isInverted";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", inverted);
-        }
-
         return inverted;
     }   //isInverted
+
+    /**
+     * This method resets the position sensor and therefore only applicable if the servo has one.
+     */
+    @Override
+    public void resetPosition()
+    {
+        throw new UnsupportedOperationException("Servo does not support resetPosition.");
+    }   //resetPosition
+
+    /**
+     * This method sets the position sensor scale and offset and therefore only applicable if the servo has one.
+     *
+     * @param scale specifies the position scale value.
+     * @param offset specifies the optional offset that adds to the final position value.
+     */
+    @Override
+    public void setPositionScaleAndOffset(double scale, double offset)
+    {
+        throw new UnsupportedOperationException("Servo does not support setPositionScaleAndOffset.");
+    }   //setPositionScaleAndOffset
 
     /**
      * This method sets the logical position of the servo motor.
@@ -101,14 +105,6 @@ import TrcCommonLib.trclib.TrcServo;
     @Override
     public void setLogicalPosition(double position)
     {
-        final String funcName = "setLogicalPosition";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "position=%f", position);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         this.prevLogicalPos = inverted? 1.0 - position: position;
         servo.set(prevLogicalPos);
     }   //setLogicalPosition
@@ -123,16 +119,7 @@ import TrcCommonLib.trclib.TrcServo;
     @Override
     public double getLogicalPosition()
     {
-        final String funcName = "getLogicalPosition";
-        double position = inverted? 1.0 - prevLogicalPos: prevLogicalPos;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", position);
-        }
-
-        return position;
+        return inverted? 1.0 - prevLogicalPos: prevLogicalPos;
     }   //getLogicalPosition
 
     /**

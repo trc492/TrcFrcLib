@@ -22,7 +22,7 @@
 
 package TrcFrcLib.frclib;
 
-import edu.wpi.first.wpilibj.Encoder;
+import TrcCommonLib.trclib.TrcEncoder;
 import edu.wpi.first.wpilibj.motorcontrol.PWMTalonSRX;
 
 public class FrcPWMTalonSRX extends FrcPWMMotorController<PWMTalonSRX>
@@ -32,14 +32,14 @@ public class FrcPWMTalonSRX extends FrcPWMMotorController<PWMTalonSRX>
      *
      * @param instanceName specifies the instance name.
      * @param pwmChannel specifies the PWM channel number of the motor.
-     * @param encoder specifies the encoder object, can be null if not provided.
      * @param revLimitSw specifies the reverse limit switch, can be null if not provided.
      * @param fwdLimitSw specifies the forward limit switch, can be null if not provided.
+     * @param encoder specifies the encoder object, can be null if not provided.
      */
     public FrcPWMTalonSRX(
-        String instanceName, int pwmChannel, Encoder encoder, FrcDigitalInput revLimitSw, FrcDigitalInput fwdLimitSw)
+        String instanceName, int pwmChannel, FrcDigitalInput revLimitSw, FrcDigitalInput fwdLimitSw, TrcEncoder encoder)
     {
-        super(instanceName, new PWMTalonSRX(pwmChannel), encoder, revLimitSw, fwdLimitSw);
+        super(instanceName, new PWMTalonSRX(pwmChannel), revLimitSw, fwdLimitSw, encoder);
     }   //FrcPWMTalonSRX
 
 }   //class FrcPWMTalonSRX

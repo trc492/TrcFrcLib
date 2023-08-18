@@ -24,19 +24,21 @@ package TrcFrcLib.frclib;
 
 import TrcCommonLib.trclib.TrcAnalogInput;
 import TrcCommonLib.trclib.TrcCardinalConverter;
+import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcAnalogInput.DataType;
 
 /**
  * This class implements an Analog Absolute Encoders that implements the FrcEncoder interface to allow compatibility
  * to other types of encoders.
  */
-public class FrcAnalogEncoder implements FrcEncoder
+public class FrcAnalogEncoder implements TrcEncoder
 {
     private final FrcAnalogInput analogInput;
     private final TrcCardinalConverter<TrcAnalogInput.DataType> cardinalConverter;
     private double sign = 1.0;
     private double scale = 1.0;
     private double offset = 0.0;
+    private double zeroOffset = 0.0;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -96,6 +98,16 @@ public class FrcAnalogEncoder implements FrcEncoder
         return analogInput.getRawData(0, DataType.RAW_DATA).value;
     }   //getRawVoltage
 
+    /**
+     * This method sets the zero offset for the absolute encoder.
+     *
+     * @param zeroOffset specifies normalized zero offset.
+     */
+    public void setZeroOffset(double zeroOffset)
+    {
+        this.zeroOffset = zeroOffset;
+    }   //setZeroOffset
+
     //
     // Implements the FrcEncoder interface.
     //
@@ -130,7 +142,7 @@ public class FrcAnalogEncoder implements FrcEncoder
     {
         // getCartesianData returns the normalized reading from AnalogInput.
         // Offset must also be normalized.
-        return sign * (cardinalConverter.getCartesianData(0).value - offset) * scale;
+        return sign * ((cardinalConverter.getCartesianData(0).value - zeroOffset) * scale + offset);
     }   //getPosition
 
     /**
@@ -143,6 +155,17 @@ public class FrcAnalogEncoder implements FrcEncoder
     {
         sign = inverted ? -1.0 : 1.0;
     }   //setInverted
+
+    /**
+     * This method checks if the encoder direction is inverted.
+     *
+     * @return true if encoder direction is rerversed, false otherwise.
+     */
+    @Override
+    public boolean isInverted()
+    {
+        return sign == -1.0;
+    }   //isInverted
 
     /**
      * This method sets the encoder scale and offset.
