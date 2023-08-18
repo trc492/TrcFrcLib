@@ -34,7 +34,10 @@ import com.ctre.phoenix.motorcontrol.can.BaseTalon;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
-import TrcCommonLib.trclib.TrcDbgTrace;import TrcCommonLib.trclib.TrcMotor;
+import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDigitalInput;
+import TrcCommonLib.trclib.TrcEncoder;
+import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
 
 public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMotor
@@ -72,12 +75,28 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      *
      * @param instanceName specifies the instance name.
      * @param baseTalon the base talon object.
+     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
+     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
+     * @param encoder specifies an external encoder overriding the motor controller one.
+     */
+    public FrcCANPhoenixController(
+        String instanceName, T baseTalon, TrcDigitalInput revLimitSwitch, TrcDigitalInput fwdLimitSwitch,
+        TrcEncoder encoder)
+    {
+        super(instanceName, revLimitSwitch, fwdLimitSwitch, encoder);
+        motor = baseTalon;
+        readConfig();
+    }   //FrcCANPhoenixController
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param baseTalon the base talon object.
      */
     public FrcCANPhoenixController(String instanceName, T baseTalon)
     {
-        super(instanceName, null, null, null);
-        motor = baseTalon;
-        readConfig();
+        this(instanceName, baseTalon, null, null, null);
     }   //FrcCANPhoenixController
 
     /**

@@ -24,8 +24,27 @@ package TrcFrcLib.frclib;
 
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
+import TrcCommonLib.trclib.TrcDigitalInput;
+import TrcCommonLib.trclib.TrcEncoder;
+
 public class FrcCANFalcon extends FrcCANPhoenixController<TalonFX>
 {
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param canId specifies the CAN ID of the device.
+     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
+     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
+     * @param encoder specifies an external encoder overriding the motor controller one.
+     */
+    public FrcCANFalcon(
+        String instanceName, int canId, TrcDigitalInput revLimitSwitch, TrcDigitalInput fwdLimitSwitch,
+        TrcEncoder encoder)
+    {
+        super(instanceName, new TalonFX(canId), revLimitSwitch, fwdLimitSwitch, encoder);
+    }   //FrcCANFalcon
+
     /**
      * Constructor: Create an instance of the object.
      *
@@ -34,7 +53,7 @@ public class FrcCANFalcon extends FrcCANPhoenixController<TalonFX>
      */
     public FrcCANFalcon(String instanceName, int canId)
     {
-        super(instanceName, new TalonFX(canId));
+        this(instanceName, canId, null, null, null);
     }   //FrcCANFalcon
 
 }   //class FrcCANFalcon

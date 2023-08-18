@@ -28,6 +28,8 @@ import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDigitalInput;
+import TrcCommonLib.trclib.TrcEncoder;
 
 /**
  * This class implements a CANTalon motor controller. It extends the TrcMotor class and
@@ -43,10 +45,26 @@ public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
      *
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the device.
+     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
+     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
+     * @param encoder specifies an external encoder overriding the motor controller one.
+     */
+    public FrcCANTalon(
+        String instanceName, int canId, TrcDigitalInput revLimitSwitch, TrcDigitalInput fwdLimitSwitch,
+        TrcEncoder encoder)
+    {
+        super(instanceName, new TalonSRX(canId), revLimitSwitch, fwdLimitSwitch, encoder);
+    }   //FrcCANTalon
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param canId specifies the CAN ID of the device.
      */
     public FrcCANTalon(String instanceName, int canId)
     {
-        super(instanceName, new TalonSRX(canId));
+        this(instanceName, canId, null, null, null);
     }   //FrcCANTalon
 
     /**

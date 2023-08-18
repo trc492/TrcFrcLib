@@ -22,6 +22,7 @@
 
 package TrcFrcLib.frclib;
 
+import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
@@ -31,8 +32,8 @@ import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
 public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMotor
 {
     public final T motor;
-    private final FrcDigitalInput revLimitSwitch;
-    private final FrcDigitalInput fwdLimitSwitch;
+    private final TrcDigitalInput revLimitSwitch;
+    private final TrcDigitalInput fwdLimitSwitch;
     private final TrcEncoder encoder;
 
     /**
@@ -45,7 +46,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
      * @param encoder specifies the encoder object, can be null if not provided.
      */
     public FrcPWMMotorController(
-        String instanceName, T pwmMotor, FrcDigitalInput revLimitSwitch, FrcDigitalInput fwdLimitSwitch,
+        String instanceName, T pwmMotor, TrcDigitalInput revLimitSwitch, TrcDigitalInput fwdLimitSwitch,
         TrcEncoder encoder)
     {
         super(instanceName, revLimitSwitch, fwdLimitSwitch, encoder);

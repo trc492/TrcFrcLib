@@ -22,6 +22,7 @@
 
 package TrcFrcLib.frclib;
 
+import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
 import edu.wpi.first.wpilibj.motorcontrol.PWMTalonFX;
 
@@ -32,14 +33,26 @@ public class FrcPWMTalonFX extends FrcPWMMotorController<PWMTalonFX>
      *
      * @param instanceName specifies the instance name.
      * @param pwmChannel specifies the PWM channel number of the motor.
-     * @param revLimitSw specifies the reverse limit switch, can be null if not provided.
-     * @param fwdLimitSw specifies the forward limit switch, can be null if not provided.
+     * @param revLimitSwitch specifies the reverse limit switch, can be null if not provided.
+     * @param fwdLimitSwitch specifies the forward limit switch, can be null if not provided.
      * @param encoder specifies the encoder object, can be null if not provided.
      */
     public FrcPWMTalonFX(
-        String instanceName, int pwmChannel, FrcDigitalInput revLimitSw, FrcDigitalInput fwdLimitSw, TrcEncoder encoder)
+        String instanceName, int pwmChannel, TrcDigitalInput revLimitSwitch, TrcDigitalInput fwdLimitSwitch,
+        TrcEncoder encoder)
     {
-        super(instanceName, new PWMTalonFX(pwmChannel), revLimitSw, fwdLimitSw, encoder);
+        super(instanceName, new PWMTalonFX(pwmChannel), revLimitSwitch, fwdLimitSwitch, encoder);
+    }   //FrcPWMTalonFX
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param pwmChannel specifies the PWM channel number of the motor.
+     */
+    public FrcPWMTalonFX(String instanceName, int pwmChannel)
+    {
+        this(instanceName, pwmChannel, null, null, null);
     }   //FrcPWMTalonFX
 
 }   //class FrcPWMTalonFX

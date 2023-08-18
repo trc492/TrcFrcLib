@@ -35,6 +35,8 @@ import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcDigitalInput;
+import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
 
@@ -50,8 +52,8 @@ public class FrcCANSparkMax extends TrcMotor
 
     public final CANSparkMax motor;
     private final SparkMaxPIDController pidCtrl;
-    private final RelativeEncoder encoder;
-    private SparkMaxLimitSwitch revLimitSwitch, fwdLimitSwitch;
+    private final RelativeEncoder sparkMaxEncoder;
+    private SparkMaxLimitSwitch sparkMaxRevLimitSwitch, sparkMaxFwdLimitSwitch;
     private Double velPidTolerance = null;
     private Double posPidTolerance = null;
     private Double currentPidTolerance = null;
@@ -65,15 +67,35 @@ public class FrcCANSparkMax extends TrcMotor
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the device.
      * @param brushless specifies true if the motor is brushless, false otherwise.
+     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
+     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
+     * @param encoder specifies an external encoder overriding the motor controller one.
      */
-    public FrcCANSparkMax(String instanceName, int canId, boolean brushless)
+    public FrcCANSparkMax(
+        String instanceName, int canId, boolean brushless, TrcDigitalInput revLimitSwitch,
+        TrcDigitalInput fwdLimitSwitch, TrcEncoder encoder)
     {
-        super(instanceName, null, null, null);
+        super(instanceName, revLimitSwitch, fwdLimitSwitch, encoder);
         motor = new CANSparkMax(
             canId, brushless? CANSparkMaxLowLevel.MotorType.kBrushless: CANSparkMaxLowLevel.MotorType.kBrushed);
         pidCtrl = motor.getPIDController();
-        encoder = motor.getEncoder();
-        revLimitSwitch = fwdLimitSwitch = null;
+        sparkMaxEncoder = motor.getEncoder();
+        sparkMaxRevLimitSwitch = sparkMaxFwdLimitSwitch = null;
+    }   //FrcCANSparkMax
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param canId specifies the CAN ID of the device.
+     * @param brushless specifies true if the motor is brushless, false otherwise.
+     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
+     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
+     * @param encoder specifies an external encoder overriding the motor controller one.
+     */
+    public FrcCANSparkMax(String instanceName, int canId, boolean brushless)
+    {
+        this(instanceName, canId, brushless, null, null, null);
     }   //FrcCANSparkMax
 
     /**
@@ -242,7 +264,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorRevLimitSwitchInverted(boolean inverted)
     {
-        revLimitSwitch = motor.getReverseLimitSwitch(inverted? Type.kNormallyClosed: Type.kNormallyOpen);
+        sparkMaxRevLimitSwitch = motor.getReverseLimitSwitch(inverted? Type.kNormallyClosed: Type.kNormallyOpen);
     }   //setMotorRevLimitSwitchInverted
 
     /**
@@ -254,7 +276,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorFwdLimitSwitchInverted(boolean inverted)
     {
-        fwdLimitSwitch = motor.getForwardLimitSwitch(inverted? Type.kNormallyClosed: Type.kNormallyOpen);
+        sparkMaxFwdLimitSwitch = motor.getForwardLimitSwitch(inverted? Type.kNormallyClosed: Type.kNormallyOpen);
     }   //setMotorFwdLimitSwitchInverted
 
     /**
@@ -265,7 +287,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isMotorRevLimitSwitchActive()
     {
-        return revLimitSwitch != null && revLimitSwitch.isPressed();
+        return sparkMaxRevLimitSwitch != null && sparkMaxRevLimitSwitch.isPressed();
     }   //isMotorRevLimitSwitchClosed
 
     /**
@@ -276,7 +298,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isMotorFwdLimitSwitchActive()
     {
-        return fwdLimitSwitch != null && fwdLimitSwitch.isPressed();
+        return sparkMaxFwdLimitSwitch != null && sparkMaxFwdLimitSwitch.isPressed();
     }   //isMotorFwdLimitSwitchActive
 
     /**
@@ -290,7 +312,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorPositionSensorInverted(boolean inverted)
     {
-        recordResponseCode("encoderSetInverted", encoder.setInverted(inverted));
+        recordResponseCode("encoderSetInverted", sparkMaxEncoder.setInverted(inverted));
     }   //setMotorPositionSensorInverted
 
     /**
@@ -301,7 +323,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isMotorPositionSensorInverted()
     {
-        return encoder.getInverted();
+        return sparkMaxEncoder.getInverted();
     }   //isMotorPositionSensorInverted
 
     /**
@@ -310,7 +332,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void resetMotorPosition()
     {
-        recordResponseCode("encoderReset", encoder.setPosition(0.0));
+        recordResponseCode("encoderReset", sparkMaxEncoder.setPosition(0.0));
     }   //resetMotorPosition
 
     /**
@@ -378,7 +400,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public double getMotorVelocity()
     {
-        return encoder.getVelocity()/60.0;
+        return sparkMaxEncoder.getVelocity()/60.0;
     }   //getMotorVelocity
 
     /**
@@ -402,7 +424,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public double getMotorPosition()
     {
-        return encoder.getPosition();
+        return sparkMaxEncoder.getPosition();
     }   //getMotorPosition
 
     /**
