@@ -32,9 +32,6 @@ import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
 public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMotor
 {
     public final T motor;
-    private final TrcDigitalInput revLimitSwitch;
-    private final TrcDigitalInput fwdLimitSwitch;
-    private final TrcEncoder encoder;
 
     /**
      * Constructor: Create an instance of the object.
@@ -51,9 +48,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     {
         super(instanceName, revLimitSwitch, fwdLimitSwitch, encoder);
         motor = pwmMotor;
-        this.revLimitSwitch = revLimitSwitch;
-        this.fwdLimitSwitch = fwdLimitSwitch;
-        this.encoder = encoder;
     }   //FrcPWMMotorController
 
     /**
@@ -185,14 +179,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void setMotorRevLimitSwitchInverted(boolean inverted)
     {
-        if (revLimitSwitch != null)
-        {
-            revLimitSwitch.setInverted(inverted);
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Motor controller does not have reverse limit switch.");
-        }
+        throw new UnsupportedOperationException("Motor controller does not have reverse limit switch.");
     }   //setMotorRevLimitSwitchInverted
 
     /**
@@ -204,14 +191,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void setMotorFwdLimitSwitchInverted(boolean inverted)
     {
-        if (fwdLimitSwitch != null)
-        {
-            fwdLimitSwitch.setInverted(inverted);
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Motor controller does not have forward limit switch.");
-        }
+        throw new UnsupportedOperationException("Motor controller does not have forward limit switch.");
     }   //setMotorFwdLimitSwitchInverted
 
     /**
@@ -222,14 +202,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public boolean isMotorRevLimitSwitchActive()
     {
-        if (revLimitSwitch != null)
-        {
-            return revLimitSwitch.isActive();
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Motor controller does not have reverse limit switch.");
-        }
+        throw new UnsupportedOperationException("Motor controller does not have reverse limit switch.");
     }   //isMotorRevLimitSwitchActive
 
     /**
@@ -240,14 +213,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public boolean isMotorFwdLimitSwitchActive()
     {
-        if (fwdLimitSwitch != null)
-        {
-            return fwdLimitSwitch.isActive();
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Motor controller does not have forward limit switch.");
-        }
+        throw new UnsupportedOperationException("Motor controller does not have forward limit switch.");
     }   //isMotorFwdLimitSwitchActive
 
     /**
@@ -261,14 +227,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void setMotorPositionSensorInverted(boolean inverted)
     {
-        if (encoder != null)
-        {
-            encoder.setInverted(inverted);
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Motor controller does not have position sensor.");
-        }
+        throw new UnsupportedOperationException("Motor controller does not have position sensor.");
     }   //setMotorPositionSensorInverted
 
     /**
@@ -279,14 +238,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public boolean isMotorPositionSensorInverted()
     {
-        if (encoder != null)
-        {
-            return encoder.isInverted();
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Motor controller does not have position sensor.");
-        }
+        throw new UnsupportedOperationException("Motor controller does not have position sensor.");
     }   //isMotorPositionSensorInverted
 
     /**
@@ -295,14 +247,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void resetMotorPosition()
     {
-        if (encoder != null)
-        {
-            encoder.reset();
-        }
-        else
-        {
-            throw new UnsupportedOperationException("This motor controller does not have an encoder.");
-        }
+        throw new UnsupportedOperationException("This motor controller does not have an encoder.");
     }   //resetMotorPosition
 
     /**
@@ -391,14 +336,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public double getMotorPosition()
     {
-        if (encoder != null)
-        {
-            return encoder.getPosition();
-        }
-        else
-        {
-            throw new UnsupportedOperationException("This motor controller does not have an encoder.");
-        }
+        throw new UnsupportedOperationException("This motor controller does not have an encoder.");
     }   //getMotorPosition
 
     /**

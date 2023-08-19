@@ -287,7 +287,13 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isMotorRevLimitSwitchActive()
     {
-        return sparkMaxRevLimitSwitch != null && sparkMaxRevLimitSwitch.isPressed();
+        if (sparkMaxRevLimitSwitch == null)
+        {
+            throw new IllegalStateException(
+                "Must call setMotorRevLimitSwitchInverted to configure the limit switch type first.");
+        }
+
+        return sparkMaxRevLimitSwitch.isPressed();
     }   //isMotorRevLimitSwitchClosed
 
     /**
@@ -298,7 +304,13 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isMotorFwdLimitSwitchActive()
     {
-        return sparkMaxFwdLimitSwitch != null && sparkMaxFwdLimitSwitch.isPressed();
+        if (sparkMaxFwdLimitSwitch == null)
+        {
+            throw new IllegalStateException(
+                "Must call setMotorFwdLimitSwitchInverted to configure the limit switch type first.");
+        }
+
+        return sparkMaxFwdLimitSwitch.isPressed();
     }   //isMotorFwdLimitSwitchActive
 
     /**
