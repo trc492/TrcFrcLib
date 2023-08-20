@@ -67,15 +67,15 @@ public class FrcCANSparkMax extends TrcMotor
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the device.
      * @param brushless specifies true if the motor is brushless, false otherwise.
-     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
-     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
+     * @param lowerLimitSwitch specifies an external lower limit switch overriding the motor controller one.
+     * @param upperLimitSwitch specifies an external upper limit switch overriding the motor controller one.
      * @param encoder specifies an external encoder overriding the motor controller one.
      */
     public FrcCANSparkMax(
-        String instanceName, int canId, boolean brushless, TrcDigitalInput revLimitSwitch,
-        TrcDigitalInput fwdLimitSwitch, TrcEncoder encoder)
+        String instanceName, int canId, boolean brushless, TrcDigitalInput lowerLimitSwitch,
+        TrcDigitalInput upperLimitSwitch, TrcEncoder encoder)
     {
-        super(instanceName, revLimitSwitch, fwdLimitSwitch, encoder);
+        super(instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
         motor = new CANSparkMax(
             canId, brushless? CANSparkMaxLowLevel.MotorType.kBrushless: CANSparkMaxLowLevel.MotorType.kBrushed);
         pidCtrl = motor.getPIDController();
@@ -89,9 +89,6 @@ public class FrcCANSparkMax extends TrcMotor
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the device.
      * @param brushless specifies true if the motor is brushless, false otherwise.
-     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
-     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
-     * @param encoder specifies an external encoder overriding the motor controller one.
      */
     public FrcCANSparkMax(String instanceName, int canId, boolean brushless)
     {
@@ -256,27 +253,93 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setBrakeModeEnabled
 
     /**
+     * This method enables the reverse limit switch and configures it to the specified type.
+     *
+     * @param normalClose specifies true as the normal close switch type, false as normal open.
+     */
+    @Override
+    public void enableMotorRevLimitSwitch(boolean normalClose)
+    {
+        sparkMaxRevLimitSwitch = motor.getReverseLimitSwitch(normalClose? Type.kNormallyClosed: Type.kNormallyOpen);
+        recordResponseCode("enableLimitSwitch", sparkMaxRevLimitSwitch.enableLimitSwitch(true));
+    }   //enableMotorRevLimitSwitch
+
+    /**
+     * This method enables the forward limit switch and configures it to the specified type.
+     *
+     * @param normalClose specifies true as the normal close switch type, false as normal open.
+     */
+    @Override
+    public void enableMotorFwdLimitSwitch(boolean normalClose)
+    {
+        sparkMaxFwdLimitSwitch = motor.getForwardLimitSwitch(normalClose? Type.kNormallyClosed: Type.kNormallyOpen);
+        recordResponseCode("enableLimitSwitch", sparkMaxFwdLimitSwitch.enableLimitSwitch(true));
+    }   //enableMotorFwdLimitSwitch
+
+    /**
+     * This method disables the reverse limit switch.
+     */
+    @Override
+    public void disableMotorRevLimitSwitch()
+    {
+        recordResponseCode("enableLimitSwitch", sparkMaxRevLimitSwitch.enableLimitSwitch(false));
+    }   //disableMotorRevLimitSwitch
+
+    /**
+     * This method disables the forward limit switch.
+     */
+    @Override
+    public void disableMotorFwdLimitSwitch()
+    {
+        recordResponseCode("enableLimitSwitch", sparkMaxFwdLimitSwitch.enableLimitSwitch(false));
+    }   //disableMotorFwdLimitSwitch
+
+    /**
+     * This method checks if the reverse limit switch is enabled.
+     *
+     * @return true if enabled, false if disabled.
+     */
+    @Override
+    public boolean isMotorRevLimitSwitchEnabled()
+    {
+        return sparkMaxRevLimitSwitch != null && sparkMaxRevLimitSwitch.isLimitSwitchEnabled();
+    }   //isMotorRevLimitSwitchEnabled
+
+    /**
+     * This method checks if the forward limit switch is enabled.
+     *
+     * @return true if enabled, false if disabled.
+     */
+    @Override
+    public boolean isMotorFwdLimitSwitchEnabled()
+    {
+        return sparkMaxFwdLimitSwitch != null && sparkMaxFwdLimitSwitch.isLimitSwitchEnabled();
+    }   //isMotorFwdLimitSwitchEnabled
+
+    /**
      * This method inverts the active state of the reverse limit switch, typically reflecting whether the switch is
      * wired normally open or normally close.
      *
-     * @param inverted specifies true to invert the limit switch, false otherwise.
+     * @param inverted specifies true to invert the limit switch to normal close, false to normal open.
      */
     @Override
     public void setMotorRevLimitSwitchInverted(boolean inverted)
     {
-        sparkMaxRevLimitSwitch = motor.getReverseLimitSwitch(inverted? Type.kNormallyClosed: Type.kNormallyOpen);
+        throw new UnsupportedOperationException(
+            "SparkMax does not support inverting limit switch. Use enableMotorRevLimitSwitch to configure its type.");
     }   //setMotorRevLimitSwitchInverted
 
     /**
      * This method inverts the active state of the forward limit switch, typically reflecting whether the switch is
      * wired normally open or normally close.
      *
-     * @param inverted specifies true to invert the limit switch, false otherwise.
+     * @param inverted specifies true to invert the limit switch to normal close, false to normal open.
      */
     @Override
     public void setMotorFwdLimitSwitchInverted(boolean inverted)
     {
-        sparkMaxFwdLimitSwitch = motor.getForwardLimitSwitch(inverted? Type.kNormallyClosed: Type.kNormallyOpen);
+        throw new UnsupportedOperationException(
+            "SparkMax does not support inverting limit switch. Use enableMotorFwdLimitSwitch to configure its type.");
     }   //setMotorFwdLimitSwitchInverted
 
     /**
@@ -287,13 +350,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isMotorRevLimitSwitchActive()
     {
-        if (sparkMaxRevLimitSwitch == null)
-        {
-            throw new IllegalStateException(
-                "Must call setMotorRevLimitSwitchInverted to configure the limit switch type first.");
-        }
-
-        return sparkMaxRevLimitSwitch.isPressed();
+        return sparkMaxRevLimitSwitch != null && sparkMaxRevLimitSwitch.isPressed();
     }   //isMotorRevLimitSwitchClosed
 
     /**
@@ -304,14 +361,48 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isMotorFwdLimitSwitchActive()
     {
-        if (sparkMaxFwdLimitSwitch == null)
-        {
-            throw new IllegalStateException(
-                "Must call setMotorFwdLimitSwitchInverted to configure the limit switch type first.");
-        }
-
-        return sparkMaxFwdLimitSwitch.isPressed();
+        return sparkMaxFwdLimitSwitch != null && sparkMaxFwdLimitSwitch.isPressed();
     }   //isMotorFwdLimitSwitchActive
+
+    /**
+     * This method sets the soft position limit for the reverse direction.
+     *
+     * @param limit specifies the limit in sensor units, null to disable.
+     */
+    @Override
+    public void setMotorRevSoftPositionLimit(Double limit)
+    {
+        if (limit != null)
+        {
+            recordResponseCode(
+                "setReverseSoftLimit", motor.setSoftLimit(SoftLimitDirection.kReverse, limit.floatValue()));
+            recordResponseCode("enableReverseSoftLimit", motor.enableSoftLimit(SoftLimitDirection.kReverse, true));
+        }
+        else
+        {
+            recordResponseCode("enableReverseSoftLimit", motor.enableSoftLimit(SoftLimitDirection.kReverse, false));
+        }
+    }   //setMotorRevSoftPositionLimit
+
+    /**
+     * This method sets the soft position limit for the forward direction.
+     *
+     * @param limit specifies the limit in sensor units, null to disable.
+     */
+    @Override
+    public void setMotorFwdSoftPositionLimit(Double limit)
+    {
+        if (limit != null)
+        {
+            recordResponseCode(
+                "setForwardSoftLimit", motor.setSoftLimit(SoftLimitDirection.kForward, limit.floatValue()));
+            recordResponseCode("enableForwardSoftLimit", motor.enableSoftLimit(SoftLimitDirection.kForward, true));
+        }
+        else
+        {
+            recordResponseCode("enableForwardSoftLimit", motor.enableSoftLimit(SoftLimitDirection.kForward, false));
+        }
+    }   //setMotorFwdSoftPositionLimit
 
     /**
      * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
@@ -477,19 +568,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setPidCoefficients
 
     /**
-     * This method returns the PID coefficients of the specified slot.
-     *
-     * @param pidSlot specifies the PID slot.
-     * @return PID coefficients of the motor's PID controller.
-     */
-    private TrcPidController.PidCoefficients getPidCoefficients(int pidSlot)
-    {
-        return new TrcPidController.PidCoefficients(
-            pidCtrl.getP(pidSlot), pidCtrl.getI(pidSlot), pidCtrl.getD(pidSlot), pidCtrl.getFF(pidSlot),
-            pidCtrl.getIZone(pidSlot));
-    }   //getPidCoefficients
-
-    /**
      * This method sets the PID tolerance of the the specified slot.
      *
      * @param slotIdx specifies the slot index.
@@ -515,6 +593,19 @@ public class FrcCANSparkMax extends TrcMotor
                 break;
         }
     }   //setPidTolerance
+
+    /**
+     * This method returns the PID coefficients of the specified slot.
+     *
+     * @param pidSlot specifies the PID slot.
+     * @return PID coefficients of the motor's PID controller.
+     */
+    private TrcPidController.PidCoefficients getPidCoefficients(int pidSlot)
+    {
+        return new TrcPidController.PidCoefficients(
+            pidCtrl.getP(pidSlot), pidCtrl.getI(pidSlot), pidCtrl.getD(pidSlot), pidCtrl.getFF(pidSlot),
+            pidCtrl.getIZone(pidSlot));
+    }   //getPidCoefficients
 
     /**
      * This method returns the PID tolerance of the specified slot.
@@ -560,17 +651,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setMotorVelocityPidCoefficients
 
     /**
-     * This method returns the PID coefficients of the motor controller's velocity PID controller.
-     *
-     * @return PID coefficients of the motor's veloicty PID controller.
-     */
-    @Override
-    public TrcPidController.PidCoefficients getMotorVelocityPidCoefficients()
-    {
-        return getPidCoefficients(1);
-    }   //getMotorVelocityPidCoefficients
-
-    /**
      * This method sets the PID tolerance of the motor controller's velocity PID controller.
      *
      * @param tolerance specifies the PID tolerance to set.
@@ -580,6 +660,17 @@ public class FrcCANSparkMax extends TrcMotor
     {
         setPidTolerance(1, tolerance);
     }   //setMotorVelocityPidTolerance
+
+    /**
+     * This method returns the PID coefficients of the motor controller's velocity PID controller.
+     *
+     * @return PID coefficients of the motor's veloicty PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorVelocityPidCoefficients()
+    {
+        return getPidCoefficients(1);
+    }   //getMotorVelocityPidCoefficients
 
     /**
      * This method checks if the motor is at the set velocity.
@@ -606,17 +697,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setMotorPositionPidCoefficients
 
     /**
-     * This method returns the PID coefficients of the motor controller's position PID controller.
-     *
-     * @return PID coefficients of the motor's position PID controller.
-     */
-    @Override
-    public TrcPidController.PidCoefficients getMotorPositionPidCoefficients()
-    {
-        return getPidCoefficients(0);
-    }   //getMotorPositionPidCoefficients
-
-    /**
      * This method sets the PID tolerance of the motor controller's position PID controller.
      *
      * @param tolerance specifies the PID tolerance to set.
@@ -626,6 +706,17 @@ public class FrcCANSparkMax extends TrcMotor
     {
         setPidTolerance(0, tolerance);
     }   //setMotorPositionPidTolerance
+
+    /**
+     * This method returns the PID coefficients of the motor controller's position PID controller.
+     *
+     * @return PID coefficients of the motor's position PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorPositionPidCoefficients()
+    {
+        return getPidCoefficients(0);
+    }   //getMotorPositionPidCoefficients
 
     /**
      * This method checks if the motor is at the set position.
@@ -652,17 +743,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setMotorCurrentPidCoefficients
 
     /**
-     * This method returns the PID coefficients of the motor controller's current PID controller.
-     *
-     * @return PID coefficients of the motor's current PID controller.
-     */
-    @Override
-    public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
-    {
-        return getPidCoefficients(2);
-    }   //geteMotorCurrentPidCoefficients
-
-    /**
      * This method sets the PID tolerance of the motor controller's current PID controller.
      *
      * @param tolerance specifies the PID tolerance to set.
@@ -672,6 +752,17 @@ public class FrcCANSparkMax extends TrcMotor
     {
         setPidTolerance(2, tolerance);
     }   //setMotorCurrentPidTolerance
+
+    /**
+     * This method returns the PID coefficients of the motor controller's current PID controller.
+     *
+     * @return PID coefficients of the motor's current PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
+    {
+        return getPidCoefficients(2);
+    }   //geteMotorCurrentPidCoefficients
 
     /**
      * This method checks if the motor is at the set current.
@@ -719,40 +810,6 @@ public class FrcCANSparkMax extends TrcMotor
     {
         return motor.getVoltageCompensationNominalVoltage() != 0.0;
     }   //isVoltageCompensationEnabled
-
-    /**
-     * This method sets the lower and upper soft limits.
-     *
-     * @param lowerLimit specifies the position of the lower limit, null to disable lower limit.
-     * @param upperLimit specifies the position of the upper limit, null to disable upper limit.
-     */
-    @Override
-    public void setSoftLimits(Double lowerLimit, Double upperLimit)
-    {
-        // TODO: Reverse may not be lower if limit swtiches are swapped but we have no knowledge of
-        // the swap. Only TrcMotor knows about it. Need to rethink this a bit more.
-        if (lowerLimit != null)
-        {
-            recordResponseCode(
-                "setReverseSoftLimit", motor.setSoftLimit(SoftLimitDirection.kReverse, lowerLimit.floatValue()));
-            recordResponseCode("enableReverseSoftLimit", motor.enableSoftLimit(SoftLimitDirection.kReverse, true));
-        }
-        else
-        {
-            recordResponseCode("enableReverseSoftLimit", motor.enableSoftLimit(SoftLimitDirection.kReverse, false));
-        }
-
-        if (upperLimit != null)
-        {
-            recordResponseCode(
-                "setReverseSoftLimit", motor.setSoftLimit(SoftLimitDirection.kForward, upperLimit.floatValue()));
-            recordResponseCode("enableReverseSoftLimit", motor.enableSoftLimit(SoftLimitDirection.kForward, true));
-        }
-        else
-        {
-            recordResponseCode("enableReverseSoftLimit", motor.enableSoftLimit(SoftLimitDirection.kForward, false));
-        }
-    }   //setSoftLimits
 
     /**
      * This method sets this motor to follow another motor.

@@ -45,15 +45,15 @@ public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
      *
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the device.
-     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
-     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
+     * @param lowerLimitSwitch specifies an external lower limit switch overriding the motor controller one.
+     * @param upperLimitSwitch specifies an external upper limit switch overriding the motor controller one.
      * @param encoder specifies an external encoder overriding the motor controller one.
      */
     public FrcCANTalon(
-        String instanceName, int canId, TrcDigitalInput revLimitSwitch, TrcDigitalInput fwdLimitSwitch,
+        String instanceName, int canId, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch,
         TrcEncoder encoder)
     {
-        super(instanceName, new TalonSRX(canId), revLimitSwitch, fwdLimitSwitch, encoder);
+        super(instanceName, new TalonSRX(canId), lowerLimitSwitch, upperLimitSwitch, encoder);
     }   //FrcCANTalon
 
     /**

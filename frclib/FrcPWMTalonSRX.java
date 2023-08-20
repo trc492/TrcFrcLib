@@ -33,15 +33,15 @@ public class FrcPWMTalonSRX extends FrcPWMMotorController<PWMTalonSRX>
      *
      * @param instanceName specifies the instance name.
      * @param pwmChannel specifies the PWM channel number of the motor.
-     * @param revLimitSwitch specifies the reverse limit switch, can be null if not provided.
-     * @param fwdLimitSwitch specifies the forward limit switch, can be null if not provided.
+     * @param lowerLimitSwitch specifies the lower limit switch, can be null if not provided.
+     * @param upperLimitSwitch specifies the upper limit switch, can be null if not provided.
      * @param encoder specifies the encoder object, can be null if not provided.
      */
     public FrcPWMTalonSRX(
-        String instanceName, int pwmChannel, TrcDigitalInput revLimitSwitch, TrcDigitalInput fwdLimitSwitch,
+        String instanceName, int pwmChannel, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch,
         TrcEncoder encoder)
     {
-        super(instanceName, new PWMTalonSRX(pwmChannel), revLimitSwitch, fwdLimitSwitch, encoder);
+        super(instanceName, new PWMTalonSRX(pwmChannel), lowerLimitSwitch, upperLimitSwitch, encoder);
     }   //FrcPWMTalonSRX
 
     /**

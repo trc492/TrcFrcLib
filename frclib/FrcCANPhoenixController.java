@@ -75,15 +75,15 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      *
      * @param instanceName specifies the instance name.
      * @param baseTalon the base talon object.
-     * @param revLimitSwitch specifies an external reverse limit switch overriding the motor controller one.
-     * @param fwdLimitSwitch specifies an external forward limit switch overriding the motor controller one.
+     * @param lowerLimitSwitch specifies an external lower limit switch overriding the motor controller one.
+     * @param upperLimitSwitch specifies an external upper limit switch overriding the motor controller one.
      * @param encoder specifies an external encoder overriding the motor controller one.
      */
     public FrcCANPhoenixController(
-        String instanceName, T baseTalon, TrcDigitalInput revLimitSwitch, TrcDigitalInput fwdLimitSwitch,
+        String instanceName, T baseTalon, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch,
         TrcEncoder encoder)
     {
-        super(instanceName, revLimitSwitch, fwdLimitSwitch, encoder);
+        super(instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
         motor = baseTalon;
         readConfig();
     }   //FrcCANPhoenixController
@@ -289,10 +289,86 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setBrakeModeEnabled
 
     /**
+     * This method enables the reverse limit switch and configures it to the specified type.
+     *
+     * @param normalClose specifies true as the normal close switch type, false as normal open.
+     */
+    @Override
+    public void enableMotorRevLimitSwitch(boolean normalClose)
+    {
+        recordResponseCode(
+            "configReverseLimitSwitch", motor.configReverseLimitSwitchSource(
+                LimitSwitchSource.FeedbackConnector,
+                normalClose? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen));
+    }   //enableMotorRevLimitSwitch
+
+    /**
+     * This method enables the forward limit switch and configures it to the specified type.
+     *
+     * @param normalClose specifies true as the normal close switch type, false as normal open.
+     */
+    @Override
+    public void enableMotorFwdLimitSwitch(boolean normalClose)
+    {
+        recordResponseCode(
+            "configForwardLimitSwitch", motor.configForwardLimitSwitchSource(
+                LimitSwitchSource.FeedbackConnector,
+                normalClose? LimitSwitchNormal.NormallyClosed: LimitSwitchNormal.NormallyOpen));
+    }   //enableMotorFwdLimitSwitch
+
+    /**
+     * This method disables the reverse limit switch.
+     */
+    @Override
+    public void disableMotorRevLimitSwitch()
+    {
+        recordResponseCode(
+            "configReverseLimitSwitch", motor.configReverseLimitSwitchSource(
+                LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.Disabled));
+    }   //disableMotorRevLimitSwitch
+
+    /**
+     * This method disables the forward limit switch.
+     */
+    @Override
+    public void disableMotorFwdLimitSwitch()
+    {
+        recordResponseCode(
+            "configForwardLimitSwitch", motor.configForwardLimitSwitchSource(
+                LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.Disabled));
+    }   //disableMotorFwdLimitSwitch
+
+    /**
+     * This method checks if the reverse limit switch is enabled.
+     *
+     * @return true if enabled, false if disabled.
+     */
+    @Override
+    public boolean isMotorRevLimitSwitchEnabled()
+    {
+        LimitSwitchNormal limitSwitchNormal = LimitSwitchNormal.valueOf(
+            motor.configGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 1));
+        return limitSwitchNormal != LimitSwitchNormal.Disabled;
+    }   //isMotorRevLimitSwitchEnabled
+
+    /**
+     * This method checks if the forward limit switch is enabled.
+     *
+     * @return true if enabled, false if disabled.
+     */
+    @Override
+    public boolean isMotorFwdLimitSwitchEnabled()
+    {
+        LimitSwitchNormal limitSwitchNormal = LimitSwitchNormal.valueOf(
+            motor.configGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 0));
+        return limitSwitchNormal != LimitSwitchNormal.Disabled;
+    }   //isMotorFwdLimitSwitchEnabled
+
+    /**
      * This method inverts the active state of the reverse limit switch, typically reflecting whether the switch is
      * wired normally open or normally close.
      *
-     * @param inverted specifies true to invert the limit switch, false otherwise.
+     * @param inverted specifies true to invert the limit switch to normal close, false to normal open.
      */
     @Override
     public void setMotorRevLimitSwitchInverted(boolean inverted)
@@ -308,7 +384,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * This method inverts the active state of the forward limit switch, typically reflecting whether the switch is
      * wired normally open or normally close.
      *
-     * @param inverted specifies true to invert the limit switch, false otherwise.
+     * @param inverted specifies true to invert the limit switch to normal close, false to normal open.
      */
     @Override
     public void setMotorFwdLimitSwitchInverted(boolean inverted)
@@ -341,6 +417,44 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         return fwdLimitSwitchInverted ^ (motor.isFwdLimitSwitchClosed() == 1);
     }   //isMotorFwdLimitSwitchActive
+
+    /**
+     * This method sets the soft position limit for the reverse direction.
+     *
+     * @param limit specifies the limit in sensor units, null to disable.
+     */
+    @Override
+    public void setMotorRevSoftPositionLimit(Double limit)
+    {
+        if (limit != null)
+        {
+            recordResponseCode("configReverseSoftLimitThreshold", motor.configReverseSoftLimitThreshold(limit));
+            recordResponseCode("configReverseSoftLimitEnable", motor.configReverseSoftLimitEnable(true));
+        }
+        else
+        {
+            recordResponseCode("configReverseSoftLimitEnable", motor.configReverseSoftLimitEnable(false));
+        }
+    }   //setMotorRevSoftPositionLimit
+
+    /**
+     * This method sets the soft position limit for the forward direction.
+     *
+     * @param limit specifies the limit in sensor units, null to disable.
+     */
+    @Override
+    public void setMotorFwdSoftPositionLimit(Double limit)
+    {
+        if (limit != null)
+        {
+            recordResponseCode("configForwardSoftLimitThreshold", motor.configForwardSoftLimitThreshold(limit));
+            recordResponseCode("configForwardSoftLimitEnable", motor.configForwardSoftLimitEnable(true));
+        }
+        else
+        {
+            recordResponseCode("configForwardSoftLimitEnable", motor.configForwardSoftLimitEnable(false));
+        }
+    }   //setMotorFwdSoftPositionLimit
 
     /**
      * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
@@ -512,6 +626,17 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setPidCoefficients
 
     /**
+     * This method sets the PID tolerance of the the specified slot.
+     *
+     * @param slotIdx specifies the slot index.
+     * @param tolerance specifies PID tolerance.
+     */
+    private void setPidTolerance(int slotIdx, double tolerance)
+    {
+        recordResponseCode("configAllowableClosedloopError", motor.configAllowableClosedloopError(slotIdx, tolerance));
+    }   //setPidTolerance
+
+    /**
      * This method returns the PID coefficients of the specified slot.
      *
      * @param slotIdx specifies the slot index.
@@ -526,17 +651,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             motor.configGetParameter(ParamEnum.eProfileParamSlot_F, slotIdx),
             motor.configGetParameter(ParamEnum.eProfileParamSlot_IZone, slotIdx));
     }   //getPidCoefficients
-
-    /**
-     * This method sets the PID tolerance of the the specified slot.
-     *
-     * @param slotIdx specifies the slot index.
-     * @param tolerance specifies PID tolerance.
-     */
-    private void setPidTolerance(int slotIdx, double tolerance)
-    {
-        recordResponseCode("configAllowableClosedloopError", motor.configAllowableClosedloopError(slotIdx, tolerance));
-    }   //setPidTolerance
 
     /**
      * This method returns the PID tolerance of the specified slot.
@@ -561,17 +675,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setMotorVelocityPidCoefficients
 
     /**
-     * This method returns the PID coefficients of the motor controller's velocity PID controller.
-     *
-     * @return PID coefficients of the motor's veloicty PID controller.
-     */
-    @Override
-    public TrcPidController.PidCoefficients getMotorVelocityPidCoefficients()
-    {
-        return getPidCoefficients(1);
-    }   //getMotorVelocityPidCoefficients
-
-    /**
      * This method sets the PID tolerance of the motor controller's velocity PID controller.
      *
      * @param tolerance specifies the PID tolerance to set.
@@ -581,6 +684,17 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         setPidTolerance(1, tolerance);
     }   //setMotorVelocityPidTolerance
+
+    /**
+     * This method returns the PID coefficients of the motor controller's velocity PID controller.
+     *
+     * @return PID coefficients of the motor's veloicty PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorVelocityPidCoefficients()
+    {
+        return getPidCoefficients(1);
+    }   //getMotorVelocityPidCoefficients
 
     /**
      * This method checks if the motor is at the set velocity.
@@ -605,17 +719,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setMotorPositionPidCoefficients
 
     /**
-     * This method returns the PID coefficients of the motor controller's position PID controller.
-     *
-     * @return PID coefficients of the motor's position PID controller.
-     */
-    @Override
-    public TrcPidController.PidCoefficients getMotorPositionPidCoefficients()
-    {
-        return getPidCoefficients(0);
-    }   //getMotorPositionPidCoefficients
-
-    /**
      * This method sets the PID tolerance of the motor controller's position PID controller.
      *
      * @param tolerance specifies the PID tolerance to set.
@@ -625,6 +728,17 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         setPidTolerance(0, tolerance);
     }   //setMotorPositionPidTolerance
+
+    /**
+     * This method returns the PID coefficients of the motor controller's position PID controller.
+     *
+     * @return PID coefficients of the motor's position PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorPositionPidCoefficients()
+    {
+        return getPidCoefficients(0);
+    }   //getMotorPositionPidCoefficients
 
     /**
      * This method checks if the motor is at the set position.
@@ -649,17 +763,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setMotorCurrentPidCoefficients
 
     /**
-     * This method returns the PID coefficients of the motor controller's current PID controller.
-     *
-     * @return PID coefficients of the motor's current PID controller.
-     */
-    @Override
-    public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
-    {
-        return getPidCoefficients(2);
-    }   //geteMotorCurrentPidCoefficients
-
-    /**
      * This method sets the PID tolerance of the motor controller's current PID controller.
      *
      * @param tolerance specifies the PID tolerance to set.
@@ -669,6 +772,17 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         setPidTolerance(2, tolerance);
     }   //setMotorCurrentPidTolerance
+
+    /**
+     * This method returns the PID coefficients of the motor controller's current PID controller.
+     *
+     * @return PID coefficients of the motor's current PID controller.
+     */
+    @Override
+    public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
+    {
+        return getPidCoefficients(2);
+    }   //geteMotorCurrentPidCoefficients
 
     /**
      * This method checks if the motor is at the set current.
@@ -715,38 +829,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     {
         return motor.isVoltageCompensationEnabled();
     }   //isVoltageCompensationEnabled
-
-    /**
-     * This method sets the lower and upper soft limits.
-     *
-     * @param lowerLimit specifies the position of the lower limit, null to disable lower limit.
-     * @param upperLimit specifies the position of the upper limit, null to disable upper limit.
-     */
-    @Override
-    public void setSoftLimits(Double lowerLimit, Double upperLimit)
-    {
-        // TODO: Reverse may not be lower if limit swtiches are swapped but we have no knowledge of
-        // the swap. Only TrcMotor knows about it. Need to rethink this a bit more.
-        if (lowerLimit != null)
-        {
-            motor.configReverseSoftLimitThreshold(lowerLimit);
-            motor.configReverseSoftLimitEnable(true);
-        }
-        else
-        {
-            motor.configReverseSoftLimitEnable(false);
-        }
-
-        if (upperLimit != null)
-        {
-            motor.configForwardSoftLimitThreshold(upperLimit);
-            motor.configForwardSoftLimitEnable(true);
-        }
-        else
-        {
-            motor.configForwardSoftLimitEnable(false);
-        }
-    }   //setSoftLimits
 
     /**
      * This method sets this motor to follow another motor.

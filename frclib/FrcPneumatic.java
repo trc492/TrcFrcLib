@@ -24,149 +24,65 @@ package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
-import TrcCommonLib.trclib.TrcDbgTrace;
-import TrcCommonLib.trclib.TrcEvent;
-import TrcCommonLib.trclib.TrcRobot;
-import TrcCommonLib.trclib.TrcStateMachine;
-import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcTimer;
 
 /**
- * This class implements a platform dependent pneumatic object. A pneumatic object consists of multiple pneumatic
- * channels. Pneumatic channels can be used to control a pneumatic valve or something that simply needs some voltage
- * to be turned on and off. For example, a 12V LED strip can be controlled by a pneumatic channel. An RGB LED strip
- * can be controlled by 3 pneumatic channels. Therefore, this class provides methods to turn on and off multiple
- * pneumatic channels in many different ways. It can even turn on and off the channels in a sequence of ON and OFF
- * with different time periods and in a loop so the RGB LED strip can be blink in different colors in various
- * blinking patterns.
+ * This class implements a platform dependent pneumatic object. A pneumatic object consists of a 1 or 2 pneumatic
+ * channels for a 1 or 2 valve pneumatic cylinder.
  */
 public class FrcPneumatic
 {
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = false;
+    private static final int INDEX_EXTEND = 0;
+    private static final int INDEX_RETRACT = 1;
+    private static final int BITMASK_EXTEND = 1 << INDEX_EXTEND;
+    private static final int BITMASK_RETRACT = 1 << INDEX_RETRACT;
 
-    /**
-     * This class implements an action for setting all pneumatic channels to ON or OFF for a set period of time.
-     */
-    public class SolenoidAction
-    {
-        public byte solMask;
-        public double period;
-    }   //class SolenoidAction
-
-    private enum State
-    {
-        START,
-        DONE
-    }   //enum State
-    
     private String instanceName;
-    private TrcTaskMgr.TaskObject pneumaticTaskObj;
-    private TrcStateMachine<State> solSM;
-    private TrcTimer delayTimer;
-    private TrcTimer solTimer;
-    private TrcEvent timerEvent;
-    private SolenoidAction[] pulseActions = new SolenoidAction[3];
-    private SolenoidAction[] actionList;
-    private boolean repeatActions;
-    private TrcEvent notifyEvent;
-    private int actionIndex;
-    private int numActions;
-    private Solenoid[] solenoids;
-    private boolean cylinderExtended = false;
+    private TrcTimer timer;
+    private final Solenoid[] solenoids;
 
     /**
      * This method is called by all variations of the constructor to do common initialization.
      *
      * @param instanceName specifies the instance name.
      */
-    private void initPneumatic(final String instanceName)
+    private void initPneumatic(String instanceName)
     {
         this.instanceName = instanceName;
-        pneumaticTaskObj = TrcTaskMgr.createTask(instanceName + ".pneumaticTask", this::pneumaticTask);
-        solSM = new TrcStateMachine<>(instanceName);
-        delayTimer = new TrcTimer(instanceName + ".delayTimer");
-        solTimer = new TrcTimer(instanceName);
-        timerEvent = new TrcEvent(instanceName);
-        for (int i = 0; i < pulseActions.length; i++)
-        {
-            pulseActions[i] = new SolenoidAction();
-        }
-        actionList = null;
-        repeatActions = false;
-        notifyEvent = null;
-        actionIndex = 0;
-        numActions = 0;
+        timer = new TrcTimer(instanceName);
     }   //initPneumatic
 
     /**
-     * Constructor: Create an instance of the object.
+     * Constructor: Creates a 1-valve pneumatic.
      *
      * @param instanceName specifies the instance name.
-     * @param module specifies the CAN ID of the Pneumatics Control Module.
+     * @param canId specifies the CAN ID of the Pneumatics Control Module.
      * @param moduleType specifies the module type to use.
-     * @param channel specifies the pneumatic channel assigned to this pneumatic object instance.
+     * @param extendChannel specifies the pneumatic channel to extend the cylinder.
      */
-    public FrcPneumatic(String instanceName, int module, PneumaticsModuleType moduleType, int channel)
+    public FrcPneumatic(String instanceName, int canId, PneumaticsModuleType moduleType, int extendChannel)
     {
+        initPneumatic(instanceName);
         solenoids = new Solenoid[1];
-        solenoids[0] = new Solenoid(module, moduleType, channel);
-        initPneumatic(instanceName);
+        solenoids[INDEX_EXTEND] = new Solenoid(canId, moduleType, extendChannel);
     }   //FrcPneumatic
 
     /**
-     * Constructor: Create an instance of the object.
+     * Constructor: Creates a 2-valve pneumatic.
      *
      * @param instanceName specifies the instance name.
-     * @param module specifies the CAN ID of the Pneumatics Control Module.
+     * @param canId specifies the CAN ID of the Pneumatics Control Module.
      * @param moduleType specifies the module type to use.
-     * @param channel1 specifies one of the pneumatic channels assigned to this pneumatic object instance.
-     * @param channel2 specifies one of the pneumatic channels assigned to this pneumatic object instance.
-     */
-    public FrcPneumatic(String instanceName, int module, PneumaticsModuleType moduleType, int channel1, int channel2)
-    {
-        solenoids = new Solenoid[2];
-        solenoids[0] = new Solenoid(module, moduleType, channel1);
-        solenoids[1] = new Solenoid(module, moduleType, channel2);
-        initPneumatic(instanceName);
-    }   //FrcPneumatic
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param module specifies the CAN ID of the Pneumatics Control Module.
-     * @param moduleType specifies the module type to use.
-     * @param channel1 specifies one of the pneumatic channels assigned to this pneumatic object instance.
-     * @param channel2 specifies one of the pneumatic channels assigned to this pneumatic object instance.
-     * @param channel3 specifies one of the pneumatic channels assigned to this pneumatic object instance.
+     * @param extendChannel specifies the pneumatic channel to extend the cylinder.
+     * @param extendChannel specifies the pneumatic channel to retract the cylinder.
      */
     public FrcPneumatic(
-        String instanceName, int module, PneumaticsModuleType moduleType, int channel1, int channel2, int channel3)
+        String instanceName, int canId, PneumaticsModuleType moduleType, int extendChannel, int retractChannel)
     {
-        solenoids = new Solenoid[3];
-        solenoids[0] = new Solenoid(module, moduleType, channel1);
-        solenoids[1] = new Solenoid(module, moduleType, channel2);
-        solenoids[2] = new Solenoid(module, moduleType, channel3);
         initPneumatic(instanceName);
-    }   //FrcPneumatic
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param module specifies the CAN ID of the Pneumatics Control Module.
-     * @param moduleType specifies the module type to use.
-     * @param channels specifies an array of pneumatic channels assigned to this pneumatic object instance.
-     */
-    public FrcPneumatic(String instanceName, int module, PneumaticsModuleType moduleType, int[] channels)
-    {
-        solenoids = new Solenoid[channels.length];
-        for (int i = 0; i < solenoids.length; i++)
-        {
-            solenoids[i] = new Solenoid(module, moduleType, channels[i]);
-        }
-        initPneumatic(instanceName);
+        solenoids = new Solenoid[2];
+        solenoids[INDEX_EXTEND] = new Solenoid(canId, moduleType, extendChannel);
+        solenoids[INDEX_RETRACT] = new Solenoid(canId, moduleType, retractChannel);
     }   //FrcPneumatic
 
     /**
@@ -185,16 +101,8 @@ public class FrcPneumatic
      * @param bitMask specifies the bit mask of the pneumatic channels to be set.
      * @param on specifies true to set the channels ON and false to set them OFF.
      */
-    public void set(byte bitMask, boolean on)
+    public void set(int bitMask, boolean on)
     {
-        final String funcName = "set";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "bitMask=%x,on=%s", bitMask, Boolean.toString(on));
-        }
-
-        cancel();
         for (int i = 0; i < solenoids.length; i++)
         {
             if (((1 << i) & bitMask) != 0)
@@ -202,186 +110,49 @@ public class FrcPneumatic
                 solenoids[i].set(on);
             }
         }
+    }   //set
 
-        if (solenoids.length <= 2)
+    /**
+     * This method gets the states of the pneumatic channels specified in a bit mask.
+     *
+     * @param bitMask specifies the channels to get the states.
+     * @return channel states in a bit mask (0: inactive, 1 active).
+     */
+    public int get(int bitMask)
+    {
+        int states = 0;
+
+        for (int i = 0; i < solenoids.length; i++)
         {
-            if ((bitMask & 0x1) != 0 && on)
+            int channelMask = 1 << i;
+            if ((channelMask & bitMask) != 0 && solenoids[i].get())
             {
-                // Extend channel fired.
-                cylinderExtended = true;
-            }
-            else if ((bitMask & 0x2) != 0 && on)
-            {
-                // Retract channel fired.
-                cylinderExtended = false;
+                states |= channelMask;
             }
         }
-    }   //set
+
+        return states;
+    }   //get
 
     /**
-     * This method sets the specified pneumatic channels to ON or OFF.
-     *
-     * @param onMask specifies the bit mask of the channels to be set to ON.
-     * @param offMask specifies the bit mask of the channels to be set to OFF.
-     */
-    public void set(byte onMask, byte offMask)
-    {
-        set(offMask, false);
-        set(onMask, true);
-    }   //set
-
-    /**
-     * This method sets the specified pneumatic channels to ON or OFF for a specified period of time and optionally
-     * signals an event when the period has expired.
-     *
-     * @param solMask specifies the bit mask of all channels. 1's specify ON channels and 0's specify OFF channels.
-     * @param onPeriod specifies the period of time the ON channels remained ON and turn them off afterwards.
-     * @param event specifies the event to be signaled when the ON period expires, null if none specified.
-     */
-    public void set(byte solMask, double onPeriod, TrcEvent event)
-    {
-        pulseActions[0].solMask = solMask;
-        pulseActions[0].period = onPeriod;
-        pulseActions[1].solMask = 0;
-        pulseActions[1].period = 0.0;
-        set(pulseActions, 2, false, event);
-    }   //set
-
-    /**
-     * This method sets all pneumatic channels to the states specified by solMask1 for period1 then sets them to the
-     * states specified by solMask2 for period2. If repeat is true, the period1 and period2 patterns repeat.
-     * Otherwise, the specified event is signaled. If repeat is true, the event parameter is ignored.
-     *
-     * @param solMask1 specifies first bit mask of all channels. 1's specify ON channels and 0's specify OFF channels.
-     * @param period1 specifies the period of time the mask 1 channels will remained in their states.
-     * @param solMask2 specifies second bit mask of all channels. 1's specify ON channels and 0's specify OFF channels.
-     * @param period2 specifies the period of time the mask 2 channels will remained in their states.
-     * @param repeat specifies true if this mask1/mask2 pattern will be repeated, false otherwise.
-     * @param event specifies the event to be signaled when period2 has expired, null if none specified.
-     *        This parameter is ignored if repeat is true.
-     */
-    public void set(
-            byte solMask1,
-            double period1,
-            byte solMask2,
-            double period2,
-            boolean repeat,
-            TrcEvent event)
-    {
-        pulseActions[0].solMask = solMask1;
-        pulseActions[0].period = period1;
-        pulseActions[1].solMask = solMask2;
-        pulseActions[1].period = period2;
-        pulseActions[2].solMask = 0;
-        pulseActions[2].period = 0.0;
-        set(pulseActions, 3, repeat, event);
-    }   //set
-
-    /**
-     * This method sets the ON/OFF pattern sequence of all pneumatic channels. If repeat is true, the sequence will
-     * be repeated. Otherwise, the specified event is signaled. If repeat is true, the event parameter is ignored.
-     *
-     * @param actionList specifies the sequence of ON/OFF actions of all the pneumatic channels and their periods.
-     * @param numActions specifies the number of valid actions in the array. The array length could be longer than
-     *        numActions.
-     * @param repeat specifies true if the sequence will be repeated, false otherwise.
-     * @param event specifies the event to be signaled when the end of sequence has been reached, null if none
-     *        specified. This parameter is ignored if repeat is true.
-     */
-    public void set(
-            SolenoidAction[] actionList,
-            int numActions,
-            boolean repeat,
-            TrcEvent event)
-    {
-        final String funcName = "set";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "numActions=%d,repeat=%s,event=%s", numActions, repeat, event);
-        }
-
-        if (actionList.length > 0 && actionList[0].period > 0.0)
-        {
-            cancel();
-            this.actionList = actionList;
-            this.numActions = numActions;
-            if (numActions > actionList.length)
-            {
-                this.numActions = actionList.length;
-            }
-            this.repeatActions = repeat;
-            if (event != null)
-            {
-                event.clear();
-            }
-            this.notifyEvent = event;
-            actionIndex = 0;
-            setTaskEnabled(true);
-            solSM.start(State.START);
-        }
-    }   //set
-
-    /**
-     * This method sets the state of a 1 or 2-channel pneumatic cylinder.
-     *
-     * @param state specifies true to extend the cylinder, false to retract.
-     */
-    public void setState(boolean state)
-    {
-        final String funcName = "setState";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "state=%s", state);
-        }
-
-        if (state)
-        {
-            extend();
-        }
-        else
-        {
-            retract();
-        }
-    }   //setState
-
-    /**
-     * This method extends a 1 or 2-channel pneumatic cylinder.
+     * This methods activates the extend channel.
      */
     public void extend()
     {
-        if (solenoids.length == 2)
-        {
-            //
-            // Two-valve cylinder: first channel is the extend valve and
-            // second channel is the retract valve.
-            //
-            set((byte)(1 << 0), (byte)(1 << 1));
-        }
-        else if (solenoids.length == 1)
-        {
-            //
-            // One-valve spring loaded cylinder: only one extend channel.
-            //
-            set((byte)1, true);
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Method supports only one or two-valve cylinders.");
-        }
+        set(BITMASK_EXTEND, true);
     }   //extend
 
     /**
-     * This method extends a 1 or 2-channel pneumatic cylinder.
+     * This methods activates the extend channel for the specified duration and deactivates it.
      *
-     * @param delay specifies delay in seconds to perform the extend.
+     * @param duration specifies the duration in seconds (from 0.01 to 2.55 sec).
      */
-    public void extend(double delay)
+    public void extend(double duration)
     {
-        if (delay > 0.0)
+        if (duration > 0.0)
         {
-            delayTimer.set(delay, this::delayExtend);
+            solenoids[INDEX_EXTEND].setPulseDuration(duration);
+            solenoids[INDEX_EXTEND].startPulse();
         }
         else
         {
@@ -390,79 +161,53 @@ public class FrcPneumatic
     }   //extend
 
     /**
-     * This method is called after the delay timer has expired to perform the extend operation.
+     * This method is a callback to process the delay extend action when the delay timer expired.
      *
-     * @param context not used.
+     * @param context specifies the extend duration.
      */
-    private void delayExtend(Object context)
+    private void delayExtendAction(Object context)
     {
-        extend();
-    }   //delayExtend
+        extend((Double) context);
+    }   //delayExtendAction
 
     /**
-     * This method extends a 1 or 2-channel pneumatic cylinder for the specified period and deactivates it. If an
-     * event is specified, it is signaled at the end of the period.
+     * This method delays the specified delay time and activates the extend channel for the specified duration.
      *
-     * @param period specifies the period to extend the pneumatic cylinder.
-     * @param event specifies the event to signal at the end of the period, null if none specified.
+     * @param delay specifies the delay time in seconds.
+     * @param duration specifies the activation duration in seconds (from 0.01 to 2.55 sec), set to 0.0 if no
+     *        deactivation required.
      */
-    public void extend(double period, TrcEvent event)
+    public void extend(double delay, double duration)
     {
-        final String funcName = "extend";
-
-        if (debugEnabled)
+        if (delay > 0.0)
         {
-            globalTracer.traceInfo(funcName, "period=%f,event=%s", period, event);
-        }
-
-        if (solenoids.length == 1 || solenoids.length == 2)
-        {
-            set((byte)(1 << 0), period, event);
+            timer.set(delay, this::delayExtendAction, (Double) duration);
         }
         else
         {
-            throw new UnsupportedOperationException(
-                    "Method supports only one or two-valve cylinders.");
+            extend(duration);
         }
     }   //extend
 
     /**
-     * This method retracts a 1 or 2-channel pneumatic cylinder.
+     * This methods activates the retract channel.
      */
     public void retract()
     {
-        if (solenoids.length == 2)
-        {
-            //
-            // Two-valve cylinder: first channel is the extend valve and
-            // second channel is the retract valve.
-            //
-            set((byte)(1 << 1), (byte)(1 << 0));
-        }
-        else if (solenoids.length == 1)
-        {
-            //
-            // One-valve spring loaded cylinder: only one extend channel.
-            //
-            set((byte)1, false);
-        }
-        else
-        {
-            throw new UnsupportedOperationException(
-                    "Method supports only one or two-valve cylinders.");
-        }
+        set(BITMASK_RETRACT, true);
     }   //retract
 
     /**
-     * This method retracts a 1 or 2-channel pneumatic cylinder.
+     * This methods activates the retract channel for the specified duration and deactivates it.
      *
-     * @param delay specifies delay in seconds to perform the retract.
+     * @param duration specifies the duration in seconds (from 0.01 to 2.55 sec).
      */
-    public void retract(double delay)
+    public void retract(double duration)
     {
-        if (delay > 0.0)
+        if (duration > 0.0)
         {
-            delayTimer.set(delay, this::delayRetract);
+            solenoids[INDEX_RETRACT].setPulseDuration(duration);
+            solenoids[INDEX_RETRACT].startPulse();
         }
         else
         {
@@ -471,285 +216,32 @@ public class FrcPneumatic
     }   //retract
 
     /**
-     * This method is called after the delay timer has expired to perform the retract operation.
+     * This method is a callback to process the delay retract action when the delay timer expired.
      *
-     * @param context not used.
+     * @param context specifies the retract duration.
      */
-    private void delayRetract(Object context)
+    private void delayRetractAction(Object context)
     {
-        retract();
-    }   //delayRetract
+        retract((Double) context);
+    }   //delayRetractAction
 
     /**
-     * This method retracts a 1 or 2-channel pneumatic cylinder for the specified period and deactivates it. If an
-     * event is specified, it is signaled at the end of the period.
+     * This method delays the specified delay time and activates the retract channel for the specified duration.
      *
-     * @param period specifies the period to retract the pneumatic cylinder.
-     * @param event specifies the event to signal at the end of the period, null if none specified.
+     * @param delay specifies the delay time in seconds.
+     * @param duration specifies the activation duration in seconds (from 0.01 to 2.55 sec), set to 0.0 if no
+     *        deactivation required.
      */
-    public void retract(double period, TrcEvent event)
+    public void retract(double delay, double duration)
     {
-        final String funcName = "retract";
-
-        if (debugEnabled)
+        if (delay > 0.0)
         {
-            globalTracer.traceInfo(funcName, "period=%f,event=%s", period, event);
-        }
-
-        if (solenoids.length == 2)
-        {
-            //
-            // Two-valve cylinder: first channel is the extend valve and
-            // second channel is the retract valve.
-            //
-            set((byte)(1 << 1), period, event);
+            timer.set(delay, this::delayRetractAction, (Double) duration);
         }
         else
         {
-            throw new UnsupportedOperationException(
-                    "Method supports only two-valve cylinders.");
+            retract(duration);
         }
-    }   //extend
-
-    /**
-     * This method extends the pneumatic cylinder for extendPeriod and then retracts it for retractPeriod and then
-     * deactivates it at the end.
-     *
-     * @param extendPeriod specifies the period to extend the pneumatic cylinder.
-     * @param retractPeriod specifies the period to retract the pneumatic cylinder after it's been extended.
-     * @param event specifies the event to signal at the end of the retract period, null if none specified.
-     */
-    public void timedExtend(double extendPeriod, double retractPeriod, TrcEvent event)
-    {
-        final String funcName = "timedExtend";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(
-                funcName, "extendPeriod=%.3f,retractPeriod=%.3f,event=%s", extendPeriod, retractPeriod, event);
-        }
-
-        if (solenoids.length == 2)
-        {
-            //
-            // Two-valve cylinder: first channel is the extend valve and
-            // second channel is the retract valve.
-            //
-            set((byte)(1 << 0), extendPeriod, (byte)(1 << 1), retractPeriod, false, event);
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Method supports only two-valve cylinders.");
-        }
-    }   //timedExtend
-
-    /**
-     * This method extends the pneumatic cylinder for extendPeriod and then retracts it.
-     *
-     * @param extendPeriod specifies the period to extend the pneumatic cylinder.
-     */
-    public void timedExtend(double extendPeriod)
-    {
-        timedExtend(extendPeriod, 0.0, null);
-    }   //timedExtend
-
-    /**
-     * This method returns the state of the one or two-valve pneumatic cylinder.
-     *
-     * @return true if the cylinder is extended, false if it is retracted.
-     */
-    public boolean isExtended()
-    {
-        final String funcName = "isExtended";
-        boolean state = false;
-
-        if (solenoids.length <= 2)
-        {
-            state = cylinderExtended;
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Method supports only 1 or 2-valve cylinders.");
-        }
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "=%s", state);
-        }
-
-        return state;
-    }   //isExtended
-
-    /**
-     * This method enables/disabled the pneumatic task that executes the action sequence.
-     *
-     * @param enabled specifies true to enable and false to disable.
-     */
-    private void setTaskEnabled(boolean enabled)
-    {
-        final String funcName = "setTaskEnabled";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "enabled=%b", enabled);
-        }
-
-        if (enabled)
-        {
-            pneumaticTaskObj.registerTask(TrcTaskMgr.TaskType.OUTPUT_TASK);
-        }
-        else
-        {
-            pneumaticTaskObj.unregisterTask();
-        }
-    }   //setTaskEnabled
-
-    /**
-     * This method disables the pneumatic task and cancels all pending actions.
-     */
-    private void cancel()
-    {
-        if (solSM.isEnabled())
-        {
-            setTaskEnabled(false);
-            solTimer.cancel();
-            solSM.stop();
-        }
-    }   //cancel
-
-    /**
-     * This method is call periodically to execute the action sequence.
-     *
-     * @param taskType specifies the type of task being run.
-     * @param runMode specifies the competition mode that is running.
-     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
-     *        false otherwise.
-     */
-    public void pneumaticTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
-    {
-        final String funcName = "pneumaticTask";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceVerbose(funcName, "taskType=%s,runMode=%s", taskType, runMode);
-        }
-
-        if (solSM.isReady())
-        {
-            State state = solSM.getState();
-
-            if (debugEnabled)
-            {
-                globalTracer.traceInfo(funcName, "Executing state %d.", state);
-            }
-
-            switch (state)
-            {
-                case START:
-                    if (actionIndex < numActions)
-                    {
-                        //
-                        // Turn the each of the solenoids ON/OFF.
-                        //
-                        if (debugEnabled)
-                        {
-                            globalTracer.traceInfo(
-                                funcName, "[%f] Executing action %d/%d",
-                                TrcTimer.getCurrentTime(), actionIndex, numActions);
-                        }
-
-                        for (int i = 0; i < solenoids.length; i++)
-                        {
-                            if (((1 << i) & actionList[actionIndex].solMask) != 0)
-                            {
-                                solenoids[i].set(true);
-                                if (debugEnabled)
-                                {
-                                    globalTracer.traceInfo(funcName, "Set solenoid %d ON.", i);
-                                }
-                            }
-                            else
-                            {
-                                solenoids[i].
-                                set(false);
-                                if (debugEnabled)
-                                {
-                                    globalTracer.traceInfo(funcName, "Set solenoid %d OFF.", i);
-                                }
-                            }
-                        }
-
-                        if (solenoids.length <= 2)
-                        {
-                            if ((actionList[actionIndex].solMask & 0x1) != 0)
-                            {
-                                // Extend channel fired.
-                                cylinderExtended = true;
-                            }
-                            else if ((actionList[actionIndex].solMask & 0x2) != 0)
-                            {
-                                // Retract channel fired.
-                                cylinderExtended = false;
-                            }
-                        }
-
-                        //
-                        // Set timer and wait for it if necessary.
-                        //
-                        if (actionList[actionIndex].period > 0.0)
-                        {
-                            if (debugEnabled)
-                            {
-                                globalTracer.traceInfo(
-                                    funcName, "Set timer for %f", actionList[actionIndex].period);
-                            }
-                            solTimer.set(
-                                    actionList[actionIndex].period,
-                                    timerEvent);
-                            solSM.addEvent(timerEvent);
-                            solSM.waitForEvents(state);
-                        }
-                        //
-                        // Move to the next action.
-                        //
-                        actionIndex++;
-                        if (repeatActions && actionIndex >= numActions)
-                        {
-                            actionIndex = 0;
-                        }
-                    }
-                    else
-                    {
-                        //
-                        // No more action, we are done.
-                        //
-                        solSM.setState(State.DONE);;
-                    }
-                    break;
-
-                case DONE:
-                default:
-                    //
-                    // We are done.
-                    //
-                    if (debugEnabled)
-                    {
-                        globalTracer.traceInfo(funcName, "Done!");
-                    }
-                    setTaskEnabled(false);
-                    if (notifyEvent != null)
-                    {
-                        notifyEvent.signal();
-                        notifyEvent = null;
-                    }
-                    actionList = null;
-                    repeatActions = false;
-                    actionIndex = 0;
-                    numActions = 0;
-                    solSM.stop();
-                    break;
-            }
-        }
-    }   //pneumaticTask
+    }   //retract
 
 }   //class FrcPneumatic
