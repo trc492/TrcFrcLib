@@ -43,17 +43,24 @@ import TrcCommonLib.trclib.TrcPidController;
 /**
  * This class implements a SparkMAX motor controller by REV robototics. It extends the TrcMotor class and
  * implements the abstract methods required by TrcMotor to be compatible with the TRC library.
- * Reference manual of the motor controller can be found here:
+ * Reference manual and API doc of the motor controller can be found here:
  * http://www.revrobotics.com/sparkmax-users-manual/?mc_cid=a60a44dc08&mc_eid=1935741b98#section-2-3
+ * https://codedocs.revrobotics.com/java/com/revrobotics/cansparkmax
  */
 public class FrcCANSparkMax extends TrcMotor
 {
     private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
+    private static final int PIDSLOT_POSITION = 0;
+    private static final int PIDSLOT_VELOCITY = 1;
+    private static final int PIDSLOT_CURRENT = 2;
 
     public final CANSparkMax motor;
     private final SparkMaxPIDController pidCtrl;
     private final RelativeEncoder sparkMaxEncoder;
     private SparkMaxLimitSwitch sparkMaxRevLimitSwitch, sparkMaxFwdLimitSwitch;
+    private Double velSetpoint = null;
+    private Double posSetpoint = null;
+    private Double currentSetpoint = null;
     private Double velPidTolerance = null;
     private Double posPidTolerance = null;
     private Double currentPidTolerance = null;
@@ -213,7 +220,7 @@ public class FrcCANSparkMax extends TrcMotor
     // @Override
     // public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
     // {
-    //     recordResponseCode("setOutputRange", pidCtrl.setOutputRange(Math.abs(revLimit), Math.abs(fwdLimit)));
+    //     recordResponseCode("setOutputRange", pidCtrl.setOutputRange(revLimit, fwdLimit));
     // }   //setCloseLoopOutputLimits
 
     /**
@@ -492,7 +499,9 @@ public class FrcCANSparkMax extends TrcMotor
     public void setMotorVelocity(double velocity)
     {
         // setVelocity takes a velocity value in RPM.
-        recordResponseCode("setVelocity", pidCtrl.setReference(velocity*60.0, ControlType.kVelocity, 1));
+        velSetpoint = velocity;
+        recordResponseCode(
+            "setVelocity", pidCtrl.setReference(velocity*60.0, ControlType.kVelocity, PIDSLOT_VELOCITY));
     }   //setMotorVelocity
 
     /**
@@ -509,14 +518,15 @@ public class FrcCANSparkMax extends TrcMotor
     /**
      * This method commands the motor to go to the given position using close loop control.
      *
-     * @param position specifies the position in sensor units.
+     * @param position specifies the position in rotations.
      * @param powerLimit specifies the maximum power output limits.
      */
     @Override
     public void setMotorPosition(double position, double powerLimit)
     {
-        recordResponseCode("setPosition", pidCtrl.setReference(position, ControlType.kPosition, 0));
-        recordResponseCode("setOutputRange", pidCtrl.setOutputRange(powerLimit, powerLimit, 0));
+        posSetpoint = position;
+        recordResponseCode("setPosition", pidCtrl.setReference(position, ControlType.kPosition, PIDSLOT_POSITION));
+        recordResponseCode("setOutputRange", pidCtrl.setOutputRange(-powerLimit, powerLimit, PIDSLOT_POSITION));
     }   //setMotorPosition
 
     /**
@@ -538,7 +548,8 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorCurrent(double current)
     {
-        recordResponseCode("setCurret", pidCtrl.setReference(current, ControlType.kCurrent));
+        currentSetpoint = current;
+        recordResponseCode("setCurret", pidCtrl.setReference(current, ControlType.kCurrent, PIDSLOT_CURRENT));
     }   //setMotorCurrent
 
     /**
@@ -575,23 +586,8 @@ public class FrcCANSparkMax extends TrcMotor
      */
     private void setPidTolerance(int slotIdx, double tolerance)
     {
-        switch (slotIdx)
-        {
-            case 0:
-                velPidTolerance = tolerance;
-                break;
-
-            case 1:
-                posPidTolerance = tolerance;
-                break;
-
-            case 2:
-                currentPidTolerance = tolerance;
-                break;
-
-            default:
-                break;
-        }
+        recordResponseCode(
+            "setSmartMotionAllowedClosedLoopError", pidCtrl.setSmartMotionAllowedClosedLoopError(tolerance, slotIdx));
     }   //setPidTolerance
 
     /**
@@ -613,30 +609,9 @@ public class FrcCANSparkMax extends TrcMotor
      * @param slotIdx specifies the slot index.
      * @return PID tolerance of the specified slot.
      */
-    private Double getPidTolerance(int slotIdx)
+    private double getPidTolerance(int slotIdx)
     {
-        Double tolerance;
-
-        switch (slotIdx)
-        {
-            case 0:
-                tolerance = velPidTolerance;
-                break;
-
-            case 1:
-                tolerance = posPidTolerance;
-                break;
-
-            case 2:
-                tolerance = currentPidTolerance;
-                break;
-
-            default:
-                tolerance = null;
-                break;
-        }
-
-        return tolerance;
+        return pidCtrl.getSmartMotionAllowedClosedLoopError(slotIdx);
     }   //getPidTolerance
 
     /**
@@ -647,7 +622,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorVelocityPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        setPidCoefficients(1, pidCoeff);
+        setPidCoefficients(PIDSLOT_VELOCITY, pidCoeff);
     }   //setMotorVelocityPidCoefficients
 
     /**
@@ -658,7 +633,8 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorVelocityPidTolerance(double tolerance)
     {
-        setPidTolerance(1, tolerance);
+        velPidTolerance = tolerance;
+        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
     }   //setMotorVelocityPidTolerance
 
     /**
@@ -669,7 +645,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public TrcPidController.PidCoefficients getMotorVelocityPidCoefficients()
     {
-        return getPidCoefficients(1);
+        return getPidCoefficients(PIDSLOT_VELOCITY);
     }   //getMotorVelocityPidCoefficients
 
     /**
@@ -680,9 +656,8 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean getMotorVelocityOnTarget()
     {
-        return false;
-        // TODO: figure out how to do this on SparkMax.
-        // return motor.getClosedLoopError(1) <= getPidTolerance(1);
+        return velSetpoint != null && velPidTolerance != null &&
+               Math.abs(velSetpoint - getMotorVelocity()) <= velPidTolerance;
     }   //getMotorVelocityOnTarget
 
     /**
@@ -693,7 +668,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorPositionPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        setPidCoefficients(0, pidCoeff);
+        setPidCoefficients(PIDSLOT_POSITION, pidCoeff);
     }   //setMotorPositionPidCoefficients
 
     /**
@@ -704,7 +679,8 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorPositionPidTolerance(double tolerance)
     {
-        setPidTolerance(0, tolerance);
+        posPidTolerance = tolerance;
+        setPidTolerance(PIDSLOT_POSITION, tolerance);
     }   //setMotorPositionPidTolerance
 
     /**
@@ -715,7 +691,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public TrcPidController.PidCoefficients getMotorPositionPidCoefficients()
     {
-        return getPidCoefficients(0);
+        return getPidCoefficients(PIDSLOT_POSITION);
     }   //getMotorPositionPidCoefficients
 
     /**
@@ -726,9 +702,8 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean getMotorPositionOnTarget()
     {
-        return false;
-        // TODO: figure out how to do this on SparkMax.
-        // return motor.getClosedLoopError(0) <= getPidTolerance(0);
+        return posSetpoint != null && posPidTolerance != null &&
+               Math.abs(posSetpoint - getMotorPosition()) <= getPidTolerance(PIDSLOT_POSITION);
     }   //getMotorPositionOnTarget
 
     /**
@@ -739,7 +714,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorCurrentPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        setPidCoefficients(2, pidCoeff);
+        setPidCoefficients(PIDSLOT_CURRENT, pidCoeff);
     }   //setMotorCurrentPidCoefficients
 
     /**
@@ -750,7 +725,8 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorCurrentPidTolerance(double tolerance)
     {
-        setPidTolerance(2, tolerance);
+        currentPidTolerance = tolerance;
+        setPidTolerance(PIDSLOT_CURRENT, tolerance);
     }   //setMotorCurrentPidTolerance
 
     /**
@@ -761,7 +737,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
     {
-        return getPidCoefficients(2);
+        return getPidCoefficients(PIDSLOT_CURRENT);
     }   //geteMotorCurrentPidCoefficients
 
     /**
@@ -772,9 +748,8 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean getMotorCurrentOnTarget()
     {
-        return false;
-        // TODO: figure out how to do this on SparkMax.
-        // return motor.getClosedLoopError(2) <= getPidTolerance(2);
+        return currentSetpoint != null && currentPidTolerance != null &&
+               Math.abs(currentSetpoint - getMotorCurrent()) <= getPidTolerance(PIDSLOT_CURRENT);
     }   //getMotorCurrentOnTarget
 
     //
@@ -823,7 +798,7 @@ public class FrcCANSparkMax extends TrcMotor
         {
             recordResponseCode("follow", motor.follow(((FrcCANSparkMax) otherMotor).motor));
         }
-        else if (otherMotor instanceof FrcCANTalon)
+        else if (otherMotor instanceof FrcCANPhoenixController)
         {
             recordResponseCode("follow", motor.follow(
                 CANSparkMax.ExternalFollower.kFollowerPhoenix, ((FrcCANTalon) otherMotor).motor.getDeviceID()));
