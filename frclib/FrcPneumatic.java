@@ -40,6 +40,7 @@ public class FrcPneumatic
     private String instanceName;
     private TrcTimer timer;
     private final Solenoid[] solenoids;
+    private boolean inverted = false;
 
     /**
      * This method is called by all variations of the constructor to do common initialization.
@@ -96,7 +97,18 @@ public class FrcPneumatic
     }   //toString
 
     /**
-     * This method sets the state of the pneumatic channels specified in a bit mask.
+     * This methods sets both the extend and retract channels inverted.
+     *
+     * @param inverted specifies true to invert the channels, false otherwise.
+     */
+    public void setInverted(boolean inverted)
+    {
+        this.inverted = inverted;
+    }   //setInverted
+
+    /**
+     * This method sets the state of the pneumatic channels specified in a bit mask. Note: this method sets the real
+     * state of the channels. In other words, it does not respect the inverted setting.
      *
      * @param bitMask specifies the bit mask of the pneumatic channels to be set.
      * @param on specifies true to set the channels ON and false to set them OFF.
@@ -113,7 +125,8 @@ public class FrcPneumatic
     }   //set
 
     /**
-     * This method gets the states of the pneumatic channels specified in a bit mask.
+     * This method gets the states of the pneumatic channels specified in a bit mask. Note: this method returns the
+     * real state of the channels. In other words, it does not respect the inverted setting.
      *
      * @param bitMask specifies the channels to get the states.
      * @return channel states in a bit mask (0: inactive, 1 active).
@@ -135,12 +148,39 @@ public class FrcPneumatic
     }   //get
 
     /**
+     * This method sets the extend channel ON or OFF.
+     *
+     * @param on specifies true to turn the channel on, false to turn it off.
+     */
+    public void extend(boolean on)
+    {
+        if (inverted)
+        {
+            on = !on;
+        }
+
+        set(BITMASK_EXTEND, on);
+    }   //extend
+
+    /**
      * This methods activates the extend channel.
      */
     public void extend()
     {
-        set(BITMASK_EXTEND, true);
+        // Turn on the extend channel.
+        extend(true);
     }   //extend
+
+    /**
+     * This method is a callback to process the extend duration expriation action.
+     *
+     * @param context not used.
+     */
+    private void extendDurationExpired(Object context)
+    {
+        // Turn off the extend channel.
+        extend(false);
+    }   //extendDurationExpired
 
     /**
      * This methods activates the extend channel for the specified duration and deactivates it.
@@ -151,12 +191,21 @@ public class FrcPneumatic
     {
         if (duration > 0.0)
         {
-            solenoids[INDEX_EXTEND].setPulseDuration(duration);
-            solenoids[INDEX_EXTEND].startPulse();
+            if (inverted)
+            {
+                // startPulse with duration does not support inverted, so use a timer instead.
+                extend(true);
+                timer.set(duration, this::extendDurationExpired);
+            }
+            else
+            {
+                solenoids[INDEX_EXTEND].setPulseDuration(duration);
+                solenoids[INDEX_EXTEND].startPulse();
+            }
         }
         else
         {
-            extend();
+            extend(true);
         }
     }   //extend
 
@@ -165,10 +214,10 @@ public class FrcPneumatic
      *
      * @param context specifies the extend duration.
      */
-    private void delayExtendAction(Object context)
+    private void extendDelayExpired(Object context)
     {
         extend((Double) context);
-    }   //delayExtendAction
+    }   //extendDelayExpired
 
     /**
      * This method delays the specified delay time and activates the extend channel for the specified duration.
@@ -181,7 +230,7 @@ public class FrcPneumatic
     {
         if (delay > 0.0)
         {
-            timer.set(delay, this::delayExtendAction, (Double) duration);
+            timer.set(delay, this::extendDelayExpired, (Double) duration);
         }
         else
         {
@@ -190,12 +239,39 @@ public class FrcPneumatic
     }   //extend
 
     /**
+     * This method sets the retract channel ON or OFF.
+     *
+     * @param on specifies true to turn the channel on, false to turn it off.
+     */
+    public void retract(boolean on)
+    {
+        if (inverted)
+        {
+            on = !on;
+        }
+
+        set(BITMASK_RETRACT, on);
+    }   //retract
+
+    /**
      * This methods activates the retract channel.
      */
     public void retract()
     {
-        set(BITMASK_RETRACT, true);
+        // Turn on the retract channel.
+        retract(true);
     }   //retract
+
+    /**
+     * This method is a callback to process the retract duration expriation action.
+     *
+     * @param context not used.
+     */
+    private void retractDurationExpired(Object context)
+    {
+        // Turn off the retract channel.
+        retract(false);
+    }   //retractDurationExpired
 
     /**
      * This methods activates the retract channel for the specified duration and deactivates it.
@@ -206,12 +282,21 @@ public class FrcPneumatic
     {
         if (duration > 0.0)
         {
-            solenoids[INDEX_RETRACT].setPulseDuration(duration);
-            solenoids[INDEX_RETRACT].startPulse();
+            if (inverted)
+            {
+                // startPulse with duration does not support inverted, so use a timer instead.
+                retract(true);
+                timer.set(duration, this::retractDurationExpired);
+            }
+            else
+            {
+                solenoids[INDEX_RETRACT].setPulseDuration(duration);
+                solenoids[INDEX_RETRACT].startPulse();
+            }
         }
         else
         {
-            retract();
+            retract(true);
         }
     }   //retract
 
@@ -220,10 +305,10 @@ public class FrcPneumatic
      *
      * @param context specifies the retract duration.
      */
-    private void delayRetractAction(Object context)
+    private void retractDelayExpired(Object context)
     {
         retract((Double) context);
-    }   //delayRetractAction
+    }   //retractDelayExpired
 
     /**
      * This method delays the specified delay time and activates the retract channel for the specified duration.
@@ -236,7 +321,7 @@ public class FrcPneumatic
     {
         if (delay > 0.0)
         {
-            timer.set(delay, this::delayRetractAction, (Double) duration);
+            timer.set(delay, this::retractDelayExpired, (Double) duration);
         }
         else
         {
