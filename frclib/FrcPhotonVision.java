@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcEvent;
 import TrcCommonLib.trclib.TrcPose2D;
+import TrcCommonLib.trclib.TrcPose3D;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcTimer;
@@ -46,6 +47,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 
 /**
  * This class implements vision detection using PhotonLib extending PhotonCamera.
@@ -75,8 +77,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
     {
         public final double timestamp;
         public final PhotonTrackedTarget target;
-        public final TrcPose2D targetPoseFrom2D;
-        public final TrcPose2D targetPoseFrom3D;
+        public final TrcPose3D targetPose;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -92,14 +93,16 @@ public abstract class FrcPhotonVision extends PhotonCamera
                 throw new IllegalStateException("Must not instantiate DetectedObject before FrcPhotonVision.");
             }
 
-            Transform3d targetTransform3d = target.getBestCameraToTarget();
-            Pose3d targetPose3d = new Pose3d(targetTransform3d.getTranslation(), targetTransform3d.getRotation());
-
             this.timestamp = timestamp;
             this.target = target;
 
-            targetPoseFrom2D = getTargetPose(target.getYaw(), target.getPitch(), targetHeight);
-            targetPoseFrom3D = pose3dToTrcPose2D(targetPose3d);
+            Transform3d targetTransform3d = target.getBestCameraToTarget();
+            // Pose3d targetPose3d = new Pose3d(targetTransform3d.getTranslation(), targetTransform3d.getRotation());
+            Translation3d targetTranslation = targetTransform3d.getTranslation();
+            Rotation3d targetRotation = targetTransform3d.getRotation();
+            targetPose = new TrcPose3D(
+                targetTranslation.getX(), targetTranslation.getY(), targetTranslation.getZ(),
+                targetRotation.getZ(), targetRotation.getY(), targetRotation.getX());
         }   //DetectedObject
 
         /**
@@ -110,31 +113,30 @@ public abstract class FrcPhotonVision extends PhotonCamera
         @Override
         public String toString()
         {
-            return String.format(
-                Locale.US, "{time=%.3f,poseFrom2d=%s,poseFrom3d=%s}", timestamp, targetPoseFrom2D, targetPoseFrom3D);
+            return String.format(Locale.US, "{time=%.3f,targetPose=%s}", timestamp, targetPose);
         }   //toString
 
-        /**
-         * This method calculates the pose of the detected object given the height offset of the object from ground.
-         *
-         * @param targetYaw specifies the horizontal angle to the target in degrees.
-         * @param targetPitch specifies the vertical angle to the target in degrees.
-         * @param targetHeight specifies the target ground offset in inches.
-         * @return a 2D pose of the detected object from the camera.
-         */
-        private TrcPose2D getTargetPose(double targetYaw, double targetPitch, double targetHeight)
-        {
-            double targetYawRadians = Math.toRadians(targetYaw);
-            double targetPitchRadians = Math.toRadians(targetPitch);
-            double targetDistanceInches =
-                (targetHeight - camHeightInches)/Math.tan(camPitchRadians + targetPitchRadians);
-            TrcPose2D targetPose = new TrcPose2D(
-                targetDistanceInches * Math.sin(targetYawRadians),
-                targetDistanceInches * Math.cos(targetYawRadians),
-                targetYaw);
+        // /**
+        //  * This method calculates the pose of the detected object given the height offset of the object from ground.
+        //  *
+        //  * @param targetYaw specifies the horizontal angle to the target in degrees.
+        //  * @param targetPitch specifies the vertical angle to the target in degrees.
+        //  * @param targetHeight specifies the target ground offset in inches.
+        //  * @return a 2D pose of the detected object from the camera.
+        //  */
+        // private TrcPose2D getTargetPose(double targetYaw, double targetPitch, double targetHeight)
+        // {
+        //     double targetYawRadians = Math.toRadians(targetYaw);
+        //     double targetPitchRadians = Math.toRadians(targetPitch);
+        //     double targetDistanceInches =
+        //         (targetHeight - camHeightInches)/Math.tan(camPitchRadians + targetPitchRadians);
+        //     TrcPose2D targetPose = new TrcPose2D(
+        //         targetDistanceInches * Math.sin(targetYawRadians),
+        //         targetDistanceInches * Math.cos(targetYawRadians),
+        //         targetYaw);
 
-            return targetPose;
-        }   //getTargetPose
+        //     return targetPose;
+        // }   //getTargetPose
 
         /**
          * This method translates a Photon Pose3d to the TrcPose2D by projecting the 3D pose on the floor to obtain
@@ -251,6 +253,17 @@ public abstract class FrcPhotonVision extends PhotonCamera
         {
             return target.getArea();
         }   //getArea
+
+        /**
+         * This method returns the pose of the detected object relative to the camera.
+         *
+         * @return pose of the detected object relative to camera.
+         */
+        @Override
+        public TrcPose3D getPose()
+        {
+            return targetPose;
+        }   //getPose
 
     }   //class DetectedObject
 

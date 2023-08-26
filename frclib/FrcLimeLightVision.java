@@ -24,6 +24,7 @@ package TrcFrcLib.frclib;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
 import TrcCommonLib.trclib.TrcDbgTrace;
+import TrcCommonLib.trclib.TrcPose3D;
 import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
 
@@ -86,6 +87,17 @@ public class FrcLimeLightVision extends FrcRemoteVisionProcessor
         {
             return area;
         }   //getArea
+
+        /**
+         * This method returns the pose of the detected object relative to the camera.
+         *
+         * @return pose of the detected object relative to camera.
+         */
+        @Override
+        public TrcPose3D getPose()
+        {
+            return null;
+        }   //getPose
 
     }   //class DetectedObject
 

@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcOpenCvDetector;
 import TrcCommonLib.trclib.TrcOpenCvPipeline;
+import TrcCommonLib.trclib.TrcPose3D;
 import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import edu.wpi.first.apriltag.AprilTagDetection;
@@ -110,6 +111,18 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         {
             return getDetectedRect(object).area();
         }   //getArea
+
+        /**
+         * This method returns the pose of the detected object relative to the camera.
+         *
+         * @return pose of the detected object relative to camera.
+         */
+        @Override
+        public TrcPose3D getPose()
+        {
+            // Don't have enough info to generate this.
+            return null;
+        }   //getPose
 
         /**
          * This method returns the string form of the target info.
