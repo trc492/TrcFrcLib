@@ -331,7 +331,7 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     @Override
     public void resetMotorPosition()
     {
-        throw new UnsupportedOperationException("This motor controller does not support position sensor.");
+        throw new UnsupportedOperationException("Motor controller does not support position sensor.");
     }   //resetMotorPosition
 
     /**

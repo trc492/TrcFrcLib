@@ -109,7 +109,7 @@ public class FrcAnalogEncoder implements TrcEncoder
     }   //setZeroOffset
 
     //
-    // Implements the FrcEncoder interface.
+    // Implements the TrcEncoder interface.
     //
 
     /**
