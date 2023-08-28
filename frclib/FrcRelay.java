@@ -42,6 +42,7 @@ public class FrcRelay extends Relay implements TrcExclusiveSubsystem
     }   //class TaskParams
 
     private final TaskParams taskParams = new TaskParams();
+    private boolean init = false;
     private String instanceName;
     private TrcTimer timer;
     private boolean inverted = false;
@@ -59,6 +60,7 @@ public class FrcRelay extends Relay implements TrcExclusiveSubsystem
         super(channel, direction);
         this.instanceName = instanceName;
         timer = new TrcTimer(instanceName);
+        init = true;
     }   //FrcRelay
 
     /**
@@ -102,32 +104,39 @@ public class FrcRelay extends Relay implements TrcExclusiveSubsystem
      */
     private void set(Value value, boolean cancelPrevious)
     {
-        if (cancelPrevious)
+        if (!init)
         {
-            cancel();
-        }
-
-        if (inverted)
-        {
-            if (value != Value.kOff)
-            {
-                // Inverted of any of ON mode is OFF.
-                super.set(Value.kOff);
-            }
-            else if (prevValue != null)
-            {
-                // Inverted of OFF mode is the previous ON mode.
-                // If we don't have prevValue, this is the first time setting it to inverted OFF which is unknown,
-                // so do nothing.
-                super.set(prevValue);
-            }
-            // Remember the intended value so we can use it next time when setting to kOff.
-            prevValue = value;
+            super.set(value);
         }
         else
         {
-            // Not inverted, set it as-is.
-            super.set(value);
+            if (cancelPrevious)
+            {
+                cancel();
+            }
+
+            if (inverted)
+            {
+                if (value != Value.kOff)
+                {
+                    // Inverted of any of ON mode is OFF.
+                    super.set(Value.kOff);
+                }
+                else if (prevValue != null)
+                {
+                    // Inverted of OFF mode is the previous ON mode.
+                    // If we don't have prevValue, this is the first time setting it to inverted OFF which is unknown,
+                    // so do nothing.
+                    super.set(prevValue);
+                }
+                // Remember the intended value so we can use it next time when setting to kOff.
+                prevValue = value;
+            }
+            else
+            {
+                // Not inverted, set it as-is.
+                super.set(value);
+            }
         }
     }   //set
 
