@@ -106,6 +106,10 @@ public class FrcRelay extends Relay implements TrcExclusiveSubsystem
     {
         if (!init)
         {
+            // Hack:
+            // We are still executing the super class constructor so taskParams is not created yet. If we are going
+            // through our normal code, we would try to access taskParams which caused NullPointerException. In this
+            // case just call the super class to do the initial set operation.
             super.set(value);
         }
         else
