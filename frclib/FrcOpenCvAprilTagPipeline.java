@@ -158,7 +158,7 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     private final TrcVisionPerformanceMetrics performanceMetrics = new TrcVisionPerformanceMetrics();
     private final AtomicReference<DetectedObject[]> detectedObjsUpdate = new AtomicReference<>();
     private int intermediateStep = 0;
-    private boolean annotate = false;
+    private boolean annotateEnabled = false;
     
     /**
      * Constructor: Create an instance of the object.
@@ -288,7 +288,7 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
             }
         }
 
-        if (annotate)
+        if (annotateEnabled)
         {
             Mat output = getIntermediateOutput(intermediateStep);
             // Scalar color = intermediateStep == 0? ANNOTATE_GREEN_COLOR: ANNOTATE_WHITE_COLOR;
@@ -321,35 +321,49 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     }   //getDetectedObjects
 
     /**
-     * This method sets the intermediate mat of the pipeline as the video output mat and optionally annotate the
-     * detected rectangle on it.
+     * This method enables/disables image annotation of the detected object.
+     *
+     * @param enabled specifies true to enable annotation, false to disable.
+     */
+    @Override
+    public void setAnnotateEnabled(boolean enabled)
+    {
+        annotateEnabled = enabled;
+    }   //setAnnotateEnabled
+
+    /**
+     * This method checks if image annotation is enabled.
+     *
+     * @return true if annotation is enabled, false otherwise.
+     */
+    @Override
+    public boolean isAnnotateEnabled()
+    {
+        return annotateEnabled;
+    }   //isAnnotateEnabled
+
+    /**
+     * This method sets the intermediate mat of the pipeline as the video output mat.
      *
      * @param intermediateStep specifies the intermediate mat used as video output (1 is the original mat, 0 to
      *        disable video output if supported).
-     * @param annotate specifies true to annotate detected rectangles on the output mat, false otherwise.
-     *        This parameter is ignored if intermediateStep is 0.
      */
     @Override
-    public void setVideoOutput(int intermediateStep, boolean annotate)
+    public void setVideoOutput(int intermediateStep)
     {
         if (intermediateStep >= 0 && intermediateStep < intermediateMats.length)
         {
             this.intermediateStep = intermediateStep;
-            this.annotate = annotate;
         }
     }   //setVideoOutput
 
     /**
      * This method cycles to the next intermediate mat of the pipeline as the video output mat.
-     *
-     * @param annotate specifies true to annotate detected rectangles on the output mat, false otherwise.
-     *        This parameter is ignored if intermediateStep is 0.
      */
     @Override
-    public void setNextVideoOutput(boolean annotate)
+    public void setNextVideoOutput()
     {
         intermediateStep = (intermediateStep + 1) % intermediateMats.length;
-        this.annotate = annotate;
     }   //setNextVideoOutput
 
     /**
