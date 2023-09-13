@@ -244,6 +244,18 @@ public class FrcXboxController extends XboxController
     }
 
     /**
+     * This method returns the combined value of the left and right analog triggers to give you a value range of
+     * -1 to 1.
+     *
+     * @param squared specifies true to apply a squared curve to the output value, false otherwise.
+     * @return adjusted value of the combined analog triggers.
+     */
+    public double getTriggerWithDeadband(boolean squared)
+    {
+        return adjustValueWithDeadband(getRightTriggerAxis() - getLeftTriggerAxis(), squared, deadbandThreshold);
+    }
+
+    /**
      * This method runs periodically and checks for changes in the button states. If any button changed state,
      * the button handler is called if one exists.
      *
@@ -336,4 +348,5 @@ public class FrcXboxController extends XboxController
 
         return value;
     }   //adjustValueWithDeadband
-}
+
+}   //class FrcXboxController
