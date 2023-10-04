@@ -94,10 +94,32 @@ public class FrcLimeLightVision extends FrcRemoteVisionProcessor
          * @return pose of the detected object relative to camera.
          */
         @Override
-        public TrcPose3D getPose()
+        public TrcPose3D getObjectPose()
         {
             return null;
-        }   //getPose
+        }   //getObjectPose
+
+        /**
+         * This method returns the objects real world width.
+         *
+         * @return object real world width, null if not supported.
+         */
+        @Override
+        public Double getObjectWidth()
+        {
+            return null;
+        }   //getObjectWidth
+
+        /**
+         * This method returns the objects real world depth.
+         *
+         * @return object real world depth, null if not supported.
+         */
+        @Override
+        public Double getObjectDepth()
+        {
+            return null;
+        }   //getObjectDepth
 
     }   //class DetectedObject
 
