@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.I2C.Port;
@@ -45,7 +44,7 @@ public class FrcI2cDevice extends TrcSerialBusDevice
      * @param devAddress specifies the address of the device on the I2C bus.
      * @param useRequestQueue specifies true to use a request queue, false otherwise.
      */
-    public FrcI2cDevice(final String instanceName, Port port, int devAddress, boolean useRequestQueue)
+    public FrcI2cDevice(String instanceName, Port port, int devAddress, boolean useRequestQueue)
     {
         super(instanceName, useRequestQueue);
         device = new I2C(port, devAddress);
@@ -58,7 +57,7 @@ public class FrcI2cDevice extends TrcSerialBusDevice
      * @param devAddress specifies the address of the device on the I2C bus.
      * @param useRequestQueue specifies true to use a request queue, false otherwise.
      */
-    public FrcI2cDevice(final String instanceName, int devAddress, boolean useRequestQueue)
+    public FrcI2cDevice(String instanceName, int devAddress, boolean useRequestQueue)
     {
         this(instanceName, Port.kOnboard, devAddress, useRequestQueue);
     }   //FrcI2cDevice
@@ -77,17 +76,11 @@ public class FrcI2cDevice extends TrcSerialBusDevice
     @Override
     public byte[] readData(int address, int length)
     {
-        final String funcName = "readData";
         byte[] buffer = new byte[length];
 
         if (address == -1 && device.readOnly(buffer, length) || address != -1 && device.read(address, length, buffer))
         {
             buffer = null;
-        }
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "addr=%d,len=%d,buffer=%s", address, length, Arrays.toString(buffer));
         }
 
         return buffer;
@@ -104,7 +97,6 @@ public class FrcI2cDevice extends TrcSerialBusDevice
     @Override
     public int writeData(int address, byte[] buffer, int length)
     {
-        final String funcName = "writeData";
         int buffLen = address == -1? length: length + 1;
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(buffLen);
         int bytesWritten = length;
@@ -118,13 +110,6 @@ public class FrcI2cDevice extends TrcSerialBusDevice
         if (device.writeBulk(byteBuffer, length))
         {
             bytesWritten = 0;
-        }
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(
-                funcName, "addr=%d,data=%s,len=%d,bytesWritten=%d",
-                address, Arrays.toString(buffer), length, bytesWritten);
         }
 
         return bytesWritten;

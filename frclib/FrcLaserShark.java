@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import com.cuforge.libcu.Lasershark;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcDistanceSensor;
 
 /**
@@ -32,14 +31,6 @@ import TrcCommonLib.trclib.TrcDistanceSensor;
  */
 public class FrcLaserShark extends Lasershark implements TrcDistanceSensor
 {
-    private static final String moduleName = "FrcLaserShark";
-    private static final boolean debugEnabled = false;
-    private static final boolean tracingEnabled = false;
-    private static final boolean useGlobalTracer = false;
-    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
-    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    private TrcDbgTrace dbgTrace = null;
-
     private final String instanceName;
 
     /**
@@ -51,14 +42,6 @@ public class FrcLaserShark extends Lasershark implements TrcDistanceSensor
     public FrcLaserShark(String instanceName, int digitalInput)
     {
         super(digitalInput);
-
-        if (debugEnabled)
-        {
-            dbgTrace = useGlobalTracer ?
-                TrcDbgTrace.getGlobalTracer() :
-                new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
         this.instanceName = instanceName;
     }   //FrcLaserShark
 
@@ -80,17 +63,7 @@ public class FrcLaserShark extends Lasershark implements TrcDistanceSensor
      */
     public double getDistanceMillimeters()
     {
-        final String funcName = "getDistanceMillimeters";
-        double distance = getDistanceMeters() * 1000.0;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceInfo(funcName, "%s: distanceMillimeters=%f", instanceName, distance);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", distance);
-        }
-
-        return distance;
+        return getDistanceMeters() * 1000.0;
     }   //getDistanceMillimeters
 
     /**
@@ -101,17 +74,7 @@ public class FrcLaserShark extends Lasershark implements TrcDistanceSensor
     @Override
     public double getDistanceInches()
     {
-        final String funcName = "getDistanceInches";
-        double distance = super.getDistanceInches();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceInfo(funcName, "%s: distanceInches=%f", instanceName, distance);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", distance);
-        }
-
-        return distance;
+        return super.getDistanceInches();
     }   //getDistanceInches
 
 }   //class FrcLaserShark

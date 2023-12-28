@@ -42,7 +42,7 @@ public class FrcSpiDevice extends TrcSerialBusDevice
      * @param spi specifies the SPI port the device is connected to.
      * @param useRequestQueue specifies true to use a request queue, false otherwise.
      */
-    public FrcSpiDevice(final String instanceName, SPI spi, boolean useRequestQueue)
+    public FrcSpiDevice(String instanceName, SPI spi, boolean useRequestQueue)
     {
         super(instanceName, useRequestQueue);
         this.spi = spi;
@@ -62,15 +62,10 @@ public class FrcSpiDevice extends TrcSerialBusDevice
     @Override
     public byte[] readData(int address, int length)
     {
-        final String funcName = "readData";
         byte[] buffer = new byte[length];
 
         spi.read(true, buffer, length);
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "addr=%d,len=%d,data=%s", address, length, Arrays.toString(buffer));
-        }
+        tracer.traceDebug(instanceName, "addr=" + address + ",len=" + length + ",data=" + Arrays.toString(buffer));
 
         return buffer;
     }   //readData
@@ -86,13 +81,7 @@ public class FrcSpiDevice extends TrcSerialBusDevice
     @Override
     public int writeData(int address, byte[] buffer, int length)
     {
-        final String funcName = "writeData";
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "addr=%d,data=%s,len=%d", address, Arrays.toString(buffer), length);
-        }
-
+        tracer.traceDebug(instanceName, "addr=" + address + ",data=" + Arrays.toString(buffer) + ",len=" + length);
         spi.write(buffer, length);
 
         return length;

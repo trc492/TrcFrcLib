@@ -28,8 +28,6 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.SensorUtil;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcTimer;
@@ -40,14 +38,7 @@ import TrcCommonLib.trclib.TrcTimer;
  */
 public class FrcPdp extends PowerDistribution
 {
-    private static final String moduleName = "FrcPdp";
-    private static final boolean debugEnabled = false;
-    private static final boolean tracingEnabled = false;
-    private static final boolean useGlobalTracer = false;
-    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
-    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    public static final int kPDPChannels = SensorUtil.kCTREPDPChannels;
-    private TrcDbgTrace dbgTrace = null;
+    private static final String moduleName = FrcPdp.class.getSimpleName();
 
     /**
      * This class contains the info of a PDP channel.
@@ -79,9 +70,10 @@ public class FrcPdp extends PowerDistribution
 
     }   //class Channel
 
+    private final int numChannels;
+    private final String[] channelNames;
+    private final double[] channelEnergyUsed;
     private final TrcTaskMgr.TaskObject energyUsedTaskObj;
-    private String[] channelNames = new String[kPDPChannels];
-    private double[] channelEnergyUsed = new double[kPDPChannels];
     private double lastTimestamp = 0.0;
 
     /**
@@ -93,21 +85,13 @@ public class FrcPdp extends PowerDistribution
     public FrcPdp(int canId, ModuleType moduleType)
     {
         super(canId, moduleType);
-
-        if (debugEnabled)
-        {
-            dbgTrace = useGlobalTracer?
-                TrcDbgTrace.getGlobalTracer():
-                new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
-        }
-
+        numChannels = getNumChannels();
+        channelNames = new String[numChannels];
+        channelEnergyUsed = new double[numChannels];
         energyUsedTaskObj = TrcTaskMgr.createTask(moduleName + ".energyUsedTask", this::energyUsedTask);
 
-        for (int i = 0; i < kPDPChannels; i++)
-        {
-            channelNames[i] = null;
-            channelEnergyUsed[i] = 0.0;
-        }
+        Arrays.fill(channelNames, null);
+        Arrays.fill(channelEnergyUsed, 0.0);
     }   //FrcPdp
 
     /**
@@ -118,18 +102,11 @@ public class FrcPdp extends PowerDistribution
      */
     public void setTaskEnabled(boolean enabled)
     {
-        final String funcName = "setTaskEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%b", enabled);
-        }
-
         if (enabled)
         {
             synchronized (this)
             {
-                for (int i = 0; i < kPDPChannels; i++)
+                for (int i = 0; i < numChannels; i++)
                 {
                     channelEnergyUsed[i] = 0.0;
                 }
@@ -142,11 +119,6 @@ public class FrcPdp extends PowerDistribution
         {
             energyUsedTaskObj.unregisterTask();
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //setTaskEnabled
 
     /**
@@ -158,27 +130,16 @@ public class FrcPdp extends PowerDistribution
      */
     public boolean registerEnergyUsed(int channel, String name)
     {
-        final String funcName = "registerEnergyUsed";
         boolean success;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "channel=%d,name=%s", channel, name);
-        }
 
         synchronized (this)
         {
-            success = channel >= 0 && channel < kPDPChannels && channelNames[channel] == null;
+            success = channel >= 0 && channel < numChannels && channelNames[channel] == null;
             if (success)
             {
                 channelNames[channel] = name;
                 channelEnergyUsed[channel] = 0.0;
             }
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%b", success);
         }
 
         return success;
@@ -192,13 +153,7 @@ public class FrcPdp extends PowerDistribution
      */
     public boolean registerEnergyUsed(Channel... channels)
     {
-        final String funcName = "registerEnergyUsed";
         boolean success = true;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "channels=%s", Arrays.toString(channels));
-        }
 
         synchronized (this)
         {
@@ -212,11 +167,6 @@ public class FrcPdp extends PowerDistribution
             }
         }
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%b", success);
-        }
-
         return success;
     }   //registerEnergyUsed
 
@@ -226,16 +176,9 @@ public class FrcPdp extends PowerDistribution
      */
     public void registerEnergyUsedForAllUnregisteredChannels()
     {
-        final String funcName = "registerEnergyUsedForAllUnregisteredChannels";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         synchronized (this)
         {
-            for (int i = 0; i < kPDPChannels; i++)
+            for (int i = 0; i < numChannels; i++)
             {
                 if (channelNames[i] == null)
                 {
@@ -243,11 +186,6 @@ public class FrcPdp extends PowerDistribution
                     channelEnergyUsed[i] = 0.0;
                 }
             }
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //registerEnergyUsed
 
@@ -259,13 +197,7 @@ public class FrcPdp extends PowerDistribution
      */
     public boolean unregisterEnergyUsed(int channel)
     {
-        final String funcName = "unregisterEnergyUsed";
         boolean success;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "channel=%d", channel);
-        }
 
         synchronized (this)
         {
@@ -275,11 +207,6 @@ public class FrcPdp extends PowerDistribution
                 channelNames[channel] = null;
                 channelEnergyUsed[channel] = 0.0;
             }
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%b", success);
         }
 
         return success;
@@ -292,17 +219,9 @@ public class FrcPdp extends PowerDistribution
      */
     public void unregisterAllEnergyUsed()
     {
-        final String funcName = "unregisterAllEnergyUsed";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         synchronized (this)
         {
-            for (int i = 0; i < kPDPChannels; i++)
+            for (int i = 0; i < numChannels; i++)
             {
                 if (channelNames[i] != null)
                 {
@@ -320,18 +239,11 @@ public class FrcPdp extends PowerDistribution
      */
     public double getEnergyUsed(int channel)
     {
-        final String funcName = "getEnergyUsed";
         double energyUsed;
 
         synchronized (this)
         {
             energyUsed = channelNames[channel] != null? channelEnergyUsed[channel]: 0.0;
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "channel=%d", channel);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", energyUsed);
         }
 
         return energyUsed;
@@ -345,14 +257,6 @@ public class FrcPdp extends PowerDistribution
      */
     public synchronized String getChannelName(int channel)
     {
-        final String funcName = "getChannelName";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "channel=%d", channel);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", channelNames[channel]);
-        }
-
         return channelNames[channel];
     }   //getChannelName
 
@@ -366,18 +270,12 @@ public class FrcPdp extends PowerDistribution
      */
     public void energyUsedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
     {
-        final String funcName = "energyUsedTask";
         double currTime = TrcTimer.getCurrentTime();
         double voltage = getVoltage();
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
-        }
-
         synchronized (this)
         {
-            for (int i = 0; i < kPDPChannels; i++)
+            for (int i = 0; i < numChannels; i++)
             {
                 if (channelNames[i] != null)
                 {
@@ -386,11 +284,6 @@ public class FrcPdp extends PowerDistribution
             }
             lastTimestamp = currTime;
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
-        }
     }   //energyUsedTask
 
     public Sendable getPdpSendable()
@@ -398,7 +291,7 @@ public class FrcPdp extends PowerDistribution
         PdpInfo pdpInfo = new PdpInfo();
         SendableRegistry.setName(pdpInfo, moduleName);
         return pdpInfo;
-    }
+    }   //getPdpSendable
 
     private class PdpInfo implements Sendable
     {
@@ -406,12 +299,13 @@ public class FrcPdp extends PowerDistribution
         public void initSendable(SendableBuilder builder)
         {
             builder.setSmartDashboardType("PowerDistributionPanel");
-            for (int i = 0; i < kPDPChannels; ++i) {
+            for (int i = 0; i < numChannels; ++i) {
                 final int chan = i;
                 builder.addDoubleProperty("Chan" + i, () -> FrcPdp.this.getCurrent(chan), null);
             }
             builder.addDoubleProperty("Voltage", FrcPdp.this::getVoltage, null);
             builder.addDoubleProperty("TotalCurrent", FrcPdp.this::getTotalCurrent, null);
-        }
-    }
+        }   //initSendable
+    }   //class PdpInfo
+
 }   //class FrcPdp

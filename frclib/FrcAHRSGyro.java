@@ -24,7 +24,6 @@ package TrcFrcLib.frclib;
 
 import com.kauailabs.navx.frc.AHRS;
 
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcGyro;
 import TrcCommonLib.trclib.TrcTimer;
 import edu.wpi.first.util.sendable.Sendable;
@@ -80,13 +79,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getRawXData(DataType dataType)
     {
-        final String funcName = "getRawXData";
         double value = 0.0;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "type=%s", dataType.toString());
-        }
 
         if (dataType == DataType.ROTATION_RATE)
         {
@@ -97,12 +90,6 @@ public class FrcAHRSGyro extends TrcGyro
             value = ahrs.getPitch();
         }
         SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=(timestamp:%.3f,value:%f",
-                data.timestamp, data.value);
-        }
 
         return data;
     }   //getRawXData
@@ -115,13 +102,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getRawYData(DataType dataType)
     {
-        final String funcName = "getRawYData";
         double value = 0.0;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "type=%s", dataType.toString());
-        }
 
         if (dataType == DataType.ROTATION_RATE)
         {
@@ -132,12 +113,6 @@ public class FrcAHRSGyro extends TrcGyro
             value = ahrs.getRoll();
         }
         SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=(timestamp:%.3f,value:%f",
-                data.timestamp, data.value);
-        }
 
         return data;
     }   //getRawYData
@@ -150,13 +125,7 @@ public class FrcAHRSGyro extends TrcGyro
      */
     public SensorData<Double> getRawZData(DataType dataType)
     {
-        final String funcName = "getRawZData";
         double value = 0.0;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "type=%s", dataType.toString());
-        }
 
         if (dataType == DataType.ROTATION_RATE)
         {
@@ -167,12 +136,6 @@ public class FrcAHRSGyro extends TrcGyro
             value = ahrs.getAngle();
         }
         SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=(timestamp:%.3f,value:%f",
-                data.timestamp, data.value);
-        }
 
         return data;
     }   //getRawZData

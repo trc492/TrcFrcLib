@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcDigitalOutput;
 
 /**
@@ -58,14 +57,6 @@ public class FrcDigitalOutput extends TrcDigitalOutput
     @Override
     public void setState(boolean state)
     {
-        final String funcName = "setState";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "state=%b", state);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         if (setOutputElapsedTimer != null) setOutputElapsedTimer.recordStartTime();
         digitalOutput.set(state);
         if (setOutputElapsedTimer != null) setOutputElapsedTimer.recordEndTime();

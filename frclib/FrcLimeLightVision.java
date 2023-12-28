@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcPose3D;
 import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
@@ -140,21 +139,19 @@ public class FrcLimeLightVision extends FrcRemoteVisionProcessor
         }
     }
 
-    private final TrcDbgTrace tracer;
     private NetworkTableEntry tv, heading;
     private NetworkTableEntry ledMode, pipeline;
     private DoubleSupplier depthSupplier = () -> 0.0;
 
-    public FrcLimeLightVision(String instanceName, String depthInput, DoubleUnaryOperator depthApproximator, TrcDbgTrace tracer)
+    public FrcLimeLightVision(String instanceName, String depthInput, DoubleUnaryOperator depthApproximator)
     {
-        this(instanceName, tracer);
+        this(instanceName);
         setDepthApproximator(depthInput, depthApproximator);
     }
 
-    public FrcLimeLightVision(String instanceName, TrcDbgTrace tracer)
+    public FrcLimeLightVision(String instanceName)
     {
         super(instanceName, instanceName);
-        this.tracer = tracer;
         tv = networkTable.getEntry("tv");
         heading = networkTable.getEntry("tx");
         ledMode = networkTable.getEntry("ledMode");
@@ -168,17 +165,13 @@ public class FrcLimeLightVision extends FrcRemoteVisionProcessor
      */
     public DetectedObject getDetectedObject()
     {
-        final String funcName = "getDetectedObject";
         DetectedObject detectedObj = null;
 
         RelativePose pose = getLastPose();
         if (pose != null)
         {
             detectedObj = new DetectedObject(pose, getTargetArea());
-            if (tracer != null)
-            {
-                tracer.traceInfo(funcName, "DetectedObj=%s", detectedObj);
-            }
+            tracer.traceDebug(instanceName, "DetectedObj=" + detectedObj);
         }
 
         return detectedObj;

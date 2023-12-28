@@ -32,9 +32,6 @@ import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcXboxController extends XboxController
 {
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = false;
-
     public static final int BUTTON_A = 1;
     public static final int BUTTON_B = 2;
     public static final int BUTTON_X = 3;
@@ -52,6 +49,7 @@ public class FrcXboxController extends XboxController
     private double nextPeriod = 0.0;
     private double deadbandThreshold = DEF_DEADBAND_THRESHOLD;
 
+    private final TrcDbgTrace tracer;
     private final String instanceName;
     private final int port;
     private final TrcTaskMgr.TaskObject buttonEventTaskObj;
@@ -59,7 +57,6 @@ public class FrcXboxController extends XboxController
     private FrcButtonHandler buttonHandler = null;
     private int leftYSign = 1;
     private int rightYSign = 1;
-    private TrcDbgTrace buttonEventTracer = null;
 
     /**
      * Construct an instance of a xbox controller. The index is the USB port on the drivers
@@ -71,8 +68,9 @@ public class FrcXboxController extends XboxController
     {
         super(port);
 
-        this.port = port;
+        this.tracer = new TrcDbgTrace();
         this.instanceName = instanceName;
+        this.port = port;
         buttonEventTaskObj = TrcTaskMgr.createTask(instanceName + ".buttonEvent", this::buttonEventTask);
         prevButtons = DriverStation.getStickButtons(port);
     }   //FrcXboxController
@@ -86,17 +84,6 @@ public class FrcXboxController extends XboxController
     {
         return instanceName;
     }   //toString
-
-    /**
-     * This method enables/disables button event tracing by setting the event tracer.
-     *
-     * @param buttonEventTracer specifies the tracer to use when enabling button events tracing, null to disable
-     *                          event tracing.
-     */
-    public void setButtonEventTracer(TrcDbgTrace buttonEventTracer)
-    {
-        this.buttonEventTracer = buttonEventTracer;
-    }   //setButtonEventTracer
 
     /**
      * This method sets the object that will handle button events. Any previous handler set with this method will
@@ -268,7 +255,6 @@ public class FrcXboxController extends XboxController
     {
         if (slowPeriodicLoop)
         {
-            final String funcName = "buttonEventTask";
             double currTime = TrcTimer.getCurrentTime();
 
             if (currTime >= nextPeriod)
@@ -289,22 +275,12 @@ public class FrcXboxController extends XboxController
                         boolean pressed = (currButtons & buttonMask) != 0;
                         int buttonNum = TrcUtil.leastSignificantSetBitPosition(buttonMask) + 1;
 
-                        if (buttonEventTracer != null)
-                        {
-                            buttonEventTracer
-                                .traceInfo(funcName, "[%.3f] controller=%s, button=%d, pressed=%b", currTime, instanceName,
-                                    buttonNum, pressed);
-                        }
-
+                        tracer.traceDebug(instanceName, "button=" + buttonNum + ", pressed=" + pressed);
                         if (pressed)
                         {
                             //
                             // Button is pressed.
                             //
-                            if (debugEnabled)
-                            {
-                                globalTracer.traceInfo(funcName, "Button %x pressed", buttonNum);
-                            }
                             buttonHandler.buttonEvent(buttonNum, true);
                         }
                         else
@@ -312,10 +288,6 @@ public class FrcXboxController extends XboxController
                             //
                             // Button is released.
                             //
-                            if (debugEnabled)
-                            {
-                                globalTracer.traceInfo(funcName, "Button %x released", buttonNum);
-                            }
                             buttonHandler.buttonEvent(buttonNum, false);
                         }
                         //

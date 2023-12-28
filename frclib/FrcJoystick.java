@@ -36,9 +36,6 @@ import TrcCommonLib.trclib.TrcUtil;
  */
 public class FrcJoystick extends Joystick
 {
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = false;
-
     //
     // Logitech Joystick:
     // UsagePage=0x01, Usage=0x04
@@ -119,13 +116,13 @@ public class FrcJoystick extends Joystick
     private double nextPeriod = 0.0;
     private double deadbandThreshold = DEF_DEADBAND_THRESHOLD;
 
+    private final TrcDbgTrace tracer;
     private final String instanceName;
     private final int port;
     private final TrcTaskMgr.TaskObject buttonEventTaskObj;
     private int prevButtons;
     private FrcButtonHandler buttonHandler = null;
     private int ySign = 1;
-    private TrcDbgTrace buttonEventTracer = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -137,6 +134,7 @@ public class FrcJoystick extends Joystick
     {
         super(port);
 
+        this.tracer = new TrcDbgTrace();
         this.instanceName = instanceName;
         this.port = port;
         buttonEventTaskObj = TrcTaskMgr.createTask(instanceName + ".buttonEvent", this::buttonEventTask);
@@ -150,7 +148,7 @@ public class FrcJoystick extends Joystick
      * @param port              specifies the joystick port ID.
      * @param deadbandThreshold specifies the deadband of the analog sticks.
      */
-    public FrcJoystick(final String instanceName, final int port, final double deadbandThreshold)
+    public FrcJoystick(String instanceName, int port, double deadbandThreshold)
     {
         this(instanceName, port);
         this.deadbandThreshold = deadbandThreshold;
@@ -165,17 +163,6 @@ public class FrcJoystick extends Joystick
     {
         return instanceName;
     }   //toString
-
-    /**
-     * This method enables/disables button event tracing by setting the event tracer.
-     *
-     * @param buttonEventTracer specifies the tracer to use when enabling button events tracing, null to disable
-     *        event tracing.
-     */
-    public void setButtonEventTracer(TrcDbgTrace buttonEventTracer)
-    {
-        this.buttonEventTracer = buttonEventTracer;
-    }   //setButtonEventTracer
 
     /**
      * This method sets the object that will handle button events. Any previous handler set with this method will
@@ -436,7 +423,6 @@ public class FrcJoystick extends Joystick
     {
         if (slowPeriodicLoop)
         {
-            final String funcName = "buttonEventTask";
             double currTime = TrcTimer.getCurrentTime();
 
             if (currTime >= nextPeriod)
@@ -457,21 +443,12 @@ public class FrcJoystick extends Joystick
                         boolean pressed = (currButtons & buttonMask) != 0;
                         int buttonNum = TrcUtil.leastSignificantSetBitPosition(buttonMask) + 1;
 
-                        if (buttonEventTracer != null)
-                        {
-                            buttonEventTracer.traceInfo(funcName, "[%.3f] joystick=%s, button=%d, pressed=%b",
-                                currTime, instanceName, buttonNum, pressed);
-                        }
-
+                        tracer.traceDebug(instanceName, "button=" + buttonNum + ", pressed=" + pressed);
                         if (pressed)
                         {
                             //
                             // Button is pressed.
                             //
-                            if (debugEnabled)
-                            {
-                                globalTracer.traceInfo(funcName, "Button %x pressed", buttonNum);
-                            }
                             buttonHandler.buttonEvent(buttonNum, true);
                         }
                         else
@@ -479,10 +456,6 @@ public class FrcJoystick extends Joystick
                             //
                             // Button is released.
                             //
-                            if (debugEnabled)
-                            {
-                                globalTracer.traceInfo(funcName, "Button %x released", buttonNum);
-                            }
                             buttonHandler.buttonEvent(buttonNum, false);
                         }
                         //

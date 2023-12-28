@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.interfaces.Gyro;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcGyro;
 import TrcCommonLib.trclib.TrcTimer;
 
@@ -32,7 +31,7 @@ public class FrcGyro extends TrcGyro
     private Gyro gyro;
     private double zSign = 1.0;
 
-    public FrcGyro(final String instanceName, Gyro gyro)
+    public FrcGyro(String instanceName, Gyro gyro)
     {
         super(instanceName, 1, GYRO_HAS_Z_AXIS, null);
         this.gyro = gyro;
@@ -51,14 +50,6 @@ public class FrcGyro extends TrcGyro
      */
     public SensorData<Double> getRawXData(DataType dataType)
     {
-        final String funcName = "getRawXData";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=null");
-        }
-
         throw new UnsupportedOperationException("Gyro does not support x-axis.");
     }   //getRawXData
 
@@ -70,14 +61,6 @@ public class FrcGyro extends TrcGyro
      */
     public SensorData<Double> getRawYData(DataType dataType)
     {
-        final String funcName = "getRawYData";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=null");
-        }
-
         throw new UnsupportedOperationException("Gyro does not support y-axis.");
     }   //getRawYData
 
@@ -89,7 +72,6 @@ public class FrcGyro extends TrcGyro
      */
     public SensorData<Double> getRawZData(DataType dataType)
     {
-        final String funcName = "getRawZData";
         double value = 0.0;
 
         if (dataType == DataType.ROTATION_RATE)
@@ -101,13 +83,6 @@ public class FrcGyro extends TrcGyro
             value = gyro.getAngle();
         }
         SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API,
-                               "=(timestamp:%.3f,value:%f", data.timestamp, data.value);
-        }
 
         return data;
     }   //getRawZData

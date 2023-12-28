@@ -42,7 +42,7 @@ import TrcCommonLib.trclib.TrcServo;
      * @param instanceName specifies the instance name.
      * @param pwmChannel specifies the PWM channel the servo is connected to.
      */
-    public FrcServo(final String instanceName, int pwmChannel)
+    public FrcServo(String instanceName, int pwmChannel)
     {
         super(instanceName);
 
@@ -77,27 +77,6 @@ import TrcCommonLib.trclib.TrcServo;
     }   //isInverted
 
     /**
-     * This method resets the position sensor and therefore only applicable if the servo has one.
-     */
-    @Override
-    public void resetPosition()
-    {
-        throw new UnsupportedOperationException("Servo does not support resetPosition.");
-    }   //resetPosition
-
-    /**
-     * This method sets the position sensor scale and offset and therefore only applicable if the servo has one.
-     *
-     * @param scale specifies the position scale value.
-     * @param offset specifies the optional offset that adds to the final position value.
-     */
-    @Override
-    public void setPositionScaleAndOffset(double scale, double offset)
-    {
-        throw new UnsupportedOperationException("Servo does not support setPositionScaleAndOffset.");
-    }   //setPositionScaleAndOffset
-
-    /**
      * This method sets the logical position of the servo motor.
      *
      * @param position specifies the logical position of the servo motor in the range of [0.0, 1.0].
@@ -121,16 +100,5 @@ import TrcCommonLib.trclib.TrcServo;
     {
         return inverted? 1.0 - prevLogicalPos: prevLogicalPos;
     }   //getLogicalPosition
-
-    /**
-     * This method stops a continuous servo. It doesn't do anything if the servo is not continuous.
-     */
-    public void stopContinuous()
-    {
-        if (isContinuous())
-        {
-            setLogicalPosition(SERVO_CONTINUOUS_STOP);
-        }
-    }   //stopContinuous
 
 }   //class FrcServo

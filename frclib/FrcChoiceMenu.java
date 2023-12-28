@@ -25,7 +25,6 @@ package TrcFrcLib.frclib;
 import java.util.HashMap;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class implements a choice menu where a number of choices are presented to the user on the dashboard. The user
@@ -33,14 +32,6 @@ import TrcCommonLib.trclib.TrcDbgTrace;
  */
 public class FrcChoiceMenu<T>
 {
-    private static final String moduleName = "FrcChoiceMenu";
-    private static final boolean debugEnabled = false;
-    private static final boolean tracingEnabled = false;
-    private static final boolean useGlobalTracer = false;
-    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
-    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    protected TrcDbgTrace dbgTrace = null;
-
     private final FrcDashboard dashboard = FrcDashboard.getInstance();
     private final String menuTitle;
     private SendableChooser<T> chooser;
@@ -51,15 +42,8 @@ public class FrcChoiceMenu<T>
      *
      * @param menuTitle specifies the title of the menu.
      */
-    public FrcChoiceMenu(final String menuTitle)
+    public FrcChoiceMenu(String menuTitle)
     {
-        if (debugEnabled)
-        {
-            dbgTrace = useGlobalTracer?
-                TrcDbgTrace.getGlobalTracer():
-                new TrcDbgTrace(moduleName + "." + menuTitle, tracingEnabled, traceLevel, msgLevel);
-        }
-
         if (menuTitle == null)
         {
             throw new NullPointerException("menuTitle cannot be null.");
@@ -77,14 +61,6 @@ public class FrcChoiceMenu<T>
      */
     public String getTitle()
     {
-        final String funcName = "getTitle";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", menuTitle);
-        }
-
         return menuTitle;
     }   //getTitle
 
@@ -98,14 +74,6 @@ public class FrcChoiceMenu<T>
      */
     public void addChoice(String choiceText, T choiceObject, boolean defChoice, boolean lastChoice)
     {
-        final String funcName = "addChoice";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "text=%s,obj=%s,def=%b,last=%b",
-                choiceText, choiceObject.toString(), defChoice, lastChoice);
-        }
-
         hashMap.put(choiceObject, choiceText);
         if (defChoice)
         {
@@ -119,11 +87,6 @@ public class FrcChoiceMenu<T>
         if (lastChoice)
         {
             dashboard.putData(menuTitle, chooser);
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //addChoice
 
@@ -146,16 +109,7 @@ public class FrcChoiceMenu<T>
      */
     public T getCurrentChoiceObject()
     {
-        final String funcName = "getCurrentChoiceObject";
-        T currChoiceObject = chooser.getSelected();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", hashMap.get(currChoiceObject));
-        }
-
-        return currChoiceObject;
+        return chooser.getSelected();
     }   //getCurrentChoiceObject
 
     /**
@@ -167,16 +121,7 @@ public class FrcChoiceMenu<T>
      */
     public String getCurrentChoiceText()
     {
-        final String funcName = "getCurrentChoiceText";
-        String currChoiceText = hashMap.get(chooser.getSelected());
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", currChoiceText);
-        }
-
-        return currChoiceText;
+        return hashMap.get(chooser.getSelected());
     }   //getCurrentChoiceText
 
 }   //class FrcChoiceMenu

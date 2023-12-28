@@ -34,7 +34,6 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcMotor;
@@ -49,7 +48,6 @@ import TrcCommonLib.trclib.TrcPidController;
  */
 public class FrcCANSparkMax extends TrcMotor
 {
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     private static final int PIDSLOT_POSITION = 0;
     private static final int PIDSLOT_VELOCITY = 1;
     private static final int PIDSLOT_CURRENT = 2;
@@ -136,7 +134,7 @@ public class FrcCANSparkMax extends TrcMotor
         if (errorCode != null && !errorCode.equals(REVLibError.kOk))
         {
             errorCount++;
-            globalTracer.traceErr(instanceName + ".recordResponseCode", "%s (ErrCode=%s)", operation, errorCode);
+            tracer.traceErr(instanceName, operation + " (ErrCode=" + errorCode + ")");
         }
         return errorCode;
     }   //recordResponseCode
@@ -792,22 +790,17 @@ public class FrcCANSparkMax extends TrcMotor
      * @param otherMotor specifies the other motor to follow.
      */
     @Override
-    public void followMotor(TrcMotor otherMotor)
+    public void follow(TrcMotor otherMotor)
     {
         if (otherMotor instanceof FrcCANSparkMax)
         {
+            // Can only follow the same type of motor natively.
             recordResponseCode("follow", motor.follow(((FrcCANSparkMax) otherMotor).motor));
-        }
-        else if (otherMotor instanceof FrcCANPhoenixController)
-        {
-            recordResponseCode("follow", motor.follow(
-                CANSparkMax.ExternalFollower.kFollowerPhoenix, ((FrcCANTalon) otherMotor).motor.getDeviceID()));
         }
         else
         {
-            // Unknow motor type, let TrcMotor simulate it.
-            super.followMotor(otherMotor);
+            super.follow(otherMotor);
         }
-    }   //followMotor
+    }   //follow
 
 }   //class FrcCANSparkMax

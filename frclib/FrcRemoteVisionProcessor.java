@@ -48,7 +48,8 @@ public abstract class FrcRemoteVisionProcessor
     protected abstract RelativePose processData();
 
     private final List<RelativePose> frames = new LinkedList<>();
-    private final String instanceName;
+    protected final TrcDbgTrace tracer;
+    protected final String instanceName;
     protected final NetworkTable networkTable;
     private final TrcTaskMgr.TaskObject visionTaskObj;
     private final Relay ringLight;
@@ -67,6 +68,7 @@ public abstract class FrcRemoteVisionProcessor
      */
     public FrcRemoteVisionProcessor(String instanceName, String networkTableName, int relayPort)
     {
+        this.tracer = new TrcDbgTrace();
         this.instanceName = instanceName;
         NetworkTableInstance instance = NetworkTableInstance.getDefault();
         networkTable = instance.getTable(networkTableName);
@@ -113,9 +115,9 @@ public abstract class FrcRemoteVisionProcessor
      */
     private void connectionListener(NetworkTableEvent event)
     {
-        TrcDbgTrace.globalTraceInfo(
-            "connectionListener", "TableEvent(remoteIp=%s, connected=%s)",
-            event.connInfo.remote_ip, event.is(Kind.kConnected));
+        tracer.traceDebug(
+            instanceName,
+            "TableEvent(remoteIp=" + event.connInfo.remote_ip + ", connected=" + event.is(Kind.kConnected) + ")");
     }   //connectionListener
 
     /**
@@ -408,7 +410,7 @@ public abstract class FrcRemoteVisionProcessor
         @Override
         public String toString()
         {
-            return String.format("RelativePose(x=%.1f,y=%.1f,r=%.1f,theta=%.1f)", x, y, r, theta);
+            return "RelativePose(x=" + x + ",y=" + y + ",r=" + r + ",theta=" + theta + ")";
         }   //toString
 
     }   //class RelativePose

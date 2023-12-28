@@ -80,7 +80,7 @@ public class FrcSerialPortDevice extends TrcSerialBusDevice
      * @param baudRate specifies the serial baud rate.
      * @param useRequestQueue specifies true to use a request queue, false otherwise.
      */
-    public FrcSerialPortDevice(final String instanceName, Port port, int baudRate, boolean useRequestQueue)
+    public FrcSerialPortDevice(String instanceName, Port port, int baudRate, boolean useRequestQueue)
     {
         this(instanceName, port, baudRate, 8, Parity.kNone, StopBits.kOne, useRequestQueue);
     }   //FrcSerialPort
@@ -99,18 +99,12 @@ public class FrcSerialPortDevice extends TrcSerialBusDevice
     @Override
     public byte[] readData(int address, int length)
     {
-        final String funcName = "readData";
-
         if (length == 0)
         {
             length = device.getBytesReceived();
         }
         byte[] data = device.read(length);
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(funcName, "addr=%d,len=%d,data=%s", address, length, Arrays.toString(data));
-        }
+        tracer.traceDebug(instanceName, "addr=" + address + ",len=" + length + ",data=" + Arrays.toString(data));
 
         return data;
     }   //readData
@@ -126,15 +120,11 @@ public class FrcSerialPortDevice extends TrcSerialBusDevice
     @Override
     public int writeData(int address, byte[] buffer, int length)
     {
-        final String funcName = "writeData";
         int bytesWritten = device.write(buffer, length);
-
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(
-                funcName, "addr=%d,data=%s,len=%d,bytesWritten=%d",
-                address, Arrays.toString(buffer), length, bytesWritten);
-        }
+        tracer.traceDebug(
+            instanceName,
+            "addr=" + address + ",data=" + Arrays.toString(buffer) +
+            ",len=" + length + ",bytesWritten=" + bytesWritten);
 
         return bytesWritten;
     }   //writeData

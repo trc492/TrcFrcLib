@@ -34,7 +34,6 @@ import com.ctre.phoenix.motorcontrol.can.BaseTalon;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcMotor;
@@ -42,7 +41,6 @@ import TrcCommonLib.trclib.TrcPidController;
 
 public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMotor
 {
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     private static final int PIDSLOT_POSITION = 0;
     private static final int PIDSLOT_VELOCITY = 1;
     private static final int PIDSLOT_CURRENT = 2;
@@ -151,7 +149,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         if (errorCode != null && !errorCode.equals(ErrorCode.OK))
         {
             errorCount++;
-            globalTracer.traceErr(instanceName + ".recordResponseCode", "%s (ErrCode=%s)", operation, errorCode);
+            tracer.traceErr(instanceName, operation + " (ErrCode=" + errorCode + ")");
         }
         return errorCode;
     }   //recordResponseCode
@@ -862,7 +860,7 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * @param otherMotor specifies the other motor to follow.
      */
     @Override
-    public void followMotor(TrcMotor otherMotor)
+    public void follow(TrcMotor otherMotor)
     {
         if (otherMotor instanceof FrcCANPhoenixController)
         {
@@ -871,9 +869,8 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         }
         else
         {
-            // Not the same type of motor, let TrcMotor simulates it.
-            super.followMotor(otherMotor);
+            super.follow(otherMotor);
         }
-    }   //followMotor
+    }   //follow
 
 }   //class FrcCANPhoenixController

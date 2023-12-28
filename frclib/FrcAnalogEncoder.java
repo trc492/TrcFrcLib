@@ -98,16 +98,6 @@ public class FrcAnalogEncoder implements TrcEncoder
         return analogInput.getRawData(0, DataType.RAW_DATA).value;
     }   //getRawVoltage
 
-    /**
-     * This method sets the zero offset for the absolute encoder.
-     *
-     * @param zeroOffset specifies normalized zero offset.
-     */
-    public void setZeroOffset(double zeroOffset)
-    {
-        this.zeroOffset = zeroOffset;
-    }   //setZeroOffset
-
     //
     // Implements the TrcEncoder interface.
     //
@@ -172,12 +162,14 @@ public class FrcAnalogEncoder implements TrcEncoder
      *
      * @param scale specifies the scale value.
      * @param offset specifies the offset value.
+     * @param zeroOffset specifies the zero offset for absolute encoder.
      */
     @Override
-    public void setScaleAndOffset(double scale, double offset)
+    public void setScaleAndOffset(double scale, double offset, double zeroOffset)
     {
         this.scale = scale;
         this.offset = offset;
+        this.zeroOffset = zeroOffset;
     }   //setScaleAndOffset
 
 }   //class FrcAnalogEncoder

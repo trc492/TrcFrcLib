@@ -34,6 +34,7 @@ public class FrcEncoder extends Encoder implements TrcEncoder
     private double sign = 1.0;
     private double scale = 1.0;
     private double offset = 0.0;
+    private double zeroOffset = 0.0;
 
     public FrcEncoder(int channelA, int channelB, EncodingType encodingType)
     {
@@ -63,7 +64,7 @@ public class FrcEncoder extends Encoder implements TrcEncoder
     @Override
     public double getPosition()
     {
-        return sign * (get() * scale + offset);
+        return sign * (get() - zeroOffset) * scale + offset;
     }   //getPosition
 
     /**
@@ -85,7 +86,7 @@ public class FrcEncoder extends Encoder implements TrcEncoder
     @Override
     public boolean isInverted()
     {
-        return sign == -1.0;
+        return sign < 0.0;
     }   //isInverted
 
     /**
@@ -93,12 +94,14 @@ public class FrcEncoder extends Encoder implements TrcEncoder
      *
      * @param scale specifies the scale value.
      * @param offset specifies the offset value.
+     * @param zeroOffset specifies the zero offset for absolute encoder.
      */
     @Override
-    public void setScaleAndOffset(double scale, double offset)
+    public void setScaleAndOffset(double scale, double offset, double zeroOffset)
     {
         this.scale = scale;
         this.offset = offset;
+        this.zeroOffset = zeroOffset;
     }   //setScaleAndOffset
 
 }   //interface FrcEncoder

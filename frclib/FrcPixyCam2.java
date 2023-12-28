@@ -22,12 +22,9 @@
 
 package TrcFrcLib.frclib;
 
-import java.util.Arrays;
-
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SerialPort;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcSerialBusDevice;
 import TrcCommonLib.trclib.TrcPixyCam2;
 
@@ -54,7 +51,7 @@ public class FrcPixyCam2 extends TrcPixyCam2
      * @param instanceName specifies the instance name.
      * @param port specifies the SPI port on the RoboRIO.
      */
-    public FrcPixyCam2(final String instanceName, SPI.Port port)
+    public FrcPixyCam2(String instanceName, SPI.Port port)
     {
         super(instanceName);
         SPI spi = new SPI(port);
@@ -70,15 +67,9 @@ public class FrcPixyCam2 extends TrcPixyCam2
      * @param port specifies the I2C port on the RoboRIO.
      * @param devAddress specifies the I2C address of the device.
      */
-    public FrcPixyCam2(final String instanceName, I2C.Port port, int devAddress)
+    public FrcPixyCam2(String instanceName, I2C.Port port, int devAddress)
     {
         super(instanceName);
-
-        if (debugEnabled)
-        {
-            dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
         pixyCam = new FrcI2cDevice(instanceName, port, devAddress, false);
     }   //FrcPixyCam2
 
@@ -88,7 +79,7 @@ public class FrcPixyCam2 extends TrcPixyCam2
      * @param instanceName specifies the instance name.
      * @param port specifies the I2C port on the RoboRIO.
      */
-    public FrcPixyCam2(final String instanceName, I2C.Port port)
+    public FrcPixyCam2(String instanceName, I2C.Port port)
     {
         this(instanceName, port, DEF_I2C_ADDRESS);
     }   //FrcPixyCam2
@@ -104,16 +95,10 @@ public class FrcPixyCam2 extends TrcPixyCam2
      * @param stopBits specifies the number of stop bits.
      */
     public FrcPixyCam2(
-        final String instanceName, SerialPort.Port port, int baudRate, int dataBits, SerialPort.Parity parity,
+        String instanceName, SerialPort.Port port, int baudRate, int dataBits, SerialPort.Parity parity,
         SerialPort.StopBits stopBits)
     {
         super(instanceName);
-
-        if (debugEnabled)
-        {
-            dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
         pixyCam = new FrcSerialPortDevice(instanceName, port, baudRate, dataBits, parity, stopBits, false);
     }   //FrcPixyCam2
 
@@ -124,7 +109,7 @@ public class FrcPixyCam2 extends TrcPixyCam2
      * @param port specifies the serial port on the RoboRIO.
      * @param baudRate specifies the baud rate.
      */
-    public FrcPixyCam2(final String instanceName, SerialPort.Port port, int baudRate)
+    public FrcPixyCam2(String instanceName, SerialPort.Port port, int baudRate)
     {
         this(instanceName, port, baudRate, DEF_DATA_BITS, DEF_PARITY, DEF_STOP_BITS);
     }   //FrcPixyCam2
@@ -135,7 +120,7 @@ public class FrcPixyCam2 extends TrcPixyCam2
      * @param instanceName specifies the instance name.
      * @param port specifies the serial port on the RoboRIO.
      */
-    public FrcPixyCam2(final String instanceName, SerialPort.Port port)
+    public FrcPixyCam2(String instanceName, SerialPort.Port port)
     {
         this(instanceName, port, DEF_BAUD_RATE, DEF_DATA_BITS, DEF_PARITY, DEF_STOP_BITS);
     }   //FrcPixyCam2
@@ -147,16 +132,7 @@ public class FrcPixyCam2 extends TrcPixyCam2
      */
     public boolean isEnabled()
     {
-        final String funcName = "isEnabled";
-        boolean enabled = pixyCam.isEnabled();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%b", enabled);
-        }
-
-        return enabled;
+        return pixyCam.isEnabled();
     }   //isEnable
 
     /**
@@ -166,19 +142,7 @@ public class FrcPixyCam2 extends TrcPixyCam2
      */
     public void setEnabled(boolean enabled)
     {
-        final String funcName = "setEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enanbled=%b", enabled);
-        }
-
         pixyCam.setEnabled(enabled);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //setEnabled
 
     //
@@ -191,14 +155,7 @@ public class FrcPixyCam2 extends TrcPixyCam2
     @Override
     public byte[] syncReadResponse()
     {
-        final String funcName = "syncReadResponse";
         byte[] response = null;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         byte[] recvHeader = pixyCam.syncRead(-1, 6);
         byte[] recvData = recvHeader[3] > 0 ? pixyCam.syncRead(-1, recvHeader[3]) : null;
 
@@ -213,12 +170,6 @@ public class FrcPixyCam2 extends TrcPixyCam2
             response = recvHeader;
         }
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceInfo(funcName, "response: %s", Arrays.toString(response));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Arrays.toString(response));
-        }
-
         return response;
     }   //syncReadResponse
 
@@ -230,19 +181,7 @@ public class FrcPixyCam2 extends TrcPixyCam2
     @Override
     public void syncWriteRequest(byte[] data)
     {
-        final String funcName = "syncWriteRequest";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "data=%s", Arrays.toString(data));
-        }
-
         pixyCam.syncWrite(-1, data, data.length);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //syncWriteRequest
 
 }   //class FrcPixyCam2

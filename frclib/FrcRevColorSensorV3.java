@@ -27,7 +27,6 @@ import com.revrobotics.ColorSensorV3;
 
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.util.Color;
-import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class implements the platform dependent Rev Color Sensor V3. It is a wrapper class extending the ColorSensorV3
@@ -35,14 +34,6 @@ import TrcCommonLib.trclib.TrcDbgTrace;
  */
 public class FrcRevColorSensorV3 extends ColorSensorV3
 {
-    private static final String moduleName = "FrcRevColorSensorV3";
-    private static final boolean debugEnabled = false;
-    private static final boolean tracingEnabled = false;
-    private static final boolean useGlobalTracer = false;
-    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
-    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    private TrcDbgTrace dbgTrace = null;
-
     private static final I2C.Port DEF_I2C_PORT = I2C.Port.kOnboard;
 
     private final String instanceName;
@@ -57,14 +48,6 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
     public FrcRevColorSensorV3(String instanceName, I2C.Port i2cPort)
     {
         super(i2cPort);
-
-        if (debugEnabled)
-        {
-            dbgTrace = useGlobalTracer ?
-                TrcDbgTrace.getGlobalTracer() :
-                new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
         this.instanceName = instanceName;
         colorMatcher = new ColorMatch();
     }   //FrcRevColorSensorV3
@@ -97,14 +80,6 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
      */
     public void addColorMatch(Color color)
     {
-        final String funcName = "addColorMatch";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "color=%s", color);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         colorMatcher.addColorMatch(color);
     }   //addColorMatch
 
@@ -116,16 +91,7 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
     @Override
     public Color getColor()
     {
-        final String funcName = "getColor";
-        Color color = super.getColor();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", color);
-        }
-
-        return color;
+        return super.getColor();
     }   //getColor
 
     /**
@@ -136,16 +102,7 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
     @Override
     public int getRed()
     {
-        final String funcName = "getRed";
-        int value = super.getRed();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", value);
-        }
-
-        return value;
+        return super.getRed();
     }   //getRed
 
     /**
@@ -156,16 +113,7 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
     @Override
     public int getGreen()
     {
-        final String funcName = "getGreen";
-        int value = super.getGreen();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", value);
-        }
-
-        return value;
+        return super.getGreen();
     }   //getGreen
 
     /**
@@ -176,16 +124,7 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
     @Override
     public int getBlue()
     {
-        final String funcName = "getBlue";
-        int value = super.getBlue();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", value);
-        }
-
-        return value;
+        return super.getBlue();
     }   //getBlue
 
     /**
@@ -196,16 +135,7 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
     @Override
     public int getIR()
     {
-        final String funcName = "getIR";
-        int value = super.getIR();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", value);
-        }
-
-        return value;
+        return super.getIR();
     }   //getIR
 
     /**
@@ -216,16 +146,7 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
     @Override
     public int getProximity()
     {
-        final String funcName = "getProximity";
-        int value = super.getProximity();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", value);
-        }
-
-        return value;
+        return super.getProximity();
     }   //getProximity
 
     /**
@@ -235,16 +156,7 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
      */
     public Color getMatchedColor()
     {
-        final String funcName = "getMatchedColor";
-        Color color = colorMatcher.matchClosestColor(getColor()).color;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", color);
-        }
-
-        return color;
+        return colorMatcher.matchClosestColor(getColor()).color;
     }   //getMatchedColor
 
     /**
@@ -254,16 +166,7 @@ public class FrcRevColorSensorV3 extends ColorSensorV3
      */
     public double getMatchedConfidence()
     {
-        final String funcName = "getMatchedConfidence";
-        double confidence = colorMatcher.matchClosestColor(getColor()).confidence;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", confidence);
-        }
-
-        return confidence;
+        return colorMatcher.matchClosestColor(getColor()).confidence;
     }   //getMatchedConfidence
 
 }   //class FrcRevColorSensorV3

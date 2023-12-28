@@ -27,7 +27,6 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.SensorCollection;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
 
@@ -37,9 +36,6 @@ import TrcCommonLib.trclib.TrcEncoder;
  */
 public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
 {
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = false;
-
     /**
      * Constructor: Create an instance of the object.
      *
@@ -77,7 +73,6 @@ public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
      */
     public void setAbsoluteZeroOffset(int rangeLow, int rangeHigh, boolean crossZeroOnInterval, int zeroOffset)
     {
-        final String funcName = "setAbsoluteZeroOffset";
         ErrorCode error;
         SensorCollection sensorCollection = motor.getSensorCollection();
 
@@ -85,22 +80,21 @@ public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
             rangeLow, rangeHigh, crossZeroOnInterval, -zeroOffset, 10);
         if (error != ErrorCode.OK)
         {
-            globalTracer.traceErr(funcName, "syncQuadratureWithPulseWidth failed (error=%s).", error.name());
+            tracer.traceErr(instanceName, "syncQuadratureWithPulseWidth failed (error=" + error.name() + ").");
         }
 
         error = motor.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 10);
         if (error != ErrorCode.OK)
         {
-            globalTracer.traceErr(funcName, "configSelectedFeedbackSensor failed (error=%s).", error.name());
+            tracer.traceErr(instanceName, "configSelectedFeedbackSensor failed (error=" + error.name() + ").");
         }
 
-        if (debugEnabled)
-        {
-            globalTracer.traceInfo(
-                funcName, "zeroOffset=%d, pwmPos=%d, quadPos=%d, selectedPos=%.3f",
-                zeroOffset, sensorCollection.getPulseWidthPosition(), sensorCollection.getQuadraturePosition(),
-                motor.getSelectedSensorPosition());
-        }
+        tracer.traceDebug(
+            instanceName,
+            "zeroOffset=" + zeroOffset +
+            ", pwmPos=" + sensorCollection.getPulseWidthPosition() +
+            ", quadPos=" + sensorCollection.getQuadraturePosition() +
+            ", selectedPos=" + motor.getSelectedSensorPosition());
     }   //setAbsoluteZeroOffset
 
 }   //class FrcCANTalon

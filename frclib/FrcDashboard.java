@@ -22,13 +22,13 @@
 
 package TrcFrcLib.frclib;
 
+import java.util.Locale;
 import java.util.Set;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import TrcCommonLib.trclib.TrcDashboard;
-import TrcCommonLib.trclib.TrcDbgTrace;
 
 /**
  * This class extends the SmartDashboard class and provides a way to send named
@@ -61,7 +61,7 @@ public class FrcDashboard extends TrcDashboard
     /**
      * Constructor: Creates an instance of the object.
      */
-    public FrcDashboard(int numLines)
+    private FrcDashboard(int numLines)
     {
         super(numLines);
 
@@ -525,14 +525,6 @@ public class FrcDashboard extends TrcDashboard
     @Override
     public void clearDisplay()
     {
-        final String funcName = "clearDisplay";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         for (int i = 0; i < display.length; i++)
         {
             display[i] = "";
@@ -546,19 +538,28 @@ public class FrcDashboard extends TrcDashboard
     @Override
     public void refreshDisplay()
     {
-        final String funcName = "refreshDisplay";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         for (int i = 0; i < display.length; i++)
         {
             SmartDashboard.putString(String.format(displayKeyFormat, i), display[i]);
         }
     }   //refreshDisplay
+
+    /**
+     * This method displays a formatted message to the display on the Driver
+     * Station.
+     *
+     * @param lineNum specifies the line number on the display.
+     * @param msg specifies the message string.
+     */
+    @Override
+    public void displayPrintf(int lineNum, String msg)
+    {
+        if (lineNum >= 0 && lineNum < display.length)
+        {
+            display[lineNum] = msg;
+            SmartDashboard.putString(String.format(displayKeyFormat, lineNum), display[lineNum]);
+        }
+    }   //displayPrintf
 
     /**
      * This method displays a formatted message to the display on the Driver
@@ -571,11 +572,7 @@ public class FrcDashboard extends TrcDashboard
     @Override
     public void displayPrintf(int lineNum, String format, Object... args)
     {
-        if (lineNum >= 0 && lineNum < display.length)
-        {
-            display[lineNum] = String.format(format, args);
-            SmartDashboard.putString(String.format(displayKeyFormat, lineNum), display[lineNum]);
-        }
+        displayPrintf(lineNum, String.format(Locale.US, format, args));
     }   //displayPrintf
 
     /**

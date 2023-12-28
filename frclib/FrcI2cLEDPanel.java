@@ -22,10 +22,7 @@
 
 package TrcFrcLib.frclib;
 
-import java.util.Arrays;
-
 import edu.wpi.first.wpilibj.I2C;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcI2cLEDPanel;
 
 /**
@@ -46,7 +43,7 @@ public class FrcI2cLEDPanel extends TrcI2cLEDPanel
      * @param port specifies the I2C port on the RoboRIO.
      * @param devAddress specifies the I2C address of the device.
      */
-    public FrcI2cLEDPanel(final String instanceName, I2C.Port port, int devAddress)
+    public FrcI2cLEDPanel(String instanceName, I2C.Port port, int devAddress)
     {
         super(instanceName);
         device = new FrcI2cDevice(instanceName, port, devAddress, true);
@@ -58,7 +55,7 @@ public class FrcI2cLEDPanel extends TrcI2cLEDPanel
      * @param instanceName specifies the instance name.
      * @param port specifies the I2C port on the RoboRIO.
      */
-    public FrcI2cLEDPanel(final String instanceName, I2C.Port port)
+    public FrcI2cLEDPanel(String instanceName, I2C.Port port)
     {
         this(instanceName, port, DEF_I2C_ADDRESS);
     }   //FrcI2cLEDPanel
@@ -70,16 +67,7 @@ public class FrcI2cLEDPanel extends TrcI2cLEDPanel
      */
     public boolean isEnabled()
     {
-        final String funcName = "isEnabled";
-        boolean enabled = device.isEnabled();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", enabled);
-        }
-
-        return enabled;
+        return device.isEnabled();
     }   //isEnable
 
     /**
@@ -89,14 +77,6 @@ public class FrcI2cLEDPanel extends TrcI2cLEDPanel
      */
     public void setEnabled(boolean enabled)
     {
-        final String funcName = "setEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%b", enabled);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         device.setEnabled(enabled);
     }   //setEnabled
 
@@ -112,14 +92,6 @@ public class FrcI2cLEDPanel extends TrcI2cLEDPanel
     @Override
     public void asyncWriteData(byte[] data)
     {
-        final String funcName = "asyncWriteData";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "data=%s", Arrays.toString(data));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         device.asyncWrite(null, data, data.length, null);
     }   //asyncWriteData
 

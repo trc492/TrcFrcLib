@@ -24,7 +24,6 @@ package TrcFrcLib.frclib;
 
 import org.opencv.core.Mat;
 
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcHomographyMapper;
 import TrcCommonLib.trclib.TrcOpenCvDetector;
 import edu.wpi.first.cscore.CvSink;
@@ -49,13 +48,12 @@ public class FrcOpenCvDetector extends TrcOpenCvDetector
      * @param worldRect specifies the world rectangle for Homography Mapper, can be null if not provided.
      * @param cvSink specifies the object to capture the video frames.
      * @param cvSource specifies the object to stream video output.
-     * @param tracer specifies the tracer for trace info, null if none provided.
      */
     public FrcOpenCvDetector(
         String instanceName, int numImageBuffers, TrcHomographyMapper.Rectangle cameraRect,
-        TrcHomographyMapper.Rectangle worldRect, CvSink cvSink, CvSource cvSource, TrcDbgTrace tracer)
+        TrcHomographyMapper.Rectangle worldRect, CvSink cvSink, CvSource cvSource)
     {
-        super(instanceName, numImageBuffers, cameraRect, worldRect, tracer);
+        super(instanceName, numImageBuffers, cameraRect, worldRect);
         this.cvSource = cvSource;
         this.cvSink = cvSink;
     }   //FrcOpenCvDetector

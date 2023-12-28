@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.SerialPort;
-import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcEmic2TextToSpeech;
 import TrcCommonLib.trclib.TrcSerialBusDevice;
 
@@ -67,7 +66,7 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
      * @param port specifies the serial port on the RoboRIO.
      * @param baudRate specifies the baud rate.
      */
-    public FrcEmic2TextToSpeech(final String instanceName, SerialPort.Port port, int baudRate)
+    public FrcEmic2TextToSpeech(String instanceName, SerialPort.Port port, int baudRate)
     {
         this(instanceName, port, baudRate, DEF_DATA_BITS, DEF_PARITY, DEF_STOP_BITS);
     }   //FrcEmic2TextToSpeech
@@ -78,7 +77,7 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
      * @param instanceName specifies the instance name.
      * @param port specifies the serial port on the RoboRIO.
      */
-    public FrcEmic2TextToSpeech(final String instanceName, SerialPort.Port port)
+    public FrcEmic2TextToSpeech(String instanceName, SerialPort.Port port)
     {
         this(instanceName, port, DEF_BAUD_RATE, DEF_DATA_BITS, DEF_PARITY, DEF_STOP_BITS);
     }   //FrcEmic2TextToSpeech
@@ -90,16 +89,7 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
      */
     public boolean isEnabled()
     {
-        final String funcName = "isEnabled";
-        boolean enabled = tts.isEnabled();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(enabled));
-        }
-
-        return enabled;
+        return tts.isEnabled();
     }   //isEnable
 
     /**
@@ -109,22 +99,10 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
      */
     public void setEnabled(boolean enabled)
     {
-        final String funcName = "setEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enanbled=%s", Boolean.toString(enabled));
-        }
-
         tts.setEnabled(enabled);
         if (enabled)
         {
             start();
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //setEnabled
 
@@ -140,19 +118,7 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
     @Override
     public void asyncReadString(RequestId requestId)
     {
-        final String funcName = "asyncReadString";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
         tts.asyncRead(requestId, -1, 0, false, this::notify, null);
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
     }   //asyncReadString
 
     /**
@@ -164,14 +130,6 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
     @Override
     public void asyncWriteString(String text, boolean preemptive)
     {
-        final String funcName = "asyncWriteString";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "text=%s,length=%d,preemptive=%s",
-                text, text.length(), Boolean.toString(preemptive));
-        }
-
         byte[] data = text.getBytes();
         if (preemptive)
         {
@@ -180,11 +138,6 @@ public class FrcEmic2TextToSpeech extends TrcEmic2TextToSpeech
         else
         {
             tts.asyncWrite(null, data, data.length, null);
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //asyncWriteString
 

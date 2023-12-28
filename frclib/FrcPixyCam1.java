@@ -51,7 +51,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
      * @param instanceName specifies the instance name.
      * @param port specifies the SPI port on the RoboRIO.
      */
-    public FrcPixyCam1(final String instanceName, SPI.Port port)
+    public FrcPixyCam1(String instanceName, SPI.Port port)
     {
         super(instanceName, true);
         SPI spi = new SPI(port);
@@ -67,7 +67,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
      * @param port specifies the I2C port on the RoboRIO.
      * @param devAddress specifies the I2C address of the device.
      */
-    public FrcPixyCam1(final String instanceName, I2C.Port port, int devAddress)
+    public FrcPixyCam1(String instanceName, I2C.Port port, int devAddress)
     {
         super(instanceName, false);
         pixyCam = new FrcI2cDevice(instanceName, port, devAddress, true);
@@ -79,7 +79,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
      * @param instanceName specifies the instance name.
      * @param port specifies the I2C port on the RoboRIO.
      */
-    public FrcPixyCam1(final String instanceName, I2C.Port port)
+    public FrcPixyCam1(String instanceName, I2C.Port port)
     {
         this(instanceName, port, DEF_I2C_ADDRESS);
     }   //FrcPixyCam1
@@ -95,7 +95,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
      * @param stopBits specifies the number of stop bits.
      */
     public FrcPixyCam1(
-        final String instanceName, SerialPort.Port port, int baudRate, int dataBits, SerialPort.Parity parity,
+        String instanceName, SerialPort.Port port, int baudRate, int dataBits, SerialPort.Parity parity,
         SerialPort.StopBits stopBits)
     {
         super(instanceName, false);
@@ -109,7 +109,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
      * @param port specifies the serial port on the RoboRIO.
      * @param baudRate specifies the baud rate.
      */
-    public FrcPixyCam1(final String instanceName, SerialPort.Port port, int baudRate)
+    public FrcPixyCam1(String instanceName, SerialPort.Port port, int baudRate)
     {
         this(instanceName, port, baudRate, DEF_DATA_BITS, DEF_PARITY, DEF_STOP_BITS);
     }   //FrcPixyCam1
@@ -120,7 +120,7 @@ public class FrcPixyCam1 extends TrcPixyCam1
      * @param instanceName specifies the instance name.
      * @param port specifies the serial port on the RoboRIO.
      */
-    public FrcPixyCam1(final String instanceName, SerialPort.Port port)
+    public FrcPixyCam1(String instanceName, SerialPort.Port port)
     {
         this(instanceName, port, DEF_BAUD_RATE, DEF_DATA_BITS, DEF_PARITY, DEF_STOP_BITS);
     }   //FrcPixyCam1

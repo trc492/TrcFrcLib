@@ -23,7 +23,6 @@
 package TrcFrcLib.frclib;
 
 import java.util.Date;
-import java.util.Locale;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -94,9 +93,14 @@ public class FrcMatchInfo
     @Override
     public String toString()
     {
-        return String.format(
-            Locale.US, "date=\"%s\" event=\"%s\" type=\"%s\" match=%d replay=%d alliance=\"%s\" location=%d gameMsg=\"%s\"",
-            eventDate, eventName, matchType, matchNumber, replayNumber, alliance, location, gameSpecificMessage);
+        return "date=\"" + eventDate + "\"" +
+               " event=\"" + eventName + "\"" +
+               " type=\"" + matchType + "\"" +
+               " match=" + matchNumber +
+               " replay=" + replayNumber +
+               " alliance=\"" + alliance + "\"" +
+               " location=" + location +
+               " gameMsg=\"" + gameSpecificMessage + "\"";
     }   //toString
 
 }   //class FrcMatchInfo

@@ -30,182 +30,6 @@ import TrcCommonLib.trclib.TrcDbgTrace;
  */
 public class FrcDbgLog implements TrcDbgTrace.DbgLog
 {
-    public static final boolean useEscSeq       = false;
-
-    public static final String ESC_PREFIX       = "\u001b[";
-    public static final String ESC_SUFFIX       = "m";
-    public static final String ESC_SEP          = ";";
-
-    public static final String SGR_RESET        = "0";
-    public static final String SGR_BRIGHT       = "1";
-    public static final String SGR_DIM          = "2";
-    public static final String SGR_ITALIC       = "3";
-    public static final String SGR_UNDERLINE    = "4";
-    public static final String SGR_BLINKSLOW    = "5";
-    public static final String SGR_BLINKFAST    = "6";
-    public static final String SGR_REVERSE      = "7";
-    public static final String SGR_HIDDEN       = "8";
-    public static final String SGR_CROSSEDOUT   = "9";
-
-    public static final String SGR_FG_BLACK     = "30";
-    public static final String SGR_FG_RED       = "31";
-    public static final String SGR_FG_GREEN     = "32";
-    public static final String SGR_FG_YELLOW    = "33";
-    public static final String SGR_FG_BLUE      = "34";
-    public static final String SGR_FG_MAGENTA   = "35";
-    public static final String SGR_FG_CYAN      = "36";
-    public static final String SGR_FG_WHITE     = "37";
-
-    public static final String SGR_BG_BLACK     = "40";
-    public static final String SGR_BG_RED       = "41";
-    public static final String SGR_BG_GREEN     = "42";
-    public static final String SGR_BG_YELLOW    = "43";
-    public static final String SGR_BG_BLUE      = "44";
-    public static final String SGR_BG_MAGENTA   = "45";
-    public static final String SGR_BG_CYAN      = "46";
-    public static final String SGR_BG_WHITE     = "47";
-
-    public static final String ESC_NORMAL       = ESC_PREFIX
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BLINKSLOW    = ESC_PREFIX
-                                                  + SGR_BLINKSLOW
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BLINKFAST    = ESC_PREFIX
-                                                  + SGR_BLINKFAST
-                                                  + ESC_SUFFIX;
-
-    public static final String ESC_FG_BLACK     = ESC_PREFIX
-                                                  + SGR_FG_BLACK
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FG_RED       = ESC_PREFIX
-                                                  + SGR_FG_RED
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FG_GREEN     = ESC_PREFIX
-                                                  + SGR_FG_GREEN
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FG_YELLOW    = ESC_PREFIX
-                                                  + SGR_FG_YELLOW
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FG_BLUE      = ESC_PREFIX
-                                                  + SGR_FG_BLUE
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FG_MAGENTA   = ESC_PREFIX
-                                                  + SGR_FG_MAGENTA
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FG_CYAN      = ESC_PREFIX
-                                                  + SGR_FG_CYAN
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FG_WHITE     = ESC_PREFIX
-                                                  + SGR_FG_WHITE
-                                                  + ESC_SUFFIX;
-
-    public static final String ESC_BG_BLACK     = ESC_PREFIX
-                                                  + SGR_BG_BLACK
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BG_RED       = ESC_PREFIX
-                                                  + SGR_BG_RED
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BG_GREEN     = ESC_PREFIX
-                                                  + SGR_BG_GREEN
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BG_YELLOW    = ESC_PREFIX
-                                                  + SGR_BG_YELLOW
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BG_BLUE      = ESC_PREFIX
-                                                  + SGR_BG_BLUE
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BG_MAGENTA   = ESC_PREFIX
-                                                  + SGR_BG_MAGENTA
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BG_CYAN      = ESC_PREFIX
-                                                  + SGR_BG_CYAN
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BG_WHITE     = ESC_PREFIX
-                                                  + SGR_BG_WHITE
-                                                  + ESC_SUFFIX;
-
-    public static final String ESC_FGB_BLACK    = ESC_PREFIX
-                                                  + SGR_FG_BLACK
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FGB_RED      = ESC_PREFIX
-                                                  + SGR_FG_RED
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FGB_GREEN    = ESC_PREFIX
-                                                  + SGR_FG_GREEN
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FGB_YELLOW   = ESC_PREFIX
-                                                  + SGR_FG_YELLOW
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FGB_BLUE     = ESC_PREFIX
-                                                  + SGR_FG_BLUE
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FGB_MAGENTA  = ESC_PREFIX
-                                                  + SGR_FG_MAGENTA
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FGB_CYAN     = ESC_PREFIX
-                                                  + SGR_FG_CYAN
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_FGB_WHITE    = ESC_PREFIX
-                                                  + SGR_FG_WHITE
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-
-    public static final String ESC_BGB_BLACK    = ESC_PREFIX
-                                                  + SGR_BG_BLACK
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BGB_RED      = ESC_PREFIX
-                                                  + SGR_BG_RED
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BGB_GREEN    = ESC_PREFIX
-                                                  + SGR_BG_GREEN
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BGB_YELLOW   = ESC_PREFIX
-                                                  + SGR_BG_YELLOW
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BGB_BLUE     = ESC_PREFIX
-                                                  + SGR_BG_BLUE
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BGB_MAGENTA  = ESC_PREFIX
-                                                  + SGR_BG_MAGENTA
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BGB_CYAN     = ESC_PREFIX
-                                                  + SGR_BG_CYAN
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-    public static final String ESC_BGB_WHITE    = ESC_PREFIX
-                                                  + SGR_BG_WHITE
-                                                  + ESC_SEP
-                                                  + SGR_BRIGHT
-                                                  + ESC_SUFFIX;
-
     //
     // Implements TrcDbgTrace.DbgLog interface.
     //
@@ -214,63 +38,35 @@ public class FrcDbgLog implements TrcDbgTrace.DbgLog
     public void msg(TrcDbgTrace.MsgLevel level, String msg)
     {
         String prefix;
-        String color;
 
         switch (level)
         {
             case FATAL:
                 prefix = "_Fatal: ";
-                color = ESC_PREFIX + SGR_FG_YELLOW +
-                        ESC_SEP + SGR_BRIGHT +
-                        ESC_SEP + SGR_BG_RED +
-                        ESC_SUFFIX;
             break;
 
             case ERR:
                 prefix = "_Err: ";
-                color = ESC_FGB_RED;
                 break;
     
             case WARN:
                 prefix = "_Warn: ";
-                color = ESC_FGB_YELLOW;
                 break;
     
             case INFO:
                 prefix = "_Info: ";
-                color = ESC_FGB_GREEN;
                 break;
     
             case VERBOSE:
                 prefix = "_Verbose: ";
-                color = ESC_FGB_WHITE;
                 break;
     
             default:
                 prefix = "_Unk: ";
-                color = ESC_NORMAL;
                 break;
         }
 
-        if (useEscSeq)
-        {
-            System.out.print(color + msg + prefix);
-        }
-        else
-        {
-            System.out.print(msg + prefix);
-        }
+        System.out.print(msg + prefix);
     }   //msg
-
-    @Override
-    public void traceMsg(String msg)
-    {
-        System.out.print(msg);
-    }   //trace
-
-    // public static void tracePrintf(String format, Object... args)
-    // {
-    //     traceMsg(String.format(format, args));
-    // }   //tracePrintf
 
 }   //class FrcDbgLog

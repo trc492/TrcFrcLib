@@ -34,7 +34,6 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
@@ -52,8 +51,7 @@ import edu.wpi.first.apriltag.AprilTagPoseEstimator;
  */
 public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>
 {
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = true;
+    private static final String moduleName = FrcOpenCvAprilTagPipeline.class.getSimpleName();
 
     /**
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
@@ -66,9 +64,9 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
          *
          * @param aprilTagInfo specifies the detected april tag info.
          */
-        public DetectedObject(AprilTagDetection aprilTagInfo)
+        public DetectedObject(String label, AprilTagDetection aprilTagInfo)
         {
-            super(aprilTagInfo);
+            super(label, aprilTagInfo);
         }   //DetectedObject
 
         /**
@@ -154,9 +152,11 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         @Override
         public String toString()
         {
-            return String.format(
-                Locale.US, "{id=%d,hamming=%d,decisionMargin=%.1f,center=%.1f/%.1f,rect=%s}",
-                object.getId(), object.getHamming(), object.getDecisionMargin(), object.getCenterX(), object.getCenterY(), getRect());
+            return "{id=" + object.getId() +
+                   ",hamming=" + object.getHamming() +
+                   ",decisionMargin=" + object.getDecisionMargin() +
+                   ",center=" + object.getCenterX() + "/" + object.getCenterY() +
+                   ",rect=" + getRect();
         }   //toString
 
     }   //class DetectedObject
@@ -167,9 +167,11 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     private static final Scalar ANNOTATE_WHITE_COLOR = new Scalar(255, 255, 255, 255);
     private static final int ANNOTATE_THICKNESS = 2;
 
+    private final TrcDbgTrace tracer;
+    private final String instanceName;
     private final String tagFamily;
     private final AprilTagPoseEstimator.Config poseEstConfig;
-    private final TrcDbgTrace tracer;
+    private final TrcVisionPerformanceMetrics performanceMetrics;
     private final AprilTagDetector aprilTagDetector;
     // private final AprilTagPoseEstimator poseEstimator;
     private final Mat cameraMatrix;
@@ -177,7 +179,6 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     private final Mat grayMat;
     private final Mat[] intermediateMats;
 
-    private final TrcVisionPerformanceMetrics performanceMetrics = new TrcVisionPerformanceMetrics();
     private final AtomicReference<DetectedObject[]> detectedObjsUpdate = new AtomicReference<>();
     private int intermediateStep = 0;
     private boolean annotateEnabled = false;
@@ -188,15 +189,15 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
      * @param tagFamily specifies the tag family.
      * @param detectorConfig specifies the detector configuration.
      * @param poseEstConfig specifies the pose estimator configuration (tagSize unit is in meter).
-     * @param tracer specifies the tracer for trace info, null if none provided.
      */
     public FrcOpenCvAprilTagPipeline(
-        String tagFamily, AprilTagDetector.Config detectorConfig, AprilTagPoseEstimator.Config poseEstConfig,
-        TrcDbgTrace tracer)
+        String tagFamily, AprilTagDetector.Config detectorConfig, AprilTagPoseEstimator.Config poseEstConfig)
     {
+        this.tracer = new TrcDbgTrace();
+        this.instanceName = moduleName + "." + tagFamily;
         this.tagFamily = tagFamily;
         this.poseEstConfig = poseEstConfig;
-        this.tracer = tracer;
+        this.performanceMetrics = new TrcVisionPerformanceMetrics(moduleName + "." + tagFamily, tracer);
         // set up AprilTag detector
         aprilTagDetector = new AprilTagDetector();
         aprilTagDetector.addFamily(tagFamily);
@@ -245,7 +246,6 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     //  */
     // public Pose3d getTargetPosition(DetectedObject aprilTagObj)
     // {
-    //     final String funcName = "getTargetPosition";
     //     Transform3d targetTransform = poseEstimator.estimate(aprilTagObj.object);
     //     Rotation3d targetRotation = targetTransform.getRotation();
     //     Pose3d targetPose = new Pose3d(
@@ -255,13 +255,9 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     //         new Rotation3d(
     //             Math.toDegrees(targetRotation.getX()), Math.toDegrees(targetRotation.getY()),
     //             Math.toDegrees(targetRotation.getZ())));
-
-    //     if (debugEnabled)
-    //     {
-    //         globalTracer.traceInfo(
-    //             funcName, "[%.3f] targetPose=%s, Yaw=%.1f", TrcTimer.getModeElapsedTime(), targetPose, targetPose.getRotation().getZ());
-    //     }
-
+    //     tracer.traceDebug(
+    //         instanceName, "targetPose=%s, Yaw=%.1f", targetPose, targetPose.getRotation().getZ());
+    //
     //     return targetPose;
     // }   //getTargetPosition
 
@@ -288,7 +284,6 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     @Override
     public DetectedObject[] process(Mat input)
     {
-        final String funcName = "process";
         DetectedObject[] detectedObjects;
         double startTime = TrcTimer.getCurrentTime();
 
@@ -297,17 +292,13 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         Imgproc.cvtColor(input, grayMat, Imgproc.COLOR_BGR2GRAY);
         AprilTagDetection[] detections = aprilTagDetector.detect(grayMat);
         performanceMetrics.logProcessingTime(startTime);
-        performanceMetrics.printMetrics(tracer);
+        performanceMetrics.printMetrics();
 
         detectedObjects = new DetectedObject[detections.length];
         for (int i = 0; i < detectedObjects.length; i++)
         {
-            detectedObjects[i] = new DetectedObject(detections[i]);
-            if (debugEnabled)
-            {
-                globalTracer.traceInfo(
-                    funcName, "[%d: %.3f] DetectedObj=%s", i, TrcTimer.getModeElapsedTime(), detectedObjects[i]);
-            }
+            detectedObjects[i] = new DetectedObject(tagFamily + "." + detections[i].getId(), detections[i]);
+            tracer.traceDebug(instanceName, "[" + i + "]" + " DetectedObj=" + detectedObjects[i]);
         }
 
         if (annotateEnabled)

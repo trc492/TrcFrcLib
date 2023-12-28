@@ -37,6 +37,7 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
     private final String instanceName;
     private double scale = 1.0;
     private double offset = 0.0;
+    private double zeroOffset = 0.0;
  
     /**
      * Constructor: Creates an instance of the object.
@@ -96,7 +97,7 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
     public double getPosition()
     {
         // Offset must be in the same unit as the absolute position.
-        return (super.getAbsolutePosition() - offset) * scale;
+        return (super.getAbsolutePosition() - zeroOffset) * scale + offset;
     }   //getPosition
 
     /**
@@ -134,12 +135,14 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
      *
      * @param scale specifies the scale value.
      * @param offset specifies the offset value.
+     * @param zeroOffset specifies the zero offset for absolute encoder.
      */
     @Override
-    public void setScaleAndOffset(double scale, double offset)
+    public void setScaleAndOffset(double scale, double offset, double zeroOffset)
     {
         this.scale = scale;
         this.offset = offset;
+        this.zeroOffset = zeroOffset;
     }   //setScaleAndOffset
 
 }   //class FrcCANCoder

@@ -29,7 +29,6 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
@@ -54,9 +53,8 @@ import edu.wpi.first.math.geometry.Translation3d;
  */
 public abstract class FrcPhotonVision extends PhotonCamera
 {
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = false;
-
+    private static final String moduleName = FrcPhotonVision.class.getSimpleName();
+    private static final TrcDbgTrace staticTracer = new TrcDbgTrace();
     private static Double camHeightInches = null;
     private static Double camPitchRadians = null;
 
@@ -113,7 +111,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         @Override
         public String toString()
         {
-            return String.format(Locale.US, "{time=%.3f,targetPose=%s}", timestamp, targetPose);
+            return "{time=" + timestamp + ",targetPose=" + targetPose + "}";
         }   //toString
 
         // /**
@@ -186,7 +184,6 @@ public abstract class FrcPhotonVision extends PhotonCamera
          */
         public static Rect getRect(PhotonTrackedTarget target)
         {
-            final String funcName = "getRect";
             Rect rect = null;
             List<TargetCorner> corners = target.getDetectedCorners();
             TargetCorner lowerLeftCorner = null;
@@ -216,17 +213,12 @@ public abstract class FrcPhotonVision extends PhotonCamera
                 double height =
                     ((lowerLeftCorner.y - upperLeftCorner.y) + (lowerRightCorner.y - upperRightCorner.y))/2.0;
                 rect = new Rect((int)upperLeftCorner.x, (int)upperLeftCorner.y, (int)width, (int)height);
-                if (debugEnabled)
-                {
-                    globalTracer.traceInfo(
-                        funcName, " UpperLeft: x=%.1f, y=%.1f", upperLeftCorner.x, upperLeftCorner.y);
-                    globalTracer.traceInfo(
-                        funcName, "UpperRight: x=%.1f, y=%.1f", upperRightCorner.x, upperRightCorner.y);
-                    globalTracer.traceInfo(
-                        funcName, " LowerLeft: x=%.1f, y=%.1f", lowerLeftCorner.x, lowerLeftCorner.y);
-                    globalTracer.traceInfo(
-                        funcName, "LowerRight: x=%.1f, y=%.1f", lowerRightCorner.x, lowerRightCorner.y);
-                }
+                staticTracer.traceDebug(
+                    moduleName + ".Id" + target.getFiducialId(),
+                    " UpperLeft: x=" + upperLeftCorner.x + ", y=" + upperLeftCorner.y +
+                    "\nUpperRight: x=" + upperRightCorner.x + ", y=" + upperRightCorner.y +
+                    "\n LowerLeft: x=" +  lowerLeftCorner.x + ", y=" + lowerLeftCorner.y +
+                    "\nLowerRight: x=" +  lowerRightCorner.x + ", y=" + lowerRightCorner.y);
             }
 
             return rect;
@@ -289,8 +281,9 @@ public abstract class FrcPhotonVision extends PhotonCamera
 
     }   //class DetectedObject
 
-    private final TrcVisionPerformanceMetrics performanceMetrics = new TrcVisionPerformanceMetrics();
     private final TrcDbgTrace tracer;
+    private final String instanceName;
+    private final TrcVisionPerformanceMetrics performanceMetrics;
     private final TrcTaskMgr.TaskObject visionTaskObj;
     private AtomicReference<DetectedObject[]> lastDetectedObjects = new AtomicReference<>();
     private AtomicReference<DetectedObject> lastDetectedBestObject = new AtomicReference<>();
@@ -304,14 +297,15 @@ public abstract class FrcPhotonVision extends PhotonCamera
      * @param cameraName specifies the photon vision camera name.
      * @param camHeight specifies the camera height from the ground in inches.
      * @param camPitch specifies the camera pitch angle from horizontal in degrees.
-     * @param tracer specifies the tracer for trace info, null if none provided.
      */
-    public FrcPhotonVision(String cameraName, double camHeight, double camPitch, TrcDbgTrace tracer)
+    public FrcPhotonVision(String cameraName, double camHeight, double camPitch)
     {
         super(cameraName);
+        this.tracer = new TrcDbgTrace();
+        this.instanceName = cameraName;
+        this.performanceMetrics = new TrcVisionPerformanceMetrics(cameraName, tracer);
         camHeightInches = camHeight;
         camPitchRadians = Math.toRadians(camPitch);
-        this.tracer = tracer;
         visionTaskObj = TrcTaskMgr.createTask(cameraName + ".visionTask", this::visionTask);
     }   //FrcPhotonVision
 
@@ -421,12 +415,11 @@ public abstract class FrcPhotonVision extends PhotonCamera
      */
     public DetectedObject[] getDetectedObjects()
     {
-        final String funcName = "getDetectedObjects";
         DetectedObject[] detectedObjs = null;
         double startTime = TrcTimer.getCurrentTime();
         PhotonPipelineResult result = getLatestResult();
         performanceMetrics.logProcessingTime(startTime);
-        performanceMetrics.printMetrics(tracer);
+        performanceMetrics.printMetrics();
 
         if (result.hasTargets())
         {
@@ -438,11 +431,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             {
                 PhotonTrackedTarget target = targets.get(i);
                 detectedObjs[i] = new DetectedObject(timestamp, target, getTargetHeight(target));
-                if (tracer != null)
-                {
-                    tracer.traceInfo(
-                        funcName, "[%d: %.3f] DetectedObj=%s", i, TrcTimer.getModeElapsedTime(), detectedObjs[i]);
-                }
+                tracer.traceDebug(instanceName, "[" + i + "] DetectedObj=" + detectedObjs[i]);
             }
         }
 
@@ -456,7 +445,6 @@ public abstract class FrcPhotonVision extends PhotonCamera
      */
     public DetectedObject getBestDetectedObject()
     {
-        final String funcName = "getBestDetectedObject";
         DetectedObject bestDetectedObj = null;
         PhotonPipelineResult result = getLatestResult();
 
@@ -464,11 +452,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         {
             PhotonTrackedTarget target = result.getBestTarget();
             bestDetectedObj = new DetectedObject(result.getTimestampSeconds(), target, getTargetHeight(target));
-            if (tracer != null)
-            {
-                tracer.traceInfo(
-                    funcName, "[%.3f] DetectedObj=%s", TrcTimer.getModeElapsedTime(), bestDetectedObj);
-            }
+            tracer.traceDebug(instanceName, "DetectedObj=" + bestDetectedObj);
         }
 
         return bestDetectedObj;
