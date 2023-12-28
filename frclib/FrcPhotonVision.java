@@ -281,8 +281,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
 
     }   //class DetectedObject
 
-    private final TrcDbgTrace tracer;
-    private final String instanceName;
+    protected final TrcDbgTrace tracer;
+    protected final String instanceName;
     private final TrcVisionPerformanceMetrics performanceMetrics;
     private final TrcTaskMgr.TaskObject visionTaskObj;
     private AtomicReference<DetectedObject[]> lastDetectedObjects = new AtomicReference<>();
