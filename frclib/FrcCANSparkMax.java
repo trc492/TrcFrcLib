@@ -22,17 +22,17 @@
 
 package TrcFrcLib.frclib;
 
+import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.ControlType;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMax.SoftLimitDirection;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.SparkMaxLimitSwitch.Type;
-import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxLimitSwitch;
-import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.SparkLimitSwitch;
+import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.ControlType;
+import com.revrobotics.CANSparkBase.IdleMode;
+import com.revrobotics.CANSparkBase.SoftLimitDirection;
+import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.SparkLimitSwitch.Type;
 
 import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
@@ -53,9 +53,9 @@ public class FrcCANSparkMax extends TrcMotor
     private static final int PIDSLOT_CURRENT = 2;
 
     public final CANSparkMax motor;
-    private final SparkMaxPIDController pidCtrl;
+    private final SparkPIDController pidCtrl;
     private final RelativeEncoder sparkMaxEncoder;
-    private SparkMaxLimitSwitch sparkMaxRevLimitSwitch, sparkMaxFwdLimitSwitch;
+    private SparkLimitSwitch sparkMaxRevLimitSwitch, sparkMaxFwdLimitSwitch;
     private Double velSetpoint = null;
     private Double posSetpoint = null;
     private Double currentSetpoint = null;
@@ -82,7 +82,7 @@ public class FrcCANSparkMax extends TrcMotor
     {
         super(instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
         motor = new CANSparkMax(
-            canId, brushless? CANSparkMaxLowLevel.MotorType.kBrushless: CANSparkMaxLowLevel.MotorType.kBrushed);
+            canId, brushless? CANSparkLowLevel.MotorType.kBrushless: CANSparkLowLevel.MotorType.kBrushed);
         pidCtrl = motor.getPIDController();
         sparkMaxEncoder = motor.getEncoder();
         sparkMaxRevLimitSwitch = sparkMaxFwdLimitSwitch = null;

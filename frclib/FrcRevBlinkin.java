@@ -46,7 +46,7 @@ public class FrcRevBlinkin extends TrcRevBlinkin
     {
         super(instanceName);
         device = new PWM(channel);
-        device.setBounds(2.003, 1.55, 1.50, 1.46, 0.999);
+        device.setBoundsMicroseconds(2003, 1550, 1500, 1460, 999);
         device.setPeriodMultiplier(PWM.PeriodMultiplier.k1X);
         device.setSpeed(0.0);
         device.setZeroLatch();

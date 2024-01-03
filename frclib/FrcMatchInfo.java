@@ -37,7 +37,7 @@ public class FrcMatchInfo
     public final int matchNumber;
     public final int replayNumber;
     public final Alliance alliance;
-    public final int location;
+    public final Integer location;
     public final String gameSpecificMessage;
 
     /**
@@ -69,8 +69,8 @@ public class FrcMatchInfo
             matchType = DriverStation.getMatchType();
             matchNumber = DriverStation.getMatchNumber();
             replayNumber = DriverStation.getReplayNumber();
-            alliance = DriverStation.getAlliance();
-            location = DriverStation.getLocation();
+            alliance = DriverStation.getAlliance().isPresent()? DriverStation.getAlliance().get(): null;
+            location = DriverStation.getLocation().isPresent()? DriverStation.getLocation().getAsInt(): null;
             gameSpecificMessage = DriverStation.getGameSpecificMessage();
         }
         else
@@ -79,8 +79,8 @@ public class FrcMatchInfo
             matchType = MatchType.None;
             matchNumber = 0;
             replayNumber = 0;
-            alliance = Alliance.Invalid;
-            location = 0;
+            alliance = null;
+            location = null;
             gameSpecificMessage = null;
         }
     }   //FrcMatchInfo
