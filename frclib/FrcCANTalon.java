@@ -34,7 +34,7 @@ import TrcCommonLib.trclib.TrcEncoder;
  * This class implements a CANTalon motor controller. It extends the TrcMotor class and
  * implements the abstract methods required by TrcMotor to be compatible with the TRC library.
  */
-public class FrcCANTalon extends FrcCANPhoenixController<TalonSRX>
+public class FrcCANTalon extends FrcCANPhoenix5Controller<TalonSRX>
 {
     /**
      * Constructor: Create an instance of the object.

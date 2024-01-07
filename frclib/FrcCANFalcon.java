@@ -22,12 +22,12 @@
 
 package TrcFrcLib.frclib;
 
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFX;
 
 import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
 
-public class FrcCANFalcon extends FrcCANPhoenixController<TalonFX>
+public class FrcCANFalcon extends FrcCANPhoenix6Controller<TalonFX>
 {
     /**
      * Constructor: Create an instance of the object.

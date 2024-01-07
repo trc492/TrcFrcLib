@@ -22,8 +22,11 @@
 
 package TrcFrcLib.frclib;
 
-import com.ctre.phoenix.ErrorCode;
-import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcEncoder;
@@ -32,9 +35,16 @@ import TrcCommonLib.trclib.TrcEncoder;
  * This class extends CANCoder and implements the FrcEncoder interface to allow compatibility to other types of
  * encoders.
  */
-public class FrcCANCoder extends CANCoder implements TrcEncoder
+public class FrcCANCoder extends CANcoder implements TrcEncoder
 {
+    private final TrcDbgTrace tracer;
     private final String instanceName;
+    private CANcoderConfiguration cancoderConfigs = new CANcoderConfiguration();
+
+    // The number of non-success error codes reported by the device after sending a command.
+    private int errorCount = 0;
+    private StatusCode lastStatus = null;
+
     private double scale = 1.0;
     private double offset = 0.0;
     private double zeroOffset = 0.0;
@@ -44,11 +54,39 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
      *
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the CANCoder.
+     * @param canBus specifies the CAN bus the CANCoder is on. Possible CAN bus
+     *                 strings are:
+     *                 <ul>
+     *                   <li>"rio" for the native roboRIO CAN bus
+     *                   <li>CANivore name or serial number
+     *                   <li>SocketCAN interface (non-FRC Linux only)
+     *                   <li>"*" for any CANivore seen by the program
+     *                   <li>empty string (default) to select the default for the
+     *                       system:
+     *                   <ul>
+     *                     <li>"rio" on roboRIO
+     *                     <li>"can0" on Linux
+     *                     <li>"*" on Windows
+     *                   </ul>
+     *                 </ul>
+     */
+    public FrcCANCoder(String instanceName, int canId, String canBus)
+    {
+        super(canId, canBus);
+        this.tracer = new TrcDbgTrace();
+        this.instanceName = instanceName;
+        recordResponseCode("readConfigs", getConfigurator().refresh(cancoderConfigs));
+    }   //FrcCANCoder
+
+    /**
+     * Constructor: Creates an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param canId specifies the CAN ID of the CANCoder.
      */
     public FrcCANCoder(String instanceName, int canId)
     {
-        super(canId);
-        this.instanceName = instanceName;
+        this(instanceName, canId, "");
     }   //FrcCANCoder
 
     /**
@@ -61,6 +99,67 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
     {
         return instanceName;
     }   //toString
+
+    /**
+     * This method returns the number of error responses seen from the motor after sending a command.
+     *
+     * @return The number of non-OK error code responses seen from the motor
+     * after sending a command.
+     */
+    public int getErrorCount()
+    {
+        return errorCount;
+    } //getErrorCount
+
+    /**
+     * The method returns the last error code. If there is none, null is returned.
+     *
+     * @return last error code.
+     */
+    public StatusCode getLastStatus()
+    {
+        return lastStatus;
+    }   //getLastStatus
+
+    /**
+     * This method checks for error code returned by the motor controller executing the last command. If there was
+     * an error, the error count is incremented.
+     *
+     * @param operation specifies the operation that failed.
+     * @param statusCode specifies the status code returned by the motor controller.
+     */
+    protected StatusCode recordResponseCode(String operation, StatusCode statusCode)
+    {
+        lastStatus = statusCode;
+        if (statusCode != null && !statusCode.equals(StatusCode.OK))
+        {
+            errorCount++;
+            tracer.traceErr(instanceName, operation + " (StatusCode=" + statusCode + ")");
+        }
+        return statusCode;
+    }   //recordResponseCode
+
+    /**
+     * This method resets the motor controller configurations to factory default so that everything is at known state.
+     */
+    public StatusCode resetFactoryDefault()
+    {
+        // Create a new TalonFX config which will contain all factory default configurations and apply it.
+        cancoderConfigs = new CANcoderConfiguration();
+        return recordResponseCode("resetFactoryDefault", getConfigurator().apply(cancoderConfigs));
+    }   //resetFactoryDefault
+
+    /**
+     * This method configures the absolute range mode of the encoder.
+     *
+     * @param range0To1 specifies true to set it to Unsigned_0To1 mode, false to Signed_PlusMinusHalf mode.
+     */
+    public StatusCode setAbsoluteRange(boolean range0To1)
+    {
+        cancoderConfigs.MagnetSensor.AbsoluteSensorRange =
+            range0To1? AbsoluteSensorRangeValue.Unsigned_0To1: AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
+        return recordResponseCode("setAbsoluteRange", getConfigurator().apply(cancoderConfigs));
+    }   //setAbsoluteRange
 
     //
     // Implements the FrcEncoder interface.
@@ -85,7 +184,7 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
     @Override
     public double getRawPosition()
     {
-        return super.getAbsolutePosition();
+        return super.getAbsolutePosition().getValueAsDouble();
     }   //getRawPosition
 
     /**
@@ -94,11 +193,11 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
      * @return encoder position adjusted by scale and offset.
      */
     @Override
-    public double getPosition()
+    public double getScaledPosition()
     {
         // Offset must be in the same unit as the absolute position.
-        return (super.getAbsolutePosition() - zeroOffset) * scale + offset;
-    }   //getPosition
+        return (super.getAbsolutePosition().getValueAsDouble() - zeroOffset) * scale + offset;
+    }   //getScaledPosition
 
     /**
      * This method reverses the direction of the encoder.
@@ -108,15 +207,9 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
     @Override
     public void setInverted(boolean inverted)
     {
-        final String funcName = "setInverted";
-        // Configure the sensor direction to match the steering motor direction.
-        ErrorCode errCode = super.configSensorDirection(inverted, 30);
-
-        if (errCode != ErrorCode.OK)
-        {
-            TrcDbgTrace.globalTraceWarn(
-                funcName, "%s: CANcoder.configSensorDirection failed (code=%s).", instanceName, errCode);
-        }
+        cancoderConfigs.MagnetSensor.SensorDirection =
+                inverted? SensorDirectionValue.Clockwise_Positive: SensorDirectionValue.CounterClockwise_Positive;
+        recordResponseCode("setInverted", getConfigurator().apply(cancoderConfigs));
     }   //setInverted
 
     /**
@@ -127,7 +220,8 @@ public class FrcCANCoder extends CANCoder implements TrcEncoder
     @Override
     public boolean isInverted()
     {
-        return super.configGetSensorDirection();
+        recordResponseCode("isInverted", getConfigurator().refresh(cancoderConfigs));
+        return cancoderConfigs.MagnetSensor.SensorDirection == SensorDirectionValue.Clockwise_Positive;
     }   //isInverted
 
     /**

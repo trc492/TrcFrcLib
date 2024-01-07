@@ -481,10 +481,11 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     /**
      * This method checks if the motor is at the set velocity.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorVelocityOnTarget()
+    public boolean getMotorVelocityOnTarget(double tolerance)
     {
         throw new UnsupportedOperationException("Motor controller does not support getMotorVelocityOnTarget.");
     }   //getMotorVelocityOnTarget
@@ -525,10 +526,11 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     /**
      * This method checks if the motor is at the set position.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorPositionOnTarget()
+    public boolean getMotorPositionOnTarget(double tolerance)
     {
         throw new UnsupportedOperationException("Motor controller does not support getMotorPositionOnTarget.");
     }   //getMotorPositionOnTarget
@@ -569,10 +571,11 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     /**
      * This method checks if the motor is at the set current.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorCurrentOnTarget()
+    public boolean getMotorCurrentOnTarget(double tolerance)
     {
         throw new UnsupportedOperationException("Motor controller does not support getMotorCurretOnTarget.");
     }   //getMotorCurrentOnTarget

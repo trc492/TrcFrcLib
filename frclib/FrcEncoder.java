@@ -62,10 +62,10 @@ public class FrcEncoder extends Encoder implements TrcEncoder
      * @return encoder position adjusted by scale and offset.
      */
     @Override
-    public double getPosition()
+    public double getScaledPosition()
     {
         return sign * (get() - zeroOffset) * scale + offset;
-    }   //getPosition
+    }   //getScaledPosition
 
     /**
      * This method reverses the direction of the encoder.

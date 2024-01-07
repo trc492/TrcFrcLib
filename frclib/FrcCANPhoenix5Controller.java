@@ -39,7 +39,7 @@ import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcMotor;
 import TrcCommonLib.trclib.TrcPidController;
 
-public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMotor
+public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcMotor
 {
     private static final int PIDSLOT_POSITION = 0;
     private static final int PIDSLOT_VELOCITY = 1;
@@ -56,8 +56,8 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             }
 
             builder.setSmartDashboardType("Quadrature Encoder");
-            builder.addDoubleProperty("Speed", FrcCANPhoenixController.this::getVelocity, null);
-            builder.addDoubleProperty("Distance", FrcCANPhoenixController.this::getPosition, null);
+            builder.addDoubleProperty("Speed", FrcCANPhoenix5Controller.this::getVelocity, null);
+            builder.addDoubleProperty("Distance", FrcCANPhoenix5Controller.this::getPosition, null);
             builder.addDoubleProperty("DistancePerCount", () -> 1, null);
         }   //initSendable
     }   //class EncoderInfo
@@ -66,9 +66,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     private FeedbackDevice feedbackDeviceType;
     private boolean revLimitSwitchInverted;
     private boolean fwdLimitSwitchInverted;
-    private double velPidTolerance;
-    private double posPidTolerance;
-    private double currentPidTolerance;
 
     // The number of non-success error codes reported by the device after sending a command.
     private int errorCount = 0;
@@ -83,14 +80,14 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * @param upperLimitSwitch specifies an external upper limit switch overriding the motor controller one.
      * @param encoder specifies an external encoder overriding the motor controller one.
      */
-    public FrcCANPhoenixController(
+    public FrcCANPhoenix5Controller(
         String instanceName, T baseTalon, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch,
         TrcEncoder encoder)
     {
         super(instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
         motor = baseTalon;
         readConfig();
-    }   //FrcCANPhoenixController
+    }   //FrcCANPhoenix5Controller
 
     /**
      * Constructor: Create an instance of the object.
@@ -98,10 +95,10 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
      * @param instanceName specifies the instance name.
      * @param baseTalon the base talon object.
      */
-    public FrcCANPhoenixController(String instanceName, T baseTalon)
+    public FrcCANPhoenix5Controller(String instanceName, T baseTalon)
     {
         this(instanceName, baseTalon, null, null, null);
-    }   //FrcCANPhoenixController
+    }   //FrcCANPhoenix5Controller
 
     /**
      * This method creates an EncoderInfo object and returns it.
@@ -155,17 +152,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //recordResponseCode
 
     /**
-     * This method sets the feedback device type.
-     *
-     * @param devType specifies the feedback device type.
-     */
-    public void setFeedbackDevice(FeedbackDevice devType)
-    {
-        feedbackDeviceType = devType;
-        recordResponseCode("configSelectedFeedbackSensor", motor.configSelectedFeedbackSensor(devType));
-    }   //setFeedbackDevice
-
-    /**
      * This method reads the configuration of the phoenix controller.
      */
     private void readConfig()
@@ -175,10 +161,18 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
             motor.configGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 0, 10));
         revLimitSwitchInverted = LimitSwitchNormal.NormallyClosed == LimitSwitchNormal.valueOf(
             motor.configGetParameter(ParamEnum.eLimitSwitchNormClosedAndDis, 1, 10));
-        velPidTolerance = getPidTolerance(PIDSLOT_VELOCITY);
-        posPidTolerance = getPidTolerance(PIDSLOT_POSITION);
-        currentPidTolerance = getPidTolerance(PIDSLOT_CURRENT);
     }   //readConfig
+
+    /**
+     * This method sets the feedback device type.
+     *
+     * @param devType specifies the feedback device type.
+     */
+    public void setFeedbackDevice(FeedbackDevice devType)
+    {
+        feedbackDeviceType = devType;
+        recordResponseCode("configSelectedFeedbackSensor", motor.configSelectedFeedbackSensor(devType));
+    }   //setFeedbackDevice
 
     //
     // Implements TrcMotorController interface.
@@ -633,34 +627,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the the specified slot.
-     *
-     * @param slotIdx specifies the slot index.
-     * @param tolerance specifies PID tolerance.
-     */
-    private void setPidTolerance(int slotIdx, double tolerance)
-    {
-        recordResponseCode("configAllowableClosedloopError", motor.configAllowableClosedloopError(slotIdx, tolerance));
-        switch (slotIdx)
-        {
-            case PIDSLOT_POSITION:
-                posPidTolerance = tolerance;
-                break;
-
-            case PIDSLOT_VELOCITY:
-                velPidTolerance = tolerance;
-                break;
-
-            case PIDSLOT_CURRENT:
-                currentPidTolerance = tolerance;
-                break;
-
-            default:
-                break;
-        }
-    }   //setPidTolerance
-
-    /**
      * This method returns the PID coefficients of the specified slot.
      *
      * @param slotIdx specifies the slot index.
@@ -677,15 +643,15 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //getPidCoefficients
 
     /**
-     * This method returns the PID tolerance of the specified slot.
+     * This method sets the PID tolerance of the the specified slot.
      *
      * @param slotIdx specifies the slot index.
-     * @return PID tolerance of the specified slot.
+     * @param tolerance specifies PID tolerance.
      */
-    private double getPidTolerance(int slotIdx)
+    private void setPidTolerance(int slotIdx, double tolerance)
     {
-        return motor.configGetParameter(ParamEnum.eProfileParamSlot_AllowableErr, slotIdx);
-    }   //getPidTolerance
+        recordResponseCode("configAllowableClosedloopError", motor.configAllowableClosedloopError(slotIdx, tolerance));
+    }   //setPidTolerance
 
     /**
      * This method sets the PID coefficients of the motor controller's velocity PID controller.
@@ -699,17 +665,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setMotorVelocityPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's velocity PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorVelocityPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
-    }   //setMotorVelocityPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's velocity PID controller.
      *
      * @return PID coefficients of the motor's veloicty PID controller.
@@ -721,14 +676,27 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //getMotorVelocityPidCoefficients
 
     /**
+     * This method sets the PID tolerance of the motor controller's velocity PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorVelocityPidTolerance(double tolerance)
+    {
+        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
+    }   //setMotorVelocityPidTolerance
+
+    /**
      * This method checks if the motor is at the set velocity.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorVelocityOnTarget()
+    public boolean getMotorVelocityOnTarget(double tolerance)
     {
-        return motor.getClosedLoopError(PIDSLOT_VELOCITY) <= velPidTolerance;
+        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
+        return motor.getClosedLoopError(PIDSLOT_VELOCITY) <= tolerance;
     }   //getMotorVelocityOnTarget
 
     /**
@@ -743,17 +711,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setMotorPositionPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's position PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorPositionPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_POSITION, tolerance);
-    }   //setMotorPositionPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's position PID controller.
      *
      * @return PID coefficients of the motor's position PID controller.
@@ -765,14 +722,27 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //getMotorPositionPidCoefficients
 
     /**
+     * This method sets the PID tolerance of the motor controller's position PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorPositionPidTolerance(double tolerance)
+    {
+        setPidTolerance(PIDSLOT_POSITION, tolerance);
+    }   //setMotorPositionPidTolerance
+
+    /**
      * This method checks if the motor is at the set position.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorPositionOnTarget()
+    public boolean getMotorPositionOnTarget(double tolerance)
     {
-        return motor.getClosedLoopError(PIDSLOT_POSITION) <= posPidTolerance;
+        setPidTolerance(PIDSLOT_POSITION, tolerance);
+        return motor.getClosedLoopError(PIDSLOT_POSITION) <= tolerance;
     }   //getMotorPositionOnTarget
 
     /**
@@ -787,17 +757,6 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //setMotorCurrentPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's current PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorCurrentPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_CURRENT, tolerance);
-    }   //setMotorCurrentPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's current PID controller.
      *
      * @return PID coefficients of the motor's current PID controller.
@@ -809,14 +768,27 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     }   //geteMotorCurrentPidCoefficients
 
     /**
+     * This method sets the PID tolerance of the motor controller's current PID controller.
+     *
+     * @param tolerance specifies the PID tolerance to set.
+     */
+    @Override
+    public void setMotorCurrentPidTolerance(double tolerance)
+    {
+        setPidTolerance(PIDSLOT_CURRENT, tolerance);
+    }   //setMotorCurrentPidTolerance
+
+    /**
      * This method checks if the motor is at the set current.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorCurrentOnTarget()
+    public boolean getMotorCurrentOnTarget(double tolerance)
     {
-        return motor.getClosedLoopError(PIDSLOT_CURRENT) <= currentPidTolerance;
+        setPidTolerance(PIDSLOT_CURRENT, tolerance);
+        return motor.getClosedLoopError(PIDSLOT_CURRENT) <= tolerance;
     }   //getMotorCurrentOnTarget
 
     //
@@ -862,10 +834,10 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
     @Override
     public void follow(TrcMotor otherMotor)
     {
-        if (otherMotor instanceof FrcCANPhoenixController)
+        if (otherMotor instanceof FrcCANPhoenix5Controller)
         {
             // Can only follow the same type of motor natively.
-            motor.follow(((FrcCANPhoenixController<?>) otherMotor).motor);
+            motor.follow(((FrcCANPhoenix5Controller<?>) otherMotor).motor);
         }
         else
         {
@@ -873,4 +845,4 @@ public abstract class FrcCANPhoenixController<T extends BaseTalon> extends TrcMo
         }
     }   //follow
 
-}   //class FrcCANPhoenixController
+}   //class FrcCANPhoenix5Controller

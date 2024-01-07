@@ -95,7 +95,7 @@ public class FrcCanandcoder extends Canandcoder implements TrcEncoder
      * @return encoder position adjusted by scale and offset.
      */
     @Override
-    public double getPosition()
+    public double getScaledPosition()
     {
         double absPos = super.getAbsPosition();
         double pos = sign * (absPos - zeroOffset) * scale + offset;
@@ -104,7 +104,7 @@ public class FrcCanandcoder extends Canandcoder implements TrcEncoder
             "pos=" + pos + " (absPos=" + absPos + ", offset=" + offset + ", scale=" + scale + "sign=" + sign + ")");
         // Offset must be in the same unit as the absolute position.
         return pos;
-    }   //getPosition
+    }   //getScaledPosition
 
     /**
      * This method reverses the direction of the encoder.

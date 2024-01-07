@@ -59,9 +59,6 @@ public class FrcCANSparkMax extends TrcMotor
     private Double velSetpoint = null;
     private Double posSetpoint = null;
     private Double currentSetpoint = null;
-    private Double velPidTolerance = null;
-    private Double posPidTolerance = null;
-    private Double currentPidTolerance = null;
     // The number of non-success error codes reported by the device after sending a command.
     private int errorCount = 0;
     private REVLibError lastError = null;
@@ -602,17 +599,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //getPidCoefficients
 
     /**
-     * This method returns the PID tolerance of the specified slot.
-     *
-     * @param slotIdx specifies the slot index.
-     * @return PID tolerance of the specified slot.
-     */
-    private double getPidTolerance(int slotIdx)
-    {
-        return pidCtrl.getSmartMotionAllowedClosedLoopError(slotIdx);
-    }   //getPidTolerance
-
-    /**
      * This method sets the PID coefficients of the motor controller's velocity PID controller.
      *
      * @param pidCoeff specifies the PID coefficients to set.
@@ -631,7 +617,6 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorVelocityPidTolerance(double tolerance)
     {
-        velPidTolerance = tolerance;
         setPidTolerance(PIDSLOT_VELOCITY, tolerance);
     }   //setMotorVelocityPidTolerance
 
@@ -649,13 +634,14 @@ public class FrcCANSparkMax extends TrcMotor
     /**
      * This method checks if the motor is at the set velocity.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorVelocityOnTarget()
+    public boolean getMotorVelocityOnTarget(double tolerance)
     {
-        return velSetpoint != null && velPidTolerance != null &&
-               Math.abs(velSetpoint - getMotorVelocity()) <= velPidTolerance;
+        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
+        return velSetpoint != null && Math.abs(velSetpoint - getMotorVelocity()) <= tolerance;
     }   //getMotorVelocityOnTarget
 
     /**
@@ -677,7 +663,6 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorPositionPidTolerance(double tolerance)
     {
-        posPidTolerance = tolerance;
         setPidTolerance(PIDSLOT_POSITION, tolerance);
     }   //setMotorPositionPidTolerance
 
@@ -695,13 +680,14 @@ public class FrcCANSparkMax extends TrcMotor
     /**
      * This method checks if the motor is at the set position.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorPositionOnTarget()
+    public boolean getMotorPositionOnTarget(double tolerance)
     {
-        return posSetpoint != null && posPidTolerance != null &&
-               Math.abs(posSetpoint - getMotorPosition()) <= getPidTolerance(PIDSLOT_POSITION);
+        setPidTolerance(PIDSLOT_POSITION, tolerance);
+        return posSetpoint != null && Math.abs(posSetpoint - getMotorPosition()) <= tolerance;
     }   //getMotorPositionOnTarget
 
     /**
@@ -723,7 +709,6 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorCurrentPidTolerance(double tolerance)
     {
-        currentPidTolerance = tolerance;
         setPidTolerance(PIDSLOT_CURRENT, tolerance);
     }   //setMotorCurrentPidTolerance
 
@@ -741,13 +726,14 @@ public class FrcCANSparkMax extends TrcMotor
     /**
      * This method checks if the motor is at the set current.
      *
+     * @param tolerance specifies the PID tolerance.
      * @return true if motor is on target, false otherwise.
      */
     @Override
-    public boolean getMotorCurrentOnTarget()
+    public boolean getMotorCurrentOnTarget(double tolerance)
     {
-        return currentSetpoint != null && currentPidTolerance != null &&
-               Math.abs(currentSetpoint - getMotorCurrent()) <= getPidTolerance(PIDSLOT_CURRENT);
+        setPidTolerance(PIDSLOT_CURRENT, tolerance);
+        return currentSetpoint != null && Math.abs(currentSetpoint - getMotorCurrent()) <= tolerance;
     }   //getMotorCurrentOnTarget
 
     //
