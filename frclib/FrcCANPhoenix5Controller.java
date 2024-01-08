@@ -830,18 +830,20 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
      * This method sets this motor to follow another motor.
      *
      * @param otherMotor specifies the other motor to follow.
+     * @param inverted specifies true if this motor is inverted from the motor it is following, false otherwise.
      */
     @Override
-    public void follow(TrcMotor otherMotor)
+    public void follow(TrcMotor otherMotor, boolean inverted)
     {
         if (otherMotor instanceof FrcCANPhoenix5Controller)
         {
             // Can only follow the same type of motor natively.
             motor.follow(((FrcCANPhoenix5Controller<?>) otherMotor).motor);
+            setMotorInverted(otherMotor.isMotorInverted() ^ inverted);
         }
         else
         {
-            super.follow(otherMotor);
+            super.follow(otherMotor, inverted);
         }
     }   //follow
 

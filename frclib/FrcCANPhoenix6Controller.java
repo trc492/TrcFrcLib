@@ -25,6 +25,7 @@ package TrcFrcLib.frclib;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -935,20 +936,21 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
      * This method sets this motor to follow another motor.
      *
      * @param otherMotor specifies the other motor to follow.
+     * @param inverted specifies true if this motor is inverted from the motor it is following, false otherwise.
      */
     @Override
-    public void follow(TrcMotor otherMotor)
+    public void follow(TrcMotor otherMotor, boolean inverted)
     {
-        // TODO: Fix this.
-        // if (otherMotor instanceof FrcCANPhoenix6Controller)
-        // {
-        //     // Can only follow the same type of motor natively.
-        //     motor.follow(((FrcCANPhoenix6Controller<?>) otherMotor).motor);
-        // }
-        // else
-        // {
-        //     super.follow(otherMotor);
-        // }
+        if (otherMotor instanceof FrcCANPhoenix6Controller)
+        {
+            recordResponseCode(
+                "follow",
+                motor.setControl(new Follower(((FrcCANPhoenix6Controller<?>) otherMotor).motor.getDeviceID(), inverted)));
+        }
+        else
+        {
+            super.follow(otherMotor, inverted);
+        }
     }   //follow
 
 }   //class FrcCANPhoenix6Controller

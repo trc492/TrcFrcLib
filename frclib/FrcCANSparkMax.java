@@ -774,18 +774,20 @@ public class FrcCANSparkMax extends TrcMotor
      * This method sets this motor to follow another motor.
      *
      * @param otherMotor specifies the other motor to follow.
+     * @param inverted specifies true if this motor is inverted from the motor it is following, false otherwise.
      */
     @Override
-    public void follow(TrcMotor otherMotor)
+    public void follow(TrcMotor otherMotor, boolean inverted)
     {
         if (otherMotor instanceof FrcCANSparkMax)
         {
             // Can only follow the same type of motor natively.
             recordResponseCode("follow", motor.follow(((FrcCANSparkMax) otherMotor).motor));
+            setMotorInverted(otherMotor.isMotorInverted() ^ inverted);
         }
         else
         {
-            super.follow(otherMotor);
+            super.follow(otherMotor, inverted);
         }
     }   //follow
 
