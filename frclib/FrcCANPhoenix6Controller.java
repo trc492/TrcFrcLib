@@ -62,13 +62,12 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
 
     private class EncoderInfo implements Sendable
     {
-        // TODO: fix this!!!
         @Override
         public void initSendable(SendableBuilder builder)
         {
             if (talonFxConfigs.Feedback.FeedbackSensorSource != FeedbackSensorSourceValue.RotorSensor)
             {
-                throw new IllegalStateException("Only QuadEncoder supported for Shuffleboard!");
+                throw new IllegalStateException("Only internal QuadEncoder supported for Shuffleboard!");
             }
 
             builder.setSmartDashboardType("Quadrature Encoder");
@@ -477,8 +476,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorPositionSensorInverted(boolean inverted)
     {
-        // TODO: Fix this.
-        // motor.setSensorPhase(inverted);
+        throw new UnsupportedOperationException("Controller does not support inverting internal position sensor.");
     }   //setMotorPositionSensorInverted
 
     /**
@@ -489,9 +487,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public boolean isMotorPositionSensorInverted()
     {
-        // TODO: Fix this.
-        // return motor.configGetParameter(ParamEnum.eSensorDirection, 0) > 0.0;
-        return false;
+        throw new UnsupportedOperationException("Controller does not support inverting internal position sensor.");
     }   //isMotorPositionSensorInverted
 
     /**
@@ -897,40 +893,6 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     //
     // The following methods override the software simulation in TrcMotor providing direct support in hardware.
     //
-
-    /**
-     * This method enables/disables voltage compensation so that it will maintain the motor output regardless of
-     * battery voltage.
-     *
-     * @param batteryNominalVoltage specifies the nominal voltage of the battery to enable, null to disable.
-     */
-    @Override
-    public void setVoltageCompensationEnabled(Double batteryNominalVoltage)
-    {
-        // TODO: Fix this.
-        // if (batteryNominalVoltage != null)
-        // {
-        //     recordResponseCode("configVoltageCompSaturation", motor.configVoltageCompSaturation(batteryNominalVoltage));
-        //     motor.enableVoltageCompensation(true);
-        // }
-        // else
-        // {
-        //     motor.enableVoltageCompensation(false);
-        // }
-    }   //setVoltageCompensationEnabled
-
-    /**
-     * This method checks if voltage compensation is enabled.
-     *
-     * @return true if voltage compensation is enabled, false if disabled.
-     */
-    @Override
-    public boolean isVoltageCompensationEnabled()
-    {
-        // TODO: Fix this.
-        // return motor.isVoltageCompensationEnabled();
-        return false;
-    }   //isVoltageCompensationEnabled
 
     /**
      * This method sets this motor to follow another motor.
