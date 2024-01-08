@@ -30,6 +30,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.core.CoreTalonFX;
+import com.ctre.phoenix6.signals.AppliedRotorPolarityValue;
 import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.ForwardLimitTypeValue;
@@ -51,7 +52,6 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
 {
     private static final int PIDSLOT_POSITION = 0;
     private static final int PIDSLOT_VELOCITY = 1;
-    private static final int PIDSLOT_CURRENT = 2;
 
     public final T motor;
     private TalonFXConfiguration talonFxConfigs = new TalonFXConfiguration();
@@ -65,7 +65,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
         @Override
         public void initSendable(SendableBuilder builder)
         {
-            if (talonFxConfigs.Feedback.FeedbackSensorSource != FeedbackSensorSourceValue.RotorSensor)
+            if (!talonFxConfigs.Feedback.FeedbackSensorSource.equals(FeedbackSensorSourceValue.RotorSensor))
             {
                 throw new IllegalStateException("Only internal QuadEncoder supported for Shuffleboard!");
             }
@@ -405,8 +405,8 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         recordResponseCode(
             "isMotorRevLimitSwitchActive", motor.getConfigurator().refresh(talonFxConfigs.HardwareLimitSwitch));
-        return (talonFxConfigs.HardwareLimitSwitch.ReverseLimitType == ReverseLimitTypeValue.NormallyClosed) ^
-               (motor.getReverseLimit().getValue() == ReverseLimitValue.ClosedToGround);
+        return (talonFxConfigs.HardwareLimitSwitch.ReverseLimitType.equals(ReverseLimitTypeValue.NormallyClosed)) ^
+               (motor.getReverseLimit().getValue().equals(ReverseLimitValue.ClosedToGround));
     }   //isMotorRevLimitSwitchActive
 
     /**
@@ -419,8 +419,8 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         recordResponseCode(
             "isMotorFwdLimitSwitchActive", motor.getConfigurator().refresh(talonFxConfigs.HardwareLimitSwitch));
-        return (talonFxConfigs.HardwareLimitSwitch.ForwardLimitType == ForwardLimitTypeValue.NormallyClosed) ^
-               (motor.getForwardLimit().getValue() == ForwardLimitValue.ClosedToGround);
+        return (talonFxConfigs.HardwareLimitSwitch.ForwardLimitType.equals(ForwardLimitTypeValue.NormallyClosed)) ^
+               (motor.getForwardLimit().getValue().equals(ForwardLimitValue.ClosedToGround));
     }   //isMotorFwdLimitSwitchActive
 
     /**
@@ -496,7 +496,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void resetMotorPosition()
     {
-        if (talonFxConfigs.Feedback.FeedbackSensorSource == FeedbackSensorSourceValue.RotorSensor)
+        if (talonFxConfigs.Feedback.FeedbackSensorSource.equals(FeedbackSensorSourceValue.RotorSensor))
         {
             recordResponseCode("resetMotorPosition", motor.getConfigurator().setPosition(0.0));
         }
@@ -524,9 +524,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public boolean isMotorInverted()
     {
-        recordResponseCode(
-            "isMotorInverted", motor.getConfigurator().refresh(talonFxConfigs.MotorOutput));
-        return talonFxConfigs.MotorOutput.Inverted == InvertedValue.Clockwise_Positive;
+        return motor.getAppliedRotorPolarity().getValue().equals(AppliedRotorPolarityValue.PositiveIsClockwise);
     }   //isMotorInverted
 
     /**
@@ -560,7 +558,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     public void setMotorVelocity(double velocity, double acceleration)
     {
         recordResponseCode("setMotorVelocity", motor.setControl(
-            new VelocityVoltage(velocity, acceleration, true, 0.0, 0, false, false, false)));
+            new VelocityVoltage(velocity, acceleration, false, 0.0, PIDSLOT_VELOCITY, false, false, false)));
     }   //setMotorVelocity
 
     /**
@@ -571,6 +569,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorVelocity(double velocity)
     {
+        // TODO: Verify zero acceleration disables motion profiling.
         setMotorVelocity(velocity, 0.0);
     }   //setMotorVelocity
 
@@ -596,12 +595,14 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
      */
     public void setMotorPosition(double position, double powerLimit, double velocity)
     {
+        // Set power limits.
         powerLimit = Math.abs(powerLimit);
         talonFxConfigs.MotorOutput.PeakForwardDutyCycle = powerLimit;
         talonFxConfigs.MotorOutput.PeakReverseDutyCycle = -powerLimit;
         recordResponseCode("setMotorPositionPowerLimit", motor.getConfigurator().apply(talonFxConfigs.MotorOutput));
+
         recordResponseCode("setMotorPosition", motor.setControl(
-            new PositionVoltage(position, velocity, true, 0.0, 0, false, false, false)));
+            new PositionVoltage(position, velocity, false, 0.0, PIDSLOT_POSITION, false, false, false)));
     }   //setMotorPosition
 
     /**
@@ -613,6 +614,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorPosition(double position, double powerLimit)
     {
+        // TODO: Verify zero velocity disables motion profiling!
         setMotorPosition(position, powerLimit, 0.0);
     }   //setMotorPosition
 
@@ -636,7 +638,15 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorCurrent(double current)
     {
-        recordResponseCode("setMotorCurrent", motor.setControl(new TorqueCurrentFOC(current)));
+        // This support requires Phoenix Pro.
+        if (motor.getIsProLicensed().getValue())
+        {
+            recordResponseCode("setMotorCurrent", motor.setControl(new TorqueCurrentFOC(current)));
+        }
+        else
+        {
+            throw new UnsupportedOperationException("This operation requires Phoenix Pro.");
+        }
     }   //setMotorCurrent
 
     /**
@@ -778,7 +788,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         boolean onTarget = false;
 
-        if (motor.getControlMode().getValue() == ControlModeValue.VelocityDutyCycle)
+        if (motor.getControlMode().getValue().equals(ControlModeValue.VelocityDutyCycle))
         {
             onTarget = motor.getClosedLoopError().getValueAsDouble() <= tolerance;
         }
@@ -830,7 +840,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         boolean onTarget = false;
 
-        if (motor.getControlMode().getValue() == ControlModeValue.PositionDutyCycle)
+        if (motor.getControlMode().getValue().equals(ControlModeValue.PositionDutyCycle))
         {
             onTarget = motor.getClosedLoopError().getValueAsDouble() <= tolerance;
         }
@@ -846,7 +856,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorCurrentPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        setPidCoefficients(PIDSLOT_CURRENT, pidCoeff);
+        throw new UnsupportedOperationException("Controller does not support current control PID coefficients.");
     }   //setMotorCurrentPidCoefficients
 
     /**
@@ -857,7 +867,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
     {
-        return getPidCoefficients(PIDSLOT_CURRENT);
+        throw new UnsupportedOperationException("Controller does not support current control PID coefficients.");
     }   //geteMotorCurrentPidCoefficients
 
     /**
@@ -882,7 +892,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         boolean onTarget = false;
 
-        if (motor.getControlMode().getValue() == ControlModeValue.TorqueCurrentFOC)
+        if (motor.getControlMode().getValue().equals(ControlModeValue.TorqueCurrentFOC))
         {
             onTarget = motor.getClosedLoopError().getValueAsDouble() <= tolerance;
         }
