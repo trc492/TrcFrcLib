@@ -498,7 +498,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         if (talonFxConfigs.Feedback.FeedbackSensorSource.equals(FeedbackSensorSourceValue.RotorSensor))
         {
-            recordResponseCode("resetMotorPosition", motor.getConfigurator().setPosition(0.0));
+            recordResponseCode("resetMotorPosition", motor.setPosition(0.0));
         }
     }   //resetMotorPosition
 
