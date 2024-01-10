@@ -26,8 +26,10 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.core.CoreTalonFX;
 import com.ctre.phoenix6.signals.AppliedRotorPolarityValue;
@@ -569,8 +571,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorVelocity(double velocity)
     {
-        // TODO: Verify zero acceleration disables motion profiling.
-        setMotorVelocity(velocity, 0.0);
+        recordResponseCode("setMotorVelocity", motor.setControl(new VelocityDutyCycle(velocity)));
     }   //setMotorVelocity
 
     /**
@@ -614,8 +615,13 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorPosition(double position, double powerLimit)
     {
-        // TODO: Verify zero velocity disables motion profiling!
-        setMotorPosition(position, powerLimit, 0.0);
+        // Set power limits.
+        powerLimit = Math.abs(powerLimit);
+        talonFxConfigs.MotorOutput.PeakForwardDutyCycle = powerLimit;
+        talonFxConfigs.MotorOutput.PeakReverseDutyCycle = -powerLimit;
+        recordResponseCode("setMotorPositionPowerLimit", motor.getConfigurator().apply(talonFxConfigs.MotorOutput));
+
+        recordResponseCode("setMotorPosition", motor.setControl(new PositionDutyCycle(position)));
     }   //setMotorPosition
 
     /**
