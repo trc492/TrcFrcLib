@@ -556,11 +556,22 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
      *
      * @param velocity specifies the motor velocity in rotations per second.
      * @param acceleration specifies the max motor acceleration rotations per second square.
+     * @param useVoltageComp specifies true to use voltage compensation, false otherwise.
      */
-    public void setMotorVelocity(double velocity, double acceleration)
+    public void setMotorVelocity(double velocity, double acceleration, boolean useVoltageComp)
     {
-        recordResponseCode("setMotorVelocity", motor.setControl(
-            new VelocityVoltage(velocity, acceleration, false, 0.0, PIDSLOT_VELOCITY, false, false, false)));
+        if (useVoltageComp)
+        {
+            recordResponseCode(
+                "setMotorVelocityWithVoltage", motor.setControl(
+                    new VelocityVoltage(velocity).withAcceleration(acceleration).withSlot(PIDSLOT_VELOCITY)));
+        }
+        else
+        {
+            recordResponseCode(
+                "setMotorVelocityWithDutyCycle", motor.setControl(
+                new VelocityDutyCycle(velocity).withAcceleration(acceleration).withSlot(PIDSLOT_VELOCITY)));
+        }
     }   //setMotorVelocity
 
     /**
@@ -571,7 +582,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorVelocity(double velocity)
     {
-        recordResponseCode("setMotorVelocity", motor.setControl(new VelocityDutyCycle(velocity)));
+        setMotorVelocity(velocity, 0.0, false);
     }   //setMotorVelocity
 
     /**
@@ -593,8 +604,9 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
      * @param position specifies the position in rotations.
      * @param powerLimit specifies the maximum power output limits.
      * @param velocity specifies the max motor veloicty rotations per second.
+     * @param useVoltageComp specifies true to use voltage compensation, false otherwise.
      */
-    public void setMotorPosition(double position, double powerLimit, double velocity)
+    public void setMotorPosition(double position, double powerLimit, double velocity, boolean useVoltageComp)
     {
         // Set power limits.
         powerLimit = Math.abs(powerLimit);
@@ -602,8 +614,18 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
         talonFxConfigs.MotorOutput.PeakReverseDutyCycle = -powerLimit;
         recordResponseCode("setMotorPositionPowerLimit", motor.getConfigurator().apply(talonFxConfigs.MotorOutput));
 
-        recordResponseCode("setMotorPosition", motor.setControl(
-            new PositionVoltage(position, velocity, false, 0.0, PIDSLOT_POSITION, false, false, false)));
+        if (useVoltageComp)
+        {
+            recordResponseCode(
+                "setMotorPositionWithVoltage", motor.setControl(
+                    new PositionVoltage(position).withVelocity(velocity).withSlot(PIDSLOT_POSITION)));
+        }
+        else
+        {
+            recordResponseCode(
+                "setMotorPositionWithDutyCycle", motor.setControl(
+                    new PositionDutyCycle(position).withVelocity(velocity).withSlot(PIDSLOT_POSITION)));
+        }
     }   //setMotorPosition
 
     /**
@@ -615,13 +637,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorPosition(double position, double powerLimit)
     {
-        // Set power limits.
-        powerLimit = Math.abs(powerLimit);
-        talonFxConfigs.MotorOutput.PeakForwardDutyCycle = powerLimit;
-        talonFxConfigs.MotorOutput.PeakReverseDutyCycle = -powerLimit;
-        recordResponseCode("setMotorPositionPowerLimit", motor.getConfigurator().apply(talonFxConfigs.MotorOutput));
-
-        recordResponseCode("setMotorPosition", motor.setControl(new PositionDutyCycle(position)));
+        setMotorPosition(position, powerLimit, 0.0, false);
     }   //setMotorPosition
 
     /**
