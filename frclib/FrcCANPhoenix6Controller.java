@@ -641,7 +641,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorPosition(double position, Double powerLimit)
     {
-        setMotorPosition(position, powerLimit, 0.0, false);
+        setMotorPosition(position, powerLimit, 0.0, true);
     }   //setMotorPosition
 
     /**
