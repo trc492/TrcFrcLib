@@ -514,14 +514,18 @@ public class FrcCANSparkMax extends TrcMotor
      * This method commands the motor to go to the given position using close loop control.
      *
      * @param position specifies the position in rotations.
-     * @param powerLimit specifies the maximum power output limits.
+     * @param powerLimit specifies the maximum power output limits, can be null if not provided. If not provided, the
+     *        previous set limit is applied.
      */
     @Override
-    public void setMotorPosition(double position, double powerLimit)
+    public void setMotorPosition(double position, Double powerLimit)
     {
+        if (powerLimit != null)
+        {
+            recordResponseCode("setOutputRange", pidCtrl.setOutputRange(-powerLimit, powerLimit, PIDSLOT_POSITION));
+        }
         posSetpoint = position;
         recordResponseCode("setPosition", pidCtrl.setReference(position, ControlType.kPosition, PIDSLOT_POSITION));
-        recordResponseCode("setOutputRange", pidCtrl.setOutputRange(-powerLimit, powerLimit, PIDSLOT_POSITION));
     }   //setMotorPosition
 
     /**

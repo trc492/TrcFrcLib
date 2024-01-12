@@ -571,9 +571,12 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
      * @param powerLimit specifies the maximum power output limits.
      */
     @Override
-    public void setMotorPosition(double position, double powerLimit)
+    public void setMotorPosition(double position, Double powerLimit)
     {
-        motor.configClosedLoopPeakOutput(PIDSLOT_POSITION, powerLimit);
+        if (powerLimit != null)
+        {
+            motor.configClosedLoopPeakOutput(PIDSLOT_POSITION, powerLimit);
+        }
         motor.set(com.ctre.phoenix.motorcontrol.ControlMode.Position, position);
     }   //setMotorPosition
 

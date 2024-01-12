@@ -596,23 +596,26 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
         return motor.getVelocity().getValueAsDouble();
     }   //getMotorVelocity
 
-    // private final PositionVoltage anglePosition = new PositionVoltage(0);
-
     /**
-     * This method commands the motor to go to the given position using close loop control.
+     * This method commands the motor to go to the given position using close loop control and optionally limits the
+     * power of the motor movement.
      *
      * @param position specifies the position in rotations.
-     * @param powerLimit specifies the maximum power output limits.
+     * @param powerLimit specifies the maximum power output limits, can be null if not provided. If not provided, the
+     *        previous set limit is applied.
      * @param velocity specifies the max motor veloicty rotations per second.
      * @param useVoltageComp specifies true to use voltage compensation, false otherwise.
      */
-    public void setMotorPosition(double position, double powerLimit, double velocity, boolean useVoltageComp)
+    public void setMotorPosition(double position, Double powerLimit, double velocity, boolean useVoltageComp)
     {
-        // Set power limits.
-        powerLimit = Math.abs(powerLimit);
-        talonFxConfigs.MotorOutput.PeakForwardDutyCycle = powerLimit;
-        talonFxConfigs.MotorOutput.PeakReverseDutyCycle = -powerLimit;
-        recordResponseCode("setMotorPositionPowerLimit", motor.getConfigurator().apply(talonFxConfigs.MotorOutput));
+        if (powerLimit != null)
+        {
+            // Set power limits.
+            powerLimit = Math.abs(powerLimit);
+            talonFxConfigs.MotorOutput.PeakForwardDutyCycle = powerLimit;
+            talonFxConfigs.MotorOutput.PeakReverseDutyCycle = -powerLimit;
+            recordResponseCode("setMotorPositionPowerLimit", motor.getConfigurator().apply(talonFxConfigs.MotorOutput));
+        }
 
         if (useVoltageComp)
         {
@@ -632,10 +635,11 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
      * This method commands the motor to go to the given position using close loop control.
      *
      * @param position specifies the position in rotations.
-     * @param powerLimit specifies the maximum power output limits.
+     * @param powerLimit specifies the maximum power output limits, can be null if not provided. If not provided, the
+     *        previous set limit is applied.
      */
     @Override
-    public void setMotorPosition(double position, double powerLimit)
+    public void setMotorPosition(double position, Double powerLimit)
     {
         setMotorPosition(position, powerLimit, 0.0, false);
     }   //setMotorPosition
