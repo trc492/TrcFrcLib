@@ -57,6 +57,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
 
     public final T motor;
     private TalonFXConfiguration talonFxConfigs = new TalonFXConfiguration();
+    private boolean useVoltageComp = false;
 
     // The number of non-success error codes reported by the device after sending a command.
     private int errorCount = 0;
@@ -555,10 +556,10 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
      * This method commands the motor to spin at the given velocity using close loop control.
      *
      * @param velocity specifies the motor velocity in rotations per second.
-     * @param acceleration specifies the max motor acceleration rotations per second square.
-     * @param useVoltageComp specifies true to use voltage compensation, false otherwise.
+     * @param acceleration specifies the max motor acceleration rotations per second square, can be 0 if not provided.
      */
-    public void setMotorVelocity(double velocity, double acceleration, boolean useVoltageComp)
+    @Override
+    public void setMotorVelocity(double velocity, double acceleration)
     {
         if (useVoltageComp)
         {
@@ -572,17 +573,6 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
                 "setMotorVelocityWithDutyCycle", motor.setControl(
                 new VelocityDutyCycle(velocity).withAcceleration(acceleration).withSlot(PIDSLOT_VELOCITY)));
         }
-    }   //setMotorVelocity
-
-    /**
-     * This method commands the motor to spin at the given velocity using close loop control.
-     *
-     * @param velocity specifies the motor velocity in rotations per second.
-     */
-    @Override
-    public void setMotorVelocity(double velocity)
-    {
-        setMotorVelocity(velocity, 0.0, false);
     }   //setMotorVelocity
 
     /**
@@ -603,10 +593,10 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
      * @param position specifies the position in rotations.
      * @param powerLimit specifies the maximum power output limits, can be null if not provided. If not provided, the
      *        previous set limit is applied.
-     * @param velocity specifies the max motor veloicty rotations per second.
-     * @param useVoltageComp specifies true to use voltage compensation, false otherwise.
+     * @param velocity specifies the max motor veloicty rotations per second, can be 0 if not provided.
      */
-    public void setMotorPosition(double position, Double powerLimit, double velocity, boolean useVoltageComp)
+    @Override
+    public void setMotorPosition(double position, Double powerLimit, double velocity)
     {
         if (powerLimit != null)
         {
@@ -629,19 +619,6 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
                 "setMotorPositionWithDutyCycle", motor.setControl(
                     new PositionDutyCycle(position).withVelocity(velocity).withSlot(PIDSLOT_POSITION)));
         }
-    }   //setMotorPosition
-
-    /**
-     * This method commands the motor to go to the given position using close loop control.
-     *
-     * @param position specifies the position in rotations.
-     * @param powerLimit specifies the maximum power output limits, can be null if not provided. If not provided, the
-     *        previous set limit is applied.
-     */
-    @Override
-    public void setMotorPosition(double position, Double powerLimit)
-    {
-        setMotorPosition(position, powerLimit, 0.0, false);
     }   //setMotorPosition
 
     /**
@@ -929,6 +906,29 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     //
     // The following methods override the software simulation in TrcMotor providing direct support in hardware.
     //
+
+    /**
+     * This method enables/disables voltage compensation so that it will maintain the motor output regardless of
+     * battery voltage.
+     *
+     * @param batteryNominalVoltage specifies the nominal voltage of the battery to enable, null to disable.
+     */
+    @Override
+    public void setVoltageCompensationEnabled(Double batteryNominalVoltage)
+    {
+        this.useVoltageComp = batteryNominalVoltage != null;
+    }   //setVoltageCompensationEnabled
+
+    /**
+     * This method checks if voltage compensation is enabled.
+     *
+     * @return true if voltage compensation is enabled, false if disabled.
+     */
+    @Override
+    public boolean isVoltageCompensationEnabled()
+    {
+        return useVoltageComp;
+    }   //isVoltageCompensationEnabled
 
     /**
      * This method sets this motor to follow another motor.

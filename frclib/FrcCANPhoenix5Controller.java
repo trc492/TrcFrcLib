@@ -543,10 +543,11 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
     /**
      * This method commands the motor to spin at the given velocity using close loop control.
      *
-     * @param velocity specifies the motor velocity in sensor units per second.
+     * @param velocity specifies the motor velocity in rotations per second.
+     * @param acceleration specifies the max motor acceleration rotations per second square (not supported).
      */
     @Override
-    public void setMotorVelocity(double velocity)
+    public void setMotorVelocity(double velocity, double acceleration)
     {
         // set takes a velocity value in sensor units per 100 msec.
         motor.set(com.ctre.phoenix.motorcontrol.ControlMode.Velocity, velocity/10.0);
@@ -565,13 +566,16 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
     }   //getMotorVelocity
 
     /**
-     * This method commands the motor to go to the given position using close loop control.
+     * This method commands the motor to go to the given position using close loop control and optionally limits the
+     * power of the motor movement.
      *
-     * @param position specifies the position in sensor units.
-     * @param powerLimit specifies the maximum power output limits.
+     * @param position specifies the position in rotations.
+     * @param powerLimit specifies the maximum power output limits, can be null if not provided. If not provided, the
+     *        previous set limit is applied.
+     * @param velocity specifies the max motor veloicty rotations per second (not supportec).
      */
     @Override
-    public void setMotorPosition(double position, Double powerLimit)
+    public void setMotorPosition(double position, Double powerLimit, double velocity)
     {
         if (powerLimit != null)
         {
