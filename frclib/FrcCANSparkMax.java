@@ -490,9 +490,11 @@ public class FrcCANSparkMax extends TrcMotor
      *
      * @param velocity specifies the motor velocity in rotations per second.
      * @param acceleration specifies the max motor acceleration rotations per second square (not supported).
+     * @param feedForward specifies feedforward in volts if voltage comp is ON, otherwise fractional unit between
+     *        -1 and 1 (not supported).
      */
     @Override
-    public void setMotorVelocity(double velocity, double acceleration)
+    public void setMotorVelocity(double velocity, double acceleration, double feedForward)
     {
         // setVelocity takes a velocity value in RPM.
         velSetpoint = velocity;
@@ -519,9 +521,11 @@ public class FrcCANSparkMax extends TrcMotor
      * @param powerLimit specifies the maximum power output limits, can be null if not provided. If not provided, the
      *        previous set limit is applied.
      * @param velocity specifies the max motor veloicty rotations per second (not supportec).
+     * @param feedForward specifies feedforward in volts if voltage comp is ON, otherwise fractional unit between
+     *        -1 and 1 (not supported).
      */
     @Override
-    public void setMotorPosition(double position, Double powerLimit, double velocity)
+    public void setMotorPosition(double position, Double powerLimit, double velocity, double feedForward)
     {
         if (powerLimit != null)
         {

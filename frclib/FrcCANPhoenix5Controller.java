@@ -545,9 +545,11 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
      *
      * @param velocity specifies the motor velocity in rotations per second.
      * @param acceleration specifies the max motor acceleration rotations per second square (not supported).
+     * @param feedForward specifies feedforward in volts if voltage comp is ON, otherwise fractional unit between
+     *        -1 and 1 (not supported).
      */
     @Override
-    public void setMotorVelocity(double velocity, double acceleration)
+    public void setMotorVelocity(double velocity, double acceleration, double feedForward)
     {
         // set takes a velocity value in sensor units per 100 msec.
         motor.set(com.ctre.phoenix.motorcontrol.ControlMode.Velocity, velocity/10.0);
@@ -572,10 +574,12 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
      * @param position specifies the position in rotations.
      * @param powerLimit specifies the maximum power output limits, can be null if not provided. If not provided, the
      *        previous set limit is applied.
-     * @param velocity specifies the max motor veloicty rotations per second (not supportec).
+     * @param velocity specifies the max motor veloicty rotations per second (not supported).
+     * @param feedForward specifies feedforward in volts if voltage comp is ON, otherwise fractional unit between
+     *        -1 and 1 (not supported).
      */
     @Override
-    public void setMotorPosition(double position, Double powerLimit, double velocity)
+    public void setMotorPosition(double position, Double powerLimit, double velocity, double feedForward)
     {
         if (powerLimit != null)
         {
