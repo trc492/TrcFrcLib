@@ -94,10 +94,10 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
          * @return rect of the detected object.
          */
         @Override
-        public Rect getRect()
+        public Rect getObjectRect()
         {
             return getDetectedRect(object);
-        }   //getRect
+        }   //getObjectRect
 
         /**
          * This method returns the area of the detected object.
@@ -105,10 +105,10 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
          * @return area of the detected object.
          */
         @Override
-        public double getArea()
+        public double getObjectArea()
         {
             return getDetectedRect(object).area();
-        }   //getArea
+        }   //getObjectArea
 
         /**
          * This method returns the pose of the detected object relative to the camera.
@@ -156,7 +156,7 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
                    ",hamming=" + object.getHamming() +
                    ",decisionMargin=" + object.getDecisionMargin() +
                    ",center=" + object.getCenterX() + "/" + object.getCenterY() +
-                   ",rect=" + getRect();
+                   ",rect=" + getObjectRect();
         }   //toString
 
     }   //class DetectedObject

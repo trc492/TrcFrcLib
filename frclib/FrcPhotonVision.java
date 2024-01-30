@@ -230,10 +230,10 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @return rect of the detected object.
          */
         @Override
-        public Rect getRect()
+        public Rect getObjectRect()
         {
             return getRect(target);
-        }   //getRect
+        }   //getObjectRect
 
         /**
          * This method returns the area of the detected object.
@@ -241,10 +241,10 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @return area of the detected object.
          */
         @Override
-        public double getArea()
+        public double getObjectArea()
         {
             return target.getArea();
-        }   //getArea
+        }   //getObjectArea
 
         /**
          * This method returns the pose of the detected object relative to the camera.
@@ -294,7 +294,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
     /**
      * Constructor: Create an instance of the object.
      *
-     * @param cameraName specifies the photon vision camera name.
+     * @param cameraName specifies the network table name that PhotonVision is broadcasting information over.
      * @param camHeight specifies the camera height from the ground in inches.
      * @param camPitch specifies the camera pitch angle from horizontal in degrees.
      */
@@ -317,7 +317,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
     @Override
     public String toString()
     {
-        return getName();
+        return super.getName();
     }   //toString
 
     /**
