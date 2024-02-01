@@ -24,26 +24,20 @@ package TrcFrcLib.frclib;
 
 import org.opencv.core.Rect;
 import org.photonvision.PhotonCamera;
+import org.photonvision.targeting.PNPResult;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
-import TrcCommonLib.trclib.TrcEvent;
 import TrcCommonLib.trclib.TrcPose2D;
 import TrcCommonLib.trclib.TrcPose3D;
-import TrcCommonLib.trclib.TrcRobot;
-import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcUtil;
 import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
-import TrcCommonLib.trclib.TrcTaskMgr.TaskType;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -51,21 +45,10 @@ import edu.wpi.first.math.geometry.Translation3d;
 /**
  * This class implements vision detection using PhotonLib extending PhotonCamera.
  */
-public abstract class FrcPhotonVision extends PhotonCamera
+public class FrcPhotonVision extends PhotonCamera
 {
     private static final String moduleName = FrcPhotonVision.class.getSimpleName();
     private static final TrcDbgTrace staticTracer = new TrcDbgTrace();
-    private static Double camHeightInches = null;
-    private static Double camPitchRadians = null;
-
-    /**
-     * This method is provided by the subclass to provide the target offset from ground so that vision can
-     * accurately calculate the target position from the camera.
-     *
-     * @param target specifies the photon detected target.
-     * @return target ground offset in inches.
-     */
-    public abstract double getTargetHeight(PhotonTrackedTarget target);
 
     /**
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
@@ -75,6 +58,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
     {
         public final double timestamp;
         public final PhotonTrackedTarget target;
+        public final Rect rect;
+        public final double area;
         public final TrcPose3D targetPose;
 
         /**
@@ -82,25 +67,14 @@ public abstract class FrcPhotonVision extends PhotonCamera
          *
          * @param timestamp specifies the time stamp of the frame it was taken.
          * @param target specifies the photon detected target.
-         * @param targetHeight specifies the target ground offset in inches.
          */
-        public DetectedObject(double timestamp, PhotonTrackedTarget target, double targetHeight)
+        public DetectedObject(double timestamp, PhotonTrackedTarget target)
         {
-            if (camHeightInches == null || camPitchRadians == null)
-            {
-                throw new IllegalStateException("Must not instantiate DetectedObject before FrcPhotonVision.");
-            }
-
             this.timestamp = timestamp;
             this.target = target;
-
-            Transform3d targetTransform3d = target.getBestCameraToTarget();
-            // Pose3d targetPose3d = new Pose3d(targetTransform3d.getTranslation(), targetTransform3d.getRotation());
-            Translation3d targetTranslation = targetTransform3d.getTranslation();
-            Rotation3d targetRotation = targetTransform3d.getRotation();
-            targetPose = new TrcPose3D(
-                targetTranslation.getX(), targetTranslation.getY(), targetTranslation.getZ(),
-                targetRotation.getZ(), targetRotation.getY(), targetRotation.getX());
+            this.rect = getRect(target);
+            this.area = target.getArea();
+            this.targetPose = getPose(target);
         }   //DetectedObject
 
         /**
@@ -111,70 +85,12 @@ public abstract class FrcPhotonVision extends PhotonCamera
         @Override
         public String toString()
         {
-            return "{time=" + timestamp + ",targetPose=" + targetPose + "}";
+            return "{time=" + timestamp +
+                   ",target=" + target +
+                   ",targetPose=" + targetPose +
+                   ",rect=" + rect +
+                   ",area=" + area + "}";
         }   //toString
-
-        // /**
-        //  * This method calculates the pose of the detected object given the height offset of the object from ground.
-        //  *
-        //  * @param targetYaw specifies the horizontal angle to the target in degrees.
-        //  * @param targetPitch specifies the vertical angle to the target in degrees.
-        //  * @param targetHeight specifies the target ground offset in inches.
-        //  * @return a 2D pose of the detected object from the camera.
-        //  */
-        // private TrcPose2D getTargetPose(double targetYaw, double targetPitch, double targetHeight)
-        // {
-        //     double targetYawRadians = Math.toRadians(targetYaw);
-        //     double targetPitchRadians = Math.toRadians(targetPitch);
-        //     double targetDistanceInches =
-        //         (targetHeight - camHeightInches)/Math.tan(camPitchRadians + targetPitchRadians);
-        //     TrcPose2D targetPose = new TrcPose2D(
-        //         targetDistanceInches * Math.sin(targetYawRadians),
-        //         targetDistanceInches * Math.cos(targetYawRadians),
-        //         targetYaw);
-
-        //     return targetPose;
-        // }   //getTargetPose
-
-        /**
-         * This method translates a Photon Pose3d to the TrcPose2D by projecting the 3D pose on the floor to obtain
-         * a 2D pose. Also, Photon Pose3d is on the Math coordinate system where X-axis is straight ahead, Y-axis is
-         * to the robot's left, Z-axis is up and positive angle is anti-clockwise. Our TrcPose2D is on typical
-         * robotics coordinate system where X-axis is to the robot's right, Y-axis is straigh ahead, no Z-axis and
-         * positive angle is clockwise. This method translates the Photon coorindate system to our robot coordinate
-         * system.
-         *
-         * @param pose3d specifies the Photon Pose3d to be translated.
-         * @return translated TrcPose2D object.
-         */
-        public static TrcPose2D pose3dToTrcPose2D(Pose3d pose3d)
-        {
-            Pose2d pose2d = pose3d.toPose2d();
-
-            return new TrcPose2D(
-                -pose2d.getY()*TrcUtil.INCHES_PER_METER,
-                pose2d.getX()*TrcUtil.INCHES_PER_METER,
-                -pose2d.getRotation().getDegrees());
-        }   //pose3dToTrcPose2D
-
-        /**
-         * This method translates a TrcPose2D to the Photon Pose3d. Photon Pose3d is on the Math coordinate system
-         * where X-axis is straight ahead, Y-axis is to the robot's left, Z-axis is up and positive angle is
-         * anti-clockwise. Our TrcPose2D is on typical robotics coordinate system where X-axis is to the robot's
-         * right, Y-axis is straigh ahead, no Z-axis and positive angle is clockwise. To translate a 2D pose to
-         * 3D, it assume the pose is on the ground and only has yaw as its rotation.
-         *
-         * @param trcPose2D specifies the TrcPose2D to be translated.
-         * @return translated Photon Pose3d object.
-         */
-        public static Pose3d trcPose2DToPose3d(TrcPose2D trcPose)
-        {
-            return new Pose3d(
-                trcPose.y*TrcUtil.METERS_PER_INCH,
-                -trcPose.x*TrcUtil.METERS_PER_INCH,
-                0.0,
-                new Rotation3d(0.0, 0.0, Math.toRadians(-trcPose.angle)));
-        }   //trcPose2DToPose3d
 
         /**
          * This method returns the rect of the detected object.
@@ -225,6 +141,30 @@ public abstract class FrcPhotonVision extends PhotonCamera
         }   //getRect
 
         /**
+         * This method calculates the target pose of the detected object.
+         *
+         * @param target specifies the detected target.
+         * @return target pose of the detected target.
+         */
+        public static TrcPose3D getPose(PhotonTrackedTarget target)
+        {
+            TrcPose3D pose;
+            Transform3d targetTransform3d = target.getBestCameraToTarget();
+            Translation3d targetTranslation = targetTransform3d.getTranslation();
+            Rotation3d targetRotation = targetTransform3d.getRotation();
+
+            pose = new TrcPose3D(
+                -targetTranslation.getY()*TrcUtil.INCHES_PER_METER,
+                targetTranslation.getX()*TrcUtil.INCHES_PER_METER,
+                targetTranslation.getZ()*TrcUtil.INCHES_PER_METER,
+                -Math.toDegrees(targetRotation.getZ()),
+                Math.toDegrees(targetRotation.getY()),
+                Math.toDegrees(targetRotation.getX()));
+
+            return pose;
+        }   //getPose
+
+        /**
          * This method returns the rect of the detected object.
          *
          * @return rect of the detected object.
@@ -232,7 +172,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         @Override
         public Rect getObjectRect()
         {
-            return getRect(target);
+            return rect;
         }   //getObjectRect
 
         /**
@@ -243,7 +183,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         @Override
         public double getObjectArea()
         {
-            return target.getArea();
+            return area;
         }   //getObjectArea
 
         /**
@@ -283,30 +223,18 @@ public abstract class FrcPhotonVision extends PhotonCamera
 
     protected final TrcDbgTrace tracer;
     protected final String instanceName;
-    private final TrcVisionPerformanceMetrics performanceMetrics;
-    private final TrcTaskMgr.TaskObject visionTaskObj;
-    private AtomicReference<DetectedObject[]> lastDetectedObjects = new AtomicReference<>();
-    private AtomicReference<DetectedObject> lastDetectedBestObject = new AtomicReference<>();
-    private TrcEvent completionEvent = null;
-    private double expireTime = 0.0;
-    private boolean detectBest = false;
+    private TrcVisionPerformanceMetrics performanceMetrics;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param cameraName specifies the network table name that PhotonVision is broadcasting information over.
-     * @param camHeight specifies the camera height from the ground in inches.
-     * @param camPitch specifies the camera pitch angle from horizontal in degrees.
      */
-    public FrcPhotonVision(String cameraName, double camHeight, double camPitch)
+    public FrcPhotonVision(String cameraName)
     {
         super(cameraName);
         this.tracer = new TrcDbgTrace();
         this.instanceName = cameraName;
-        this.performanceMetrics = new TrcVisionPerformanceMetrics(cameraName, tracer);
-        camHeightInches = camHeight;
-        camPitchRadians = Math.toRadians(camPitch);
-        visionTaskObj = TrcTaskMgr.createTask(cameraName + ".visionTask", this::visionTask);
     }   //FrcPhotonVision
 
     /**
@@ -317,96 +245,36 @@ public abstract class FrcPhotonVision extends PhotonCamera
     @Override
     public String toString()
     {
-        return super.getName();
+        return instanceName;
     }   //toString
 
     /**
-     * This method cancels pending detection request if any.
+     * This method enables/disables performance metrics.
+     *
+     * @param enabled specifies true to enable performance metrics, false to disable.
      */
-    public void cancel()
+    public void setPerformanceMetricsEnabled(boolean enabled)
     {
-        visionTaskObj.unregisterTask();
-    }   //cancel
+        if (performanceMetrics == null && enabled)
+        {
+            performanceMetrics = new TrcVisionPerformanceMetrics(super.getName(), tracer);
+        }
+        else if (performanceMetrics != null && !enabled)
+        {
+            performanceMetrics = null;
+        }
+    }   //setPerformanceMetricsEnabled
 
     /**
-     * This method start a detection request. If there is already a pending request, this will fail and return false.
-     *
-     * @param event specifies the event to signal if detection request is completed.
-     * @param timeout specifies the maximum timeout allowed for the detection. If failed to detect objects past
-     *        timeout, event will be signaled. Caller is responsible to check if there is valid detection result.
-     * @retrun true if detection request is started, false if there is already a pending request.
+     * This method prints the performance metrics to the trace log.
      */
-    public boolean detectObjects(TrcEvent event, double timeout)
+    public void printPerformanceMetrics()
     {
-        boolean success = false;
-
-        if (event == null || timeout <= 0.0)
+        if (performanceMetrics != null)
         {
-            throw new IllegalArgumentException("Must provide a non-null event and a valid timeout.");
+            performanceMetrics.printMetrics();
         }
-
-        if (!visionTaskObj.isRegistered())
-        {
-            lastDetectedObjects.set(null);
-            completionEvent = event;
-            expireTime = TrcTimer.getCurrentTime() + timeout;
-            detectBest = false;
-            visionTaskObj.registerTask(TaskType.PRE_PERIODIC_TASK);
-            success = true;
-        }
-
-        return success;
-    }   //detectObjects
-
-    /**
-     * This method start a detection request. If there is already a pending request, this will fail and return false.
-     *
-     * @param event specifies the event to signal if detection request is completed.
-     * @param timeout specifies the maximum timeout allowed for the detection. If failed to detect objects past
-     *        timeout, event will be signaled. Caller is responsible to check if there is valid detection result.
-     * @retrun true if detection request is started, false if there is already a pending request.
-     */
-    public boolean detectBestObject(TrcEvent event, double timeout)
-    {
-        boolean success = false;
-
-        if (event == null || timeout <= 0.0)
-        {
-            throw new IllegalArgumentException("Must provide a non-null event and a valid timeout.");
-        }
-
-        if (!visionTaskObj.isRegistered())
-        {
-            lastDetectedBestObject.set(null);
-            completionEvent = event;
-            expireTime = TrcTimer.getCurrentTime() + timeout;
-            detectBest = true;
-            visionTaskObj.registerTask(TaskType.PRE_PERIODIC_TASK);
-            success = true;
-        }
-
-        return success;
-    }   //detectBestObject
-
-    /**
-     * This method returns the last vision detected objects. This call consumes the detected objects.
-     *
-     * @return array of last detected objects.
-     */
-    public DetectedObject[] getLastDetectedObjects()
-    {
-        return lastDetectedObjects.getAndSet(null);
-    }   //getLastDetectedObjects
-
-    /**
-     * This method returns the last vision detected best object. This call consumes the detected object.
-     *
-     * @return last detected best object.
-     */
-    public DetectedObject getLastDetectedBestObject()
-    {
-        return lastDetectedBestObject.getAndSet(null);
-    }   //getLastDetectedBestObject
+    }   //printPerformanceMetrics
 
     /**
      * This method returns the array of detected objects.
@@ -418,8 +286,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         DetectedObject[] detectedObjs = null;
         double startTime = TrcTimer.getCurrentTime();
         PhotonPipelineResult result = getLatestResult();
-        performanceMetrics.logProcessingTime(startTime);
-        performanceMetrics.printMetrics();
+        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
 
         if (result.hasTargets())
         {
@@ -430,7 +297,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             for (int i = 0; i < targets.size(); i++)
             {
                 PhotonTrackedTarget target = targets.get(i);
-                detectedObjs[i] = new DetectedObject(timestamp, target, getTargetHeight(target));
+                detectedObjs[i] = new DetectedObject(timestamp, target);
                 tracer.traceDebug(instanceName, "[" + i + "] DetectedObj=" + detectedObjs[i]);
             }
         }
@@ -446,51 +313,45 @@ public abstract class FrcPhotonVision extends PhotonCamera
     public DetectedObject getBestDetectedObject()
     {
         DetectedObject bestDetectedObj = null;
+        double startTime = TrcTimer.getCurrentTime();
         PhotonPipelineResult result = getLatestResult();
+        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
 
         if (result.hasTargets())
         {
             PhotonTrackedTarget target = result.getBestTarget();
-            bestDetectedObj = new DetectedObject(result.getTimestampSeconds(), target, getTargetHeight(target));
-            tracer.traceDebug(instanceName, "DetectedObj=" + bestDetectedObj);
+            bestDetectedObj = new DetectedObject(result.getTimestampSeconds(), target);
+            tracer.traceInfo(instanceName, "DetectedObj=" + bestDetectedObj);
         }
 
         return bestDetectedObj;
     }   //getBestDetectedObject
 
     /**
-     * This methods is called periodically to check if vision has detected objects.
+     * This method uses the PhotonVision Pose Estimator to get an estimated absolute field position of the robot.
      *
-     * @param taskType specifies the type of task being run.
-     * @param runMode specifies the competition mode (e.g. Autonomous, TeleOp, Test).
-     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
-     *        false otherwise.
+     * @return absolute robot field position, can be null if not provided.
      */
-    private void visionTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
+    public TrcPose2D getRobotFieldPosition(Transform3d cameraToRobot)
     {
-        boolean detected = false;
+        TrcPose2D robotPose = null;
+        double startTime = TrcTimer.getCurrentTime();
+        PhotonPipelineResult result = getLatestResult();
+        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
 
-        if (detectBest)
+        PNPResult estimatedPose = result.getMultiTagResult().estimatedPose;
+        if (estimatedPose.isPresent)
         {
-            DetectedObject detectedBestObj = getBestDetectedObject();
-            detected = lastDetectedBestObject != null;
-            lastDetectedBestObject.set(detectedBestObj);
-        }
-        else
-        {
-            DetectedObject[] detectedObjs = getDetectedObjects();
-            detected = detectedObjs != null;
-            lastDetectedObjects.set(detectedObjs);
+            Transform3d fieldToRobot = estimatedPose.best.plus(cameraToRobot);
+            Translation3d translation = fieldToRobot.getTranslation();
+            Rotation3d rotation = fieldToRobot.getRotation();
+            robotPose = new TrcPose2D(
+                -translation.getY()*TrcUtil.INCHES_PER_METER,
+                translation.getX()*TrcUtil.INCHES_PER_METER,
+                -Math.toDegrees(rotation.getZ()));
         }
 
-        if (detected || TrcTimer.getCurrentTime() >= expireTime)
-        {
-            // Either we have detected objects or we have timed out, signal completion and disable task. 
-            completionEvent.signal();
-            completionEvent = null;
-            expireTime = 0.0;
-            visionTaskObj.unregisterTask();
-        }
-    }   //visionTask
+        return robotPose;
+    }   //getRobotFieldPosition
 
 }   //class FrcPhotonVision

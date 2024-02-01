@@ -92,12 +92,12 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
         /**
          * This method returns the rect of the detected object.
          *
-         * @return rect of the detected object.
+         * @return rect of the detected object, null if not supported.
          */
         @Override
         public Rect getObjectRect()
         {
-            throw new UnsupportedOperationException("PhotonVision processor does not provide object rectangle.");
+            return null;
         }   //getObjectRect
 
         /**
@@ -184,14 +184,15 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
     /**
      * Constructor: Create an instance of the object.
      *
-     * @param instanceName specifies the instance name (PhotonVision NetworkTable name).
+     * @param tableName specifies the network table name that PhotonVision is broadcasting information over.
+     * @param cameraName specifies the camera name.
      */
-    public FrcPhotonVisionRaw(String instanceName)
+    public FrcPhotonVisionRaw(String tableName, String cameraName)
     {
-        super(instanceName);
+        super(cameraName);
 
         NetworkTableInstance ntInstance = NetworkTableInstance.getDefault();
-        networkTable = ntInstance.getTable(instanceName);
+        networkTable = ntInstance.getTable(tableName).getSubTable(cameraName);
         ntInstance.addConnectionListener(false, this::connectionListener);
 
         hasTarget = networkTable.getEntry("hasTarget");
@@ -238,15 +239,27 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
         return detectedObj;
     }   //getDetectedObject
 
-    // public double getTargetDepth()
+    // /**
+    //  * This method calculates the pose of the detected object given the height offset of the object from ground.
+    //  *
+    //  * @param targetYaw specifies the horizontal angle to the target in degrees.
+    //  * @param targetPitch specifies the vertical angle to the target in degrees.
+    //  * @param targetHeight specifies the target ground offset in inches.
+    //  * @return a 2D pose of the detected object from the camera.
+    //  */
+    // private TrcPose2D getTargetPose(double targetYaw, double targetPitch, double targetHeight)
     // {
-    //     return targetDetected() ? depthSupplier.getAsDouble() : 0.0;
-    // }
-
-    // public void setDepthApproximator(String input, DoubleUnaryOperator depthApproximator)
-    // {
-    //     depthSupplier = () -> depthApproximator.applyAsDouble(networkTable.getEntry(input).getDouble(0.0));
-    // }
+    //     double targetYawRadians = Math.toRadians(targetYaw);
+    //     double targetPitchRadians = Math.toRadians(targetPitch);
+    //     double targetDistanceInches =
+    //         (targetHeight - camHeightInches)/Math.tan(camPitchRadians + targetPitchRadians);
+    //     TrcPose2D targetPose = new TrcPose2D(
+    //         targetDistanceInches * Math.sin(targetYawRadians),
+    //         targetDistanceInches * Math.cos(targetYawRadians),
+    //         targetYaw);
+    //
+    //     return targetPose;
+    // }   //getTargetPose
 
     //
     // Methods for accessing NetworkTable entries.
