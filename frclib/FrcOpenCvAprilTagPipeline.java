@@ -171,7 +171,6 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     private final String instanceName;
     private final String tagFamily;
     private final AprilTagPoseEstimator.Config poseEstConfig;
-    private final TrcVisionPerformanceMetrics performanceMetrics;
     private final AprilTagDetector aprilTagDetector;
     // private final AprilTagPoseEstimator poseEstimator;
     private final Mat cameraMatrix;
@@ -182,6 +181,7 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     private final AtomicReference<DetectedObject[]> detectedObjsUpdate = new AtomicReference<>();
     private int intermediateStep = 0;
     private boolean annotateEnabled = false;
+    private TrcVisionPerformanceMetrics performanceMetrics = null;
     
     /**
      * Constructor: Create an instance of the object.
@@ -197,7 +197,6 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         this.instanceName = moduleName + "." + tagFamily;
         this.tagFamily = tagFamily;
         this.poseEstConfig = poseEstConfig;
-        this.performanceMetrics = new TrcVisionPerformanceMetrics(moduleName + "." + tagFamily, tracer);
         // set up AprilTag detector
         aprilTagDetector = new AprilTagDetector();
         aprilTagDetector.addFamily(tagFamily);
@@ -238,6 +237,34 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         return tagFamily;
     }   //toString
 
+    /**
+     * This method enables/disables performance metrics.
+     *
+     * @param enabled specifies true to enable performance metrics, false to disable.
+     */
+    public void setPerformanceMetricsEnabled(boolean enabled)
+    {
+        if (performanceMetrics == null && enabled)
+        {
+            performanceMetrics = new TrcVisionPerformanceMetrics(instanceName);
+        }
+        else if (performanceMetrics != null && !enabled)
+        {
+            performanceMetrics = null;
+        }
+    }   //setPerformanceMetricsEnabled
+
+    /**
+     * This method prints the performance metrics to the trace log.
+     */
+    public void printPerformanceMetrics()
+    {
+        if (performanceMetrics != null)
+        {
+            performanceMetrics.printMetrics(tracer);
+        }
+    }   //printPerformanceMetrics
+
     // /**
     //  * This method calculates the target position by using camera calibrated Homography.
     //  *
@@ -271,7 +298,10 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
     @Override
     public void reset()
     {
-        performanceMetrics.reset();
+        if (performanceMetrics != null)
+        {
+            performanceMetrics.reset();
+        }
         intermediateStep = 0;
     }   //reset
 
@@ -291,8 +321,7 @@ public class FrcOpenCvAprilTagPipeline implements TrcOpenCvPipeline<TrcOpenCvDet
         // Convert to grayscale.
         Imgproc.cvtColor(input, grayMat, Imgproc.COLOR_BGR2GRAY);
         AprilTagDetection[] detections = aprilTagDetector.detect(grayMat);
-        performanceMetrics.logProcessingTime(startTime);
-        performanceMetrics.printMetrics();
+        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
 
         detectedObjects = new DetectedObject[detections.length];
         for (int i = 0; i < detectedObjects.length; i++)

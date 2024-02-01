@@ -223,7 +223,7 @@ public class FrcPhotonVision extends PhotonCamera
 
     protected final TrcDbgTrace tracer;
     protected final String instanceName;
-    private TrcVisionPerformanceMetrics performanceMetrics;
+    private TrcVisionPerformanceMetrics performanceMetrics = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -257,7 +257,7 @@ public class FrcPhotonVision extends PhotonCamera
     {
         if (performanceMetrics == null && enabled)
         {
-            performanceMetrics = new TrcVisionPerformanceMetrics(super.getName(), tracer);
+            performanceMetrics = new TrcVisionPerformanceMetrics(instanceName);
         }
         else if (performanceMetrics != null && !enabled)
         {
@@ -272,7 +272,7 @@ public class FrcPhotonVision extends PhotonCamera
     {
         if (performanceMetrics != null)
         {
-            performanceMetrics.printMetrics();
+            performanceMetrics.printMetrics(tracer);
         }
     }   //printPerformanceMetrics
 
