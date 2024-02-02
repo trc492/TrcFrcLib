@@ -45,10 +45,19 @@ import edu.wpi.first.math.geometry.Translation3d;
 /**
  * This class implements vision detection using PhotonLib extending PhotonCamera.
  */
-public class FrcPhotonVision extends PhotonCamera
+public abstract class FrcPhotonVision extends PhotonCamera
 {
     private static final String moduleName = FrcPhotonVision.class.getSimpleName();
     private static final TrcDbgTrace staticTracer = new TrcDbgTrace();
+
+    /**
+     * This method is provided by the subclass to provide the target offset from ground so that vision can
+     * accurately calculate the target position from the camera.
+     *
+     * @param target specifies the photon detected target.
+     * @return target ground offset in inches.
+     */
+    public abstract double getTargetGroundOffset(PhotonTrackedTarget target);
 
     /**
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
@@ -61,20 +70,29 @@ public class FrcPhotonVision extends PhotonCamera
         public final Rect rect;
         public final double area;
         public final TrcPose3D targetPose;
+        private final TrcPose3D pose3d;
+        private final TrcPose2D pose2d;
 
         /**
          * Constructor: Creates an instance of the object.
          *
          * @param timestamp specifies the time stamp of the frame it was taken.
          * @param target specifies the photon detected target.
+         * @param targetGroundOffset specifies the target ground offset in inches.
+         * @param camGroundOffset specifies the camera ground offset in inches.
+         * @param camPitch specifies the camera pitch from horizontal in degrees.
          */
-        public DetectedObject(double timestamp, PhotonTrackedTarget target)
+        public DetectedObject(
+            double timestamp, PhotonTrackedTarget target, double targetGroundOffset, double camGroundOffset,
+            double camPitch)
         {
             this.timestamp = timestamp;
             this.target = target;
             this.rect = getRect(target);
             this.area = target.getArea();
-            this.targetPose = getPose(target);
+            this.pose3d = getPose3d(target);
+            this.pose2d = getPose2d(target, targetGroundOffset, camGroundOffset, camPitch);
+            this.targetPose = getObjectPose();
         }   //DetectedObject
 
         /**
@@ -86,10 +104,11 @@ public class FrcPhotonVision extends PhotonCamera
         public String toString()
         {
             return "{time=" + timestamp +
-                   ",target=" + target +
-                   ",targetPose=" + targetPose +
+                   ",pose3d=" + pose3d +
+                   ",pose2d=" + pose2d +
                    ",rect=" + rect +
-                   ",area=" + area + "}";
+                   ",area=" + area +
+                   ",target=" + target + "}";
         }   //toString
 
         /**
@@ -146,7 +165,7 @@ public class FrcPhotonVision extends PhotonCamera
          * @param target specifies the detected target.
          * @return target pose of the detected target.
          */
-        public static TrcPose3D getPose(PhotonTrackedTarget target)
+        public static TrcPose3D getPose3d(PhotonTrackedTarget target)
         {
             TrcPose3D pose;
             Transform3d targetTransform3d = target.getBestCameraToTarget();
@@ -162,7 +181,34 @@ public class FrcPhotonVision extends PhotonCamera
                 Math.toDegrees(targetRotation.getX()));
 
             return pose;
-        }   //getPose
+        }   //getPose3d
+
+        /**
+         * This method calculates the pose of the detected object given the yaw, pitch and height offset of the object
+         * from ground.
+         *
+         * @param target specifies the detected target.
+         * @param targetGroundOffset specifies the target ground offset in inches.
+         * @param camGroundOffset specifies the camera ground offset in inches.
+         * @param camPitch specifies the camera pitch from horizontal in degrees.
+         * @return a 2D pose of the detected object from the camera.
+         */
+        public static TrcPose2D getPose2d(
+            PhotonTrackedTarget target, double targetGroundOffset, double camGroundOffset, double camPitch)
+        {
+            double targetYawDegrees = target.getYaw();
+            double targetPitchDegrees = target.getPitch();
+            double targetYawRadians = Math.toRadians(targetYawDegrees);
+            double targetPitchRadians = Math.toRadians(targetPitchDegrees);
+            double camPitchRadians = Math.toRadians(camPitch);
+            double targetDistanceInches =
+                (targetGroundOffset - camGroundOffset)/Math.tan(camPitchRadians + targetPitchRadians);
+
+            return new TrcPose2D(
+                targetDistanceInches * Math.sin(targetYawRadians),
+                targetDistanceInches * Math.cos(targetYawRadians),
+                targetYawDegrees);
+        }   //getPose2d
 
         /**
          * This method returns the rect of the detected object.
@@ -172,7 +218,7 @@ public class FrcPhotonVision extends PhotonCamera
         @Override
         public Rect getObjectRect()
         {
-            return rect;
+            return rect.clone();
         }   //getObjectRect
 
         /**
@@ -194,7 +240,19 @@ public class FrcPhotonVision extends PhotonCamera
         @Override
         public TrcPose3D getObjectPose()
         {
-            return targetPose;
+            TrcPose3D pose;
+
+            if (pose3d.x == 0.0 && pose3d.y == 0.0 && pose3d.z == 0.0 &&
+                pose3d.yaw == 0.0 && pose3d.pitch == 0.0 && pose3d.roll == 0.0)
+            {
+                pose = new TrcPose3D(pose2d.x, pose2d.y, 0.0, pose2d.angle, 0.0, 0.0);
+            }
+            else
+            {
+                pose = pose3d.clone();
+            }
+
+            return pose;
         }   //getObjectPose
 
         /**
@@ -223,18 +281,24 @@ public class FrcPhotonVision extends PhotonCamera
 
     protected final TrcDbgTrace tracer;
     protected final String instanceName;
+    private final double camGroundOffset;
+    private final double camPitch;
     private TrcVisionPerformanceMetrics performanceMetrics = null;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param cameraName specifies the network table name that PhotonVision is broadcasting information over.
+     * @param camGroundOffset specifies the camera ground offset in inches.
+     * @param camPitch specifies the camera pitch from horizontal in degrees.
      */
-    public FrcPhotonVision(String cameraName)
+    public FrcPhotonVision(String cameraName, double camGroundOffset, double camPitch)
     {
         super(cameraName);
         this.tracer = new TrcDbgTrace();
         this.instanceName = cameraName;
+        this.camGroundOffset = camGroundOffset;
+        this.camPitch = camPitch;
     }   //FrcPhotonVision
 
     /**
@@ -297,7 +361,8 @@ public class FrcPhotonVision extends PhotonCamera
             for (int i = 0; i < targets.size(); i++)
             {
                 PhotonTrackedTarget target = targets.get(i);
-                detectedObjs[i] = new DetectedObject(timestamp, target);
+                detectedObjs[i] = new DetectedObject(
+                    timestamp, target, getTargetGroundOffset(target), camGroundOffset, camPitch);
                 tracer.traceDebug(instanceName, "[" + i + "] DetectedObj=" + detectedObjs[i]);
             }
         }
@@ -320,7 +385,8 @@ public class FrcPhotonVision extends PhotonCamera
         if (result.hasTargets())
         {
             PhotonTrackedTarget target = result.getBestTarget();
-            bestDetectedObj = new DetectedObject(result.getTimestampSeconds(), target);
+            bestDetectedObj = new DetectedObject(
+                result.getTimestampSeconds(), target, getTargetGroundOffset(target), camGroundOffset, camPitch);
             tracer.traceInfo(instanceName, "DetectedObj=" + bestDetectedObj);
         }
 
