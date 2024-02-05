@@ -119,7 +119,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param target specifies the detected target.
          * @return rect of the detected target.
          */
-        public Rect getRect(PhotonTrackedTarget target)
+        private Rect getRect(PhotonTrackedTarget target)
         {
             Rect rect = null;
             List<TargetCorner> corners = target.getDetectedCorners();
@@ -167,7 +167,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param target specifies the detected target.
          * @return target pose of the detected target.
          */
-        public TrcPose3D getPose3d(PhotonTrackedTarget target)
+        private TrcPose3D getPose3d(PhotonTrackedTarget target)
         {
             TrcPose3D pose;
             Transform3d targetTransform3d = target.getBestCameraToTarget();
@@ -195,7 +195,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param camPitch specifies the camera pitch from horizontal in degrees.
          * @return a 2D pose of the detected object from the camera.
          */
-        public TrcPose2D getPose2d(
+        private TrcPose2D getPose2d(
             PhotonTrackedTarget target, double targetGroundOffset, double camGroundOffset, double camPitch)
         {
             double targetYawDegrees = target.getYaw();
