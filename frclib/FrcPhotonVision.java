@@ -72,6 +72,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         public final TrcPose3D targetPose;
         private final TrcPose3D pose3d;
         private final TrcPose2D pose2d;
+        private double pitch2d;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -106,6 +107,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             return "{time=" + timestamp +
                    ",pose3d=" + pose3d +
                    ",pose2d=" + pose2d +
+                   ",pitch2d=" + pitch2d +
                    ",rect=" + rect +
                    ",area=" + area +
                    ",target=" + target + "}";
@@ -117,7 +119,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param target specifies the detected target.
          * @return rect of the detected target.
          */
-        public static Rect getRect(PhotonTrackedTarget target)
+        public Rect getRect(PhotonTrackedTarget target)
         {
             Rect rect = null;
             List<TargetCorner> corners = target.getDetectedCorners();
@@ -165,7 +167,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param target specifies the detected target.
          * @return target pose of the detected target.
          */
-        public static TrcPose3D getPose3d(PhotonTrackedTarget target)
+        public TrcPose3D getPose3d(PhotonTrackedTarget target)
         {
             TrcPose3D pose;
             Transform3d targetTransform3d = target.getBestCameraToTarget();
@@ -193,7 +195,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param camPitch specifies the camera pitch from horizontal in degrees.
          * @return a 2D pose of the detected object from the camera.
          */
-        public static TrcPose2D getPose2d(
+        public TrcPose2D getPose2d(
             PhotonTrackedTarget target, double targetGroundOffset, double camGroundOffset, double camPitch)
         {
             double targetYawDegrees = target.getYaw();
@@ -203,6 +205,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             double camPitchRadians = Math.toRadians(camPitch);
             double targetDistanceInches =
                 (targetGroundOffset - camGroundOffset)/Math.tan(camPitchRadians + targetPitchRadians);
+            this.pitch2d = camPitch + targetPitchDegrees;
 
             return new TrcPose2D(
                 targetDistanceInches * Math.sin(targetYawRadians),
@@ -245,7 +248,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             if (pose3d.x == 0.0 && pose3d.y == 0.0 && pose3d.z == 0.0 &&
                 pose3d.yaw == 0.0 && pose3d.pitch == 0.0 && pose3d.roll == 0.0)
             {
-                pose = new TrcPose3D(pose2d.x, pose2d.y, 0.0, pose2d.angle, 0.0, 0.0);
+                pose = new TrcPose3D(pose2d.x, pose2d.y, 0.0, pose2d.angle, pitch2d, 0.0);
             }
             else
             {
