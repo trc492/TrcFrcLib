@@ -26,6 +26,10 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
+import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
@@ -58,6 +62,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     public final T motor;
     private TalonFXConfiguration talonFxConfigs = new TalonFXConfiguration();
     private boolean useVoltageComp = false;
+    private boolean useMotionProfile = false;
 
     // The number of non-success error codes reported by the device after sending a command.
     private int errorCount = 0;
@@ -563,19 +568,39 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorVelocity(double velocity, double acceleration, double feedForward)
     {
-        if (useVoltageComp)
+        if (useMotionProfile)
         {
-            recordResponseCode(
-                "setMotorVelocityWithVoltage", motor.setControl(
-                    new VelocityVoltage(velocity).withAcceleration(acceleration)
+            if (useVoltageComp)
+            {
+                recordResponseCode(
+                    "setMotorVelocityWithVoltageAndMotionMagic", motor.setControl(
+                        new MotionMagicVelocityVoltage(velocity).withAcceleration(acceleration)
+                            .withFeedForward(feedForward).withSlot(PIDSLOT_VELOCITY)));
+            }
+            else
+            {
+                recordResponseCode(
+                    "setMotorVelocityWithDutyCycleAndMotionMagic", motor.setControl(
+                    new MotionMagicVelocityDutyCycle(velocity).withAcceleration(acceleration)
                         .withFeedForward(feedForward).withSlot(PIDSLOT_VELOCITY)));
+            }
         }
         else
         {
-            recordResponseCode(
-                "setMotorVelocityWithDutyCycle", motor.setControl(
-                new VelocityDutyCycle(velocity).withAcceleration(acceleration)
-                    .withFeedForward(feedForward).withSlot(PIDSLOT_VELOCITY)));
+            if (useVoltageComp)
+            {
+                recordResponseCode(
+                    "setMotorVelocityWithVoltage", motor.setControl(
+                        new VelocityVoltage(velocity).withAcceleration(acceleration)
+                            .withFeedForward(feedForward).withSlot(PIDSLOT_VELOCITY)));
+            }
+            else
+            {
+                recordResponseCode(
+                    "setMotorVelocityWithDutyCycle", motor.setControl(
+                    new VelocityDutyCycle(velocity).withAcceleration(acceleration)
+                        .withFeedForward(feedForward).withSlot(PIDSLOT_VELOCITY)));
+            }
         }
     }   //setMotorVelocity
 
@@ -613,19 +638,37 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
             recordResponseCode("setMotorPositionPowerLimit", motor.getConfigurator().apply(talonFxConfigs.MotorOutput));
         }
 
-        if (useVoltageComp)
+        if (useMotionProfile)
         {
-            recordResponseCode(
-                "setMotorPositionWithVoltage", motor.setControl(
-                    new PositionVoltage(position).withVelocity(velocity)
-                        .withFeedForward(feedForward).withSlot(PIDSLOT_POSITION)));
+            if (useVoltageComp)
+            {
+                recordResponseCode(
+                    "setMotorPositionWithVoltageAndMotionMagic", motor.setControl(
+                        new MotionMagicVoltage(position).withFeedForward(feedForward).withSlot(PIDSLOT_POSITION)));
+            }
+            else
+            {
+                recordResponseCode(
+                    "setMotorPositionWithDutyCycleAndMotionMagic", motor.setControl(
+                        new MotionMagicDutyCycle(position).withFeedForward(feedForward).withSlot(PIDSLOT_POSITION)));
+            }
         }
         else
         {
-            recordResponseCode(
-                "setMotorPositionWithDutyCycle", motor.setControl(
-                    new PositionDutyCycle(position).withVelocity(velocity)
-                        .withFeedForward(feedForward).withSlot(PIDSLOT_POSITION)));
+            if (useVoltageComp)
+            {
+                recordResponseCode(
+                    "setMotorPositionWithVoltage", motor.setControl(
+                        new PositionVoltage(position).withVelocity(velocity)
+                            .withFeedForward(feedForward).withSlot(PIDSLOT_POSITION)));
+            }
+            else
+            {
+                recordResponseCode(
+                    "setMotorPositionWithDutyCycle", motor.setControl(
+                        new PositionDutyCycle(position).withVelocity(velocity)
+                            .withFeedForward(feedForward).withSlot(PIDSLOT_POSITION)));
+            }
         }
     }   //setMotorPosition
 
@@ -937,6 +980,35 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         return useVoltageComp;
     }   //isVoltageCompensationEnabled
+
+    /**
+     * This method enables motion profile support.
+     *
+     * @param velocity specifies cruise velocity in the unit of rps.
+     * @param acceleration specifies acceleration in the unit of rot per sec square.
+     * @param jerk specifies acceleration derivation in the unit of rot per sec cube.
+     */
+    @Override
+    public void enableMotionProfile(double velocity, double acceleration, double jerk)
+    {
+        talonFxConfigs.MotionMagic.MotionMagicCruiseVelocity = velocity;
+        talonFxConfigs.MotionMagic.MotionMagicAcceleration = acceleration;
+        talonFxConfigs.MotionMagic.MotionMagicJerk = jerk;
+        if (recordResponseCode("setMotionMagic", motor.getConfigurator().apply(talonFxConfigs.MotionMagic)) ==
+            StatusCode.OK)
+        {
+            useMotionProfile = true;
+        }
+    }   //enableMotionProfile
+
+    /**
+     * This method disables motion profile support.
+     */
+    @Override
+    public void disableMotionProfile()
+    {
+        useMotionProfile = false;
+    }   //disableMotionProfile
 
     /**
      * This method sets this motor to follow another motor.
