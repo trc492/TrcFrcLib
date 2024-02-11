@@ -35,6 +35,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.core.CoreTalonFX;
 import com.ctre.phoenix6.signals.AppliedRotorPolarityValue;
 import com.ctre.phoenix6.signals.ControlModeValue;
@@ -61,7 +62,10 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
 
     public final T motor;
     private TalonFXConfiguration talonFxConfigs = new TalonFXConfiguration();
-    private boolean useVoltageComp = false;
+    private Double batteryNominalVoltage = null;
+    // TODO: To support Motion Profile
+    // - Create a TrapezoidProfile with given maxVel and maxAccel
+    // - Set up Coeffs: kP, kI, kD, kV, kS
     private boolean useMotionProfile = false;
 
     // The number of non-success error codes reported by the device after sending a command.
@@ -543,7 +547,15 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setMotorPower(double power)
     {
-        recordResponseCode("setMotorPower", motor.setControl(new DutyCycleOut(power)));
+        if (batteryNominalVoltage != null)
+        {
+            recordResponseCode(
+                "setMotorPowerWithVolt", motor.setControl(new VoltageOut(power * batteryNominalVoltage)));
+        }
+        else
+        {
+            recordResponseCode("setMotorPower", motor.setControl(new DutyCycleOut(power)));
+        }
     }   //setMotorPower
 
     /**
@@ -570,7 +582,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         if (useMotionProfile)
         {
-            if (useVoltageComp)
+            if (batteryNominalVoltage != null)
             {
                 recordResponseCode(
                     "setMotorVelocityWithVoltageAndMotionMagic", motor.setControl(
@@ -587,7 +599,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
         }
         else
         {
-            if (useVoltageComp)
+            if (batteryNominalVoltage != null)
             {
                 recordResponseCode(
                     "setMotorVelocityWithVoltage", motor.setControl(
@@ -640,7 +652,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
 
         if (useMotionProfile)
         {
-            if (useVoltageComp)
+            if (batteryNominalVoltage != null)
             {
                 recordResponseCode(
                     "setMotorPositionWithVoltageAndMotionMagic", motor.setControl(
@@ -655,7 +667,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
         }
         else
         {
-            if (useVoltageComp)
+            if (batteryNominalVoltage != null)
             {
                 recordResponseCode(
                     "setMotorPositionWithVoltage", motor.setControl(
@@ -967,7 +979,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public void setVoltageCompensationEnabled(Double batteryNominalVoltage)
     {
-        this.useVoltageComp = batteryNominalVoltage != null;
+        this.batteryNominalVoltage = batteryNominalVoltage;
     }   //setVoltageCompensationEnabled
 
     /**
@@ -978,7 +990,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     @Override
     public boolean isVoltageCompensationEnabled()
     {
-        return useVoltageComp;
+        return batteryNominalVoltage != null;
     }   //isVoltageCompensationEnabled
 
     /**
