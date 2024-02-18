@@ -26,6 +26,7 @@ import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkAbsoluteEncoder;
 import com.revrobotics.SparkLimitSwitch;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
@@ -54,7 +55,8 @@ public class FrcCANSparkMax extends TrcMotor
 
     public final CANSparkMax motor;
     private final SparkPIDController pidCtrl;
-    private final RelativeEncoder sparkMaxEncoder;
+    private final RelativeEncoder relativeEncoder;
+    private final SparkAbsoluteEncoder absoluteEncoder;
     private SparkLimitSwitch sparkMaxRevLimitSwitch, sparkMaxFwdLimitSwitch;
     private Double velSetpoint = null;
     private Double posSetpoint = null;
@@ -69,20 +71,43 @@ public class FrcCANSparkMax extends TrcMotor
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the device.
      * @param brushless specifies true if the motor is brushless, false otherwise.
+     * @param absEncoder specifies true if uses DutyCycle absolute encoder, false to use relative encoder.
      * @param lowerLimitSwitch specifies an external lower limit switch overriding the motor controller one.
      * @param upperLimitSwitch specifies an external upper limit switch overriding the motor controller one.
      * @param encoder specifies an external encoder overriding the motor controller one.
      */
     public FrcCANSparkMax(
-        String instanceName, int canId, boolean brushless, TrcDigitalInput lowerLimitSwitch,
+        String instanceName, int canId, boolean brushless, boolean absEncoder, TrcDigitalInput lowerLimitSwitch,
         TrcDigitalInput upperLimitSwitch, TrcEncoder encoder)
     {
         super(instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
         motor = new CANSparkMax(
             canId, brushless? CANSparkLowLevel.MotorType.kBrushless: CANSparkLowLevel.MotorType.kBrushed);
         pidCtrl = motor.getPIDController();
-        sparkMaxEncoder = motor.getEncoder();
+        if (absEncoder)
+        {
+            relativeEncoder = null;
+            absoluteEncoder = motor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
+        }
+        else
+        {
+            relativeEncoder = motor.getEncoder();
+            absoluteEncoder = null;
+        }
         sparkMaxRevLimitSwitch = sparkMaxFwdLimitSwitch = null;
+    }   //FrcCANSparkMax
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param canId specifies the CAN ID of the device.
+     * @param brushless specifies true if the motor is brushless, false otherwise.
+     * @param absEncoder specifies true if uses DutyCycle absolute encoder, false to use relative encoder.
+     */
+    public FrcCANSparkMax(String instanceName, int canId, boolean brushless, boolean absEncoder)
+    {
+        this(instanceName, canId, brushless, absEncoder, null, null, null);
     }   //FrcCANSparkMax
 
     /**
@@ -94,7 +119,7 @@ public class FrcCANSparkMax extends TrcMotor
      */
     public FrcCANSparkMax(String instanceName, int canId, boolean brushless)
     {
-        this(instanceName, canId, brushless, null, null, null);
+        this(instanceName, canId, brushless, false, null, null, null);
     }   //FrcCANSparkMax
 
     /**
@@ -417,7 +442,9 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorPositionSensorInverted(boolean inverted)
     {
-        recordResponseCode("encoderSetInverted", sparkMaxEncoder.setInverted(inverted));
+        recordResponseCode(
+            "encoderSetInverted",
+            relativeEncoder != null? relativeEncoder.setInverted(inverted): absoluteEncoder.setInverted(inverted));
     }   //setMotorPositionSensorInverted
 
     /**
@@ -428,7 +455,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public boolean isMotorPositionSensorInverted()
     {
-        return sparkMaxEncoder.getInverted();
+        return relativeEncoder != null? relativeEncoder.getInverted(): absoluteEncoder.getInverted();
     }   //isMotorPositionSensorInverted
 
     /**
@@ -437,7 +464,11 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void resetMotorPosition()
     {
-        recordResponseCode("encoderReset", sparkMaxEncoder.setPosition(0.0));
+        // Only relative encoder allows reset its position.
+        if (relativeEncoder != null)
+        {
+            recordResponseCode("encoderReset", relativeEncoder.setPosition(0.0));
+        }
     }   //resetMotorPosition
 
     /**
@@ -510,7 +541,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public double getMotorVelocity()
     {
-        return sparkMaxEncoder.getVelocity()/60.0;
+        return relativeEncoder != null? relativeEncoder.getVelocity()/60.0: absoluteEncoder.getVelocity();
     }   //getMotorVelocity
 
     /**
@@ -543,7 +574,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public double getMotorPosition()
     {
-        return sparkMaxEncoder.getPosition();
+        return relativeEncoder != null? relativeEncoder.getPosition(): absoluteEncoder.getPosition();
     }   //getMotorPosition
 
     /**
