@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcEvent;
+import TrcCommonLib.trclib.TrcPeriodicThread;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcRobot.*;
 import TrcCommonLib.trclib.TrcTaskMgr;
@@ -321,6 +322,7 @@ public abstract class FrcRobotBase extends RobotBase
         {
             globalTracer.traceInfo(moduleName, "robotInitElapsedTime=" + robotInitElapsedTime + "s");
         }
+        TrcPeriodicThread.setRobotInitialized(true);
         //
         // WPILib house keeping.
         //
