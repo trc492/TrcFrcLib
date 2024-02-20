@@ -42,6 +42,10 @@ public class FrcXboxController extends XboxController
     public static final int START = 8;
     public static final int LEFT_STICK_BUTTON = 9;
     public static final int RIGHT_STICK_BUTTON = 10;
+    public static final int DPAD_UP = 11;
+    public static final int DPAD_RIGHT = 12;
+    public static final int DPAD_DOWN = 13;
+    public static final int DPAD_LEFT = 14;
 
     private static final double DEF_DEADBAND_THRESHOLD = 0.15;
     private static final double DEF_SAMPLING_PERIOD = 0.02;     //Sampling at 50Hz.
@@ -72,7 +76,7 @@ public class FrcXboxController extends XboxController
         this.instanceName = instanceName;
         this.port = port;
         buttonEventTaskObj = TrcTaskMgr.createTask(instanceName + ".buttonEvent", this::buttonEventTask);
-        prevButtons = DriverStation.getStickButtons(port);
+        prevButtons = getGamepadButtons(port);
     }   //FrcXboxController
 
     /**
@@ -243,6 +247,55 @@ public class FrcXboxController extends XboxController
     }
 
     /**
+     * This method reads the all gamepad button states including POV.
+     *
+     * @param port specifies the joystick port.
+     * @return bit mask of all button states.
+     */
+    private int getGamepadButtons(int port)
+    {
+        int buttons = DriverStation.getStickButtons(port);
+        int pov = getPOV();
+
+        switch (pov)
+        {
+            case 0:
+                buttons |= 1 << (DPAD_UP - 1);
+                break;
+
+            case 45:
+                buttons |= (1 << (DPAD_UP - 1)) | (1 << (DPAD_RIGHT - 1));
+                break;
+
+            case 90:
+                buttons |= 1 << (DPAD_RIGHT - 1);
+                break;
+
+            case 135:
+                buttons |= (1 << (DPAD_DOWN - 1)) | (1 << (DPAD_RIGHT - 1));
+                break;
+
+            case 180:
+                buttons |= 1 << (DPAD_DOWN - 1);
+                break;
+
+            case 225:
+                buttons |= (1 << (DPAD_DOWN - 1)) | (1 << (DPAD_LEFT - 1));
+                break;
+
+            case 270:
+                buttons |= 1 << (DPAD_LEFT - 1);
+                break;
+
+            case 315:
+                buttons |= (1 << (DPAD_UP - 1)) | (1 << (DPAD_LEFT - 1));
+                break;
+        }
+
+        return buttons;
+    }   //getGamepadButtons
+
+    /**
      * This method runs periodically and checks for changes in the button states. If any button changed state,
      * the button handler is called if one exists.
      *
@@ -261,7 +314,7 @@ public class FrcXboxController extends XboxController
             {
                 nextPeriod = currTime + samplingPeriod;
 
-                int currButtons = DriverStation.getStickButtons(port);
+                int currButtons = getGamepadButtons(port);
                 if (buttonHandler != null && runMode != TrcRobot.RunMode.DISABLED_MODE)
                 {
                     int changedButtons = prevButtons ^ currButtons;
