@@ -43,9 +43,13 @@ public class FrcXboxController extends XboxController
     public static final int LEFT_STICK_BUTTON = 9;
     public static final int RIGHT_STICK_BUTTON = 10;
     public static final int DPAD_UP = 11;
-    public static final int DPAD_RIGHT = 12;
-    public static final int DPAD_DOWN = 13;
-    public static final int DPAD_LEFT = 14;
+    public static final int DPAD_RIGHT_UP = 12;
+    public static final int DPAD_RIGHT = 13;
+    public static final int DPAD_RIGHT_DOWN = 14;
+    public static final int DPAD_DOWN = 15;
+    public static final int DPAD_LEFT_DOWN = 16;
+    public static final int DPAD_LEFT = 17;
+    public static final int DPAD_LEFT_UP = 18;
 
     private static final double DEF_DEADBAND_THRESHOLD = 0.15;
     private static final double DEF_SAMPLING_PERIOD = 0.02;     //Sampling at 50Hz.
@@ -264,7 +268,7 @@ public class FrcXboxController extends XboxController
                 break;
 
             case 45:
-                buttons |= (1 << (DPAD_UP - 1)) | (1 << (DPAD_RIGHT - 1));
+                buttons |= 1 << (DPAD_RIGHT_UP - 1);
                 break;
 
             case 90:
@@ -272,7 +276,7 @@ public class FrcXboxController extends XboxController
                 break;
 
             case 135:
-                buttons |= (1 << (DPAD_DOWN - 1)) | (1 << (DPAD_RIGHT - 1));
+                buttons |= 1 << (DPAD_RIGHT_DOWN - 1);
                 break;
 
             case 180:
@@ -280,7 +284,7 @@ public class FrcXboxController extends XboxController
                 break;
 
             case 225:
-                buttons |= (1 << (DPAD_DOWN - 1)) | (1 << (DPAD_LEFT - 1));
+                buttons |= 1 << (DPAD_LEFT_DOWN - 1);
                 break;
 
             case 270:
@@ -288,7 +292,7 @@ public class FrcXboxController extends XboxController
                 break;
 
             case 315:
-                buttons |= (1 << (DPAD_UP - 1)) | (1 << (DPAD_LEFT - 1));
+                buttons |= 1 << (DPAD_LEFT_UP - 1);
                 break;
         }
 
