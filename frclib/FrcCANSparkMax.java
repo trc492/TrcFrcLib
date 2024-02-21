@@ -94,6 +94,7 @@ public class FrcCANSparkMax extends TrcMotor
             relativeEncoder = motor.getEncoder();
             absoluteEncoder = null;
         }
+
         sparkMaxRevLimitSwitch = sparkMaxFwdLimitSwitch = null;
     }   //FrcCANSparkMax
 
@@ -309,7 +310,10 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void disableMotorRevLimitSwitch()
     {
-        recordResponseCode("enableLimitSwitch", sparkMaxRevLimitSwitch.enableLimitSwitch(false));
+        if (sparkMaxRevLimitSwitch != null)
+        {
+            recordResponseCode("enableLimitSwitch", sparkMaxRevLimitSwitch.enableLimitSwitch(false));
+        }
     }   //disableMotorRevLimitSwitch
 
     /**
@@ -318,7 +322,10 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void disableMotorFwdLimitSwitch()
     {
-        recordResponseCode("enableLimitSwitch", sparkMaxFwdLimitSwitch.enableLimitSwitch(false));
+        if (sparkMaxFwdLimitSwitch != null)
+        {
+            recordResponseCode("enableLimitSwitch", sparkMaxFwdLimitSwitch.enableLimitSwitch(false));
+        }
     }   //disableMotorFwdLimitSwitch
 
     /**
