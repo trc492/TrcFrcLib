@@ -374,6 +374,39 @@ public abstract class FrcPhotonVision extends PhotonCamera
     }   //getDetectedObjects
 
     /**
+     * This method returns the detected AprilTag object.
+     *
+     * @param aprilTagId specifies the AprilTag ID to look for, -1 if looking for any AprilTag.
+     * @return detected AprilTag object.
+     */
+    public DetectedObject getDetectedAprilTag(int aprilTagId)
+    {
+        DetectedObject detectedAprilTag = null;
+        double startTime = TrcTimer.getCurrentTime();
+        PhotonPipelineResult result = getLatestResult();
+        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
+
+        if (result.hasTargets())
+        {
+            List<PhotonTrackedTarget> targets = result.getTargets();
+            double timestamp = result.getTimestampSeconds();
+
+            for (PhotonTrackedTarget target: targets)
+            {
+                if (aprilTagId == -1 || aprilTagId == target.getFiducialId())
+                {
+                    detectedAprilTag = new DetectedObject(
+                        timestamp, target, getTargetGroundOffset(target), camGroundOffset, camPitch);
+                    tracer.traceDebug(instanceName, "DetectedAprilTag=" + detectedAprilTag);
+                    break;
+                }
+            }
+        }
+
+        return detectedAprilTag;
+    }   //getDetectedAprilTag
+
+    /**
      * This method returns the best detected object.
      *
      * @return best detected object.
