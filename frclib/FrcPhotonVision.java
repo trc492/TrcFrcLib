@@ -374,6 +374,29 @@ public abstract class FrcPhotonVision extends PhotonCamera
     }   //getDetectedObjects
 
     /**
+     * This method returns the best detected object.
+     *
+     * @return best detected object.
+     */
+    public DetectedObject getBestDetectedObject()
+    {
+        DetectedObject bestDetectedObj = null;
+        double startTime = TrcTimer.getCurrentTime();
+        PhotonPipelineResult result = getLatestResult();
+        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
+
+        if (result.hasTargets())
+        {
+            PhotonTrackedTarget target = result.getBestTarget();
+            bestDetectedObj = new DetectedObject(
+                result.getTimestampSeconds(), target, getTargetGroundOffset(target), camGroundOffset, camPitch);
+            tracer.traceInfo(instanceName, "DetectedObj=" + bestDetectedObj);
+        }
+
+        return bestDetectedObj;
+    }   //getBestDetectedObject
+
+    /**
      * This method returns the detected AprilTag object.
      *
      * @param aprilTagId specifies the AprilTag ID to look for, -1 if looking for any AprilTag.
@@ -405,29 +428,6 @@ public abstract class FrcPhotonVision extends PhotonCamera
 
         return detectedAprilTag;
     }   //getDetectedAprilTag
-
-    /**
-     * This method returns the best detected object.
-     *
-     * @return best detected object.
-     */
-    public DetectedObject getBestDetectedObject()
-    {
-        DetectedObject bestDetectedObj = null;
-        double startTime = TrcTimer.getCurrentTime();
-        PhotonPipelineResult result = getLatestResult();
-        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
-
-        if (result.hasTargets())
-        {
-            PhotonTrackedTarget target = result.getBestTarget();
-            bestDetectedObj = new DetectedObject(
-                result.getTimestampSeconds(), target, getTargetGroundOffset(target), camGroundOffset, camPitch);
-            tracer.traceInfo(instanceName, "DetectedObj=" + bestDetectedObj);
-        }
-
-        return bestDetectedObj;
-    }   //getBestDetectedObject
 
     /**
      * This method uses the PhotonVision Pose Estimator to get an estimated absolute field position of the robot.
