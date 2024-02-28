@@ -179,8 +179,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
                 targetTranslation.getX()*TrcUtil.INCHES_PER_METER,
                 targetTranslation.getZ()*TrcUtil.INCHES_PER_METER,
                 -Math.toDegrees(targetRotation.getZ()),
-                Math.toDegrees(targetRotation.getY()),
-                Math.toDegrees(targetRotation.getX()));
+                -Math.toDegrees(targetRotation.getY()),
+                -Math.toDegrees(targetRotation.getX()));
 
             return pose;
         }   //getPose3d
@@ -390,7 +390,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             PhotonTrackedTarget target = result.getBestTarget();
             bestDetectedObj = new DetectedObject(
                 result.getTimestampSeconds(), target, getTargetGroundOffset(target), camGroundOffset, camPitch);
-            tracer.traceInfo(instanceName, "DetectedObj=" + bestDetectedObj);
+            tracer.traceDebug(instanceName, "DetectedObj=" + bestDetectedObj);
         }
 
         return bestDetectedObj;
@@ -432,9 +432,10 @@ public abstract class FrcPhotonVision extends PhotonCamera
     /**
      * This method uses the PhotonVision Pose Estimator to get an estimated absolute field position of the robot.
      *
-     * @return absolute robot field position, can be null if not provided.
+     * @param robotToCameraPose specifies the camera pose from robot center.
+     * @return absolute robot field position, can be null if cannot determine.
      */
-    public TrcPose2D getRobotFieldPosition(Transform3d cameraToRobot)
+    public TrcPose2D getRobotEstimatedPose(TrcPose3D robotToCameraPose)
     {
         TrcPose2D robotPose = null;
         double startTime = TrcTimer.getCurrentTime();
@@ -444,6 +445,12 @@ public abstract class FrcPhotonVision extends PhotonCamera
         PNPResult estimatedPose = result.getMultiTagResult().estimatedPose;
         if (estimatedPose.isPresent)
         {
+            Transform3d cameraToRobot = new Transform3d(
+                new Translation3d(robotToCameraPose.y*TrcUtil.METERS_PER_INCH,
+                                  -robotToCameraPose.x*TrcUtil.METERS_PER_INCH,
+                                  robotToCameraPose.z*TrcUtil.METERS_PER_INCH),
+                new Rotation3d(0.0, Math.toRadians(-robotToCameraPose.pitch),
+                               Math.toRadians(-robotToCameraPose.yaw)));
             Transform3d fieldToRobot = estimatedPose.best.plus(cameraToRobot);
             Translation3d translation = fieldToRobot.getTranslation();
             Rotation3d rotation = fieldToRobot.getRotation();
@@ -454,6 +461,32 @@ public abstract class FrcPhotonVision extends PhotonCamera
         }
 
         return robotPose;
-    }   //getRobotFieldPosition
+    }   //getRobotEstimatedPose
+
+    /**
+     * This method uses the AprilTag's absolute field pose and the detected AprilTag relative pose to calculate the
+     * robot's absolute field pose.
+     *
+     * @param cameraToRobot specifies the transform vector of the camera position on the robot.
+     * @return absolute robot field position, can be null if not provided.
+     */
+    public TrcPose2D getRobotFieldPoseFromAprilTag(
+        TrcPose3D aprilTagFieldPose, TrcPose3D cameraToAprilTagPose, TrcPose3D robotToCameraPose)
+    {
+        FrcDashboard dashboard = FrcDashboard.getInstance();
+        TrcPose2D aprilTagPose = aprilTagFieldPose.toPose2D();
+        TrcPose2D cameraToAprilTag = cameraToAprilTagPose.toPose2D();
+        TrcPose2D robotToCamera = robotToCameraPose.toPose2D();
+        TrcPose2D cameraPose = aprilTagPose.subtractRelativePose(cameraToAprilTag);
+        TrcPose2D robotPose = cameraPose.subtractRelativePose(robotToCamera);
+        dashboard.displayPrintf(
+            12, "cameraPose=%s, robotPose=%s", cameraPose, robotPose);
+        dashboard.displayPrintf(
+            13, "this=%s, relPose=%s, result=%s", aprilTagPose, cameraToAprilTag,
+            TrcUtil.createVector(cameraPose.x, cameraPose.y).subtract(cameraToAprilTag.toPosVector()));
+        return aprilTagFieldPose.toPose2D()
+            .subtractRelativePose(cameraToAprilTagPose.toPose2D())
+            .subtractRelativePose(robotToCameraPose.toPose2D());
+    }   //getRobotFieldPoseFromAprilTag
 
 }   //class FrcPhotonVision
