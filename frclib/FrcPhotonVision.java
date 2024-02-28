@@ -473,17 +473,6 @@ public abstract class FrcPhotonVision extends PhotonCamera
     public TrcPose2D getRobotFieldPoseFromAprilTag(
         TrcPose3D aprilTagFieldPose, TrcPose3D cameraToAprilTagPose, TrcPose3D robotToCameraPose)
     {
-        FrcDashboard dashboard = FrcDashboard.getInstance();
-        TrcPose2D aprilTagPose = aprilTagFieldPose.toPose2D();
-        TrcPose2D cameraToAprilTag = cameraToAprilTagPose.toPose2D();
-        TrcPose2D robotToCamera = robotToCameraPose.toPose2D();
-        TrcPose2D cameraPose = aprilTagPose.subtractRelativePose(cameraToAprilTag);
-        TrcPose2D robotPose = cameraPose.subtractRelativePose(robotToCamera);
-        dashboard.displayPrintf(
-            12, "cameraPose=%s, robotPose=%s", cameraPose, robotPose);
-        dashboard.displayPrintf(
-            13, "this=%s, relPose=%s, result=%s", aprilTagPose, cameraToAprilTag,
-            TrcUtil.createVector(cameraPose.x, cameraPose.y).subtract(cameraToAprilTag.toPosVector()));
         return aprilTagFieldPose.toPose2D()
             .subtractRelativePose(cameraToAprilTagPose.toPose2D())
             .subtractRelativePose(robotToCameraPose.toPose2D());
