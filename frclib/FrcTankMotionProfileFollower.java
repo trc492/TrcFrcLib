@@ -59,7 +59,7 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
     private PidCoefficients pidCoefficients;
     private int pidSlot;
     private double worldUnitsPerEncoderTick;
-    private FrcCANTalon leftMaster, rightMaster;
+    private FrcCANTalonSRX leftMaster, rightMaster;
     private TrcTaskMgr.TaskObject motionProfileTaskObject;
     private TrcTankMotionProfile profile;
     private int numPoints;
@@ -114,7 +114,7 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
      * @param leftMotors List of motors on the left side of the drive train. The first motor in the list will be used
      *                   as the master motor, and all others will be set as slaves.
      */
-    public void setLeftMotors(FrcCANTalon... leftMotors)
+    public void setLeftMotors(FrcCANTalonSRX... leftMotors)
     {
         if (leftMotors.length == 0)
         {
@@ -143,7 +143,7 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
      * @param rightMotors List of motors on the right side of the drive train. The first motor in the list will be used
      *                    as the master motor, and all others will be set as slaves.
      */
-    public void setRightMotors(FrcCANTalon... rightMotors)
+    public void setRightMotors(FrcCANTalonSRX... rightMotors)
     {
         if (rightMotors.length == 0)
         {
@@ -395,12 +395,12 @@ public class FrcTankMotionProfileFollower extends TrcTankMotionProfileFollower
         return rightMaster == null ? 0.0 : rightMaster.getVelocity() * worldUnitsPerEncoderTick;
     }
 
-    public FrcCANTalon getLeftMaster()
+    public FrcCANTalonSRX getLeftMaster()
     {
         return leftMaster;
     }
 
-    public FrcCANTalon getRightMaster()
+    public FrcCANTalonSRX getRightMaster()
     {
         return rightMaster;
     }

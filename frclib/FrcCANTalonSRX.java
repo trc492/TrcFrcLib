@@ -31,10 +31,10 @@ import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
 
 /**
- * This class implements a CANTalon motor controller. It extends the TrcMotor class and
+ * This class implements a CanTalonSrx motor controller. It extends the TrcMotor class and
  * implements the abstract methods required by TrcMotor to be compatible with the TRC library.
  */
-public class FrcCANTalon extends FrcCANPhoenix5Controller<TalonSRX>
+public class FrcCANTalonSRX extends FrcCANPhoenix5Controller<TalonSRX>
 {
     /**
      * Constructor: Create an instance of the object.
@@ -45,12 +45,12 @@ public class FrcCANTalon extends FrcCANPhoenix5Controller<TalonSRX>
      * @param upperLimitSwitch specifies an external upper limit switch overriding the motor controller one.
      * @param encoder specifies an external encoder overriding the motor controller one.
      */
-    public FrcCANTalon(
+    public FrcCANTalonSRX(
         String instanceName, int canId, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch,
         TrcEncoder encoder)
     {
         super(instanceName, new TalonSRX(canId), lowerLimitSwitch, upperLimitSwitch, encoder);
-    }   //FrcCANTalon
+    }   //FrcCANTalonSRX
 
     /**
      * Constructor: Create an instance of the object.
@@ -58,10 +58,10 @@ public class FrcCANTalon extends FrcCANPhoenix5Controller<TalonSRX>
      * @param instanceName specifies the instance name.
      * @param canId specifies the CAN ID of the device.
      */
-    public FrcCANTalon(String instanceName, int canId)
+    public FrcCANTalonSRX(String instanceName, int canId)
     {
         this(instanceName, canId, null, null, null);
-    }   //FrcCANTalon
+    }   //FrcCANTalonSRX
 
     /**
      * This method synchronizes the internal encoder to the absolute zero position.
@@ -97,4 +97,4 @@ public class FrcCANTalon extends FrcCANPhoenix5Controller<TalonSRX>
             ", selectedPos=" + motor.getSelectedSensorPosition());
     }   //setAbsoluteZeroOffset
 
-}   //class FrcCANTalon
+}   //class FrcCANTalonSRX
