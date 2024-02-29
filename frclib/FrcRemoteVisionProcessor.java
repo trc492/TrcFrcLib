@@ -23,7 +23,7 @@
 package TrcFrcLib.frclib;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
-import TrcCommonLib.trclib.TrcPose3D;
+import TrcCommonLib.trclib.TrcPose2D;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
 import TrcCommonLib.trclib.TrcTimer;
@@ -68,7 +68,7 @@ public abstract class FrcRemoteVisionProcessor
      * @param targetData specifies the target data from which to get the target pose.
      * @return detected target pose.
      */
-    protected abstract TrcPose3D getTargetPose(TargetData<?> targetData);
+    protected abstract TrcPose2D getTargetPose(TargetData<?> targetData);
 
     private final List<TargetData<?>> frames = new LinkedList<>();
     private final AtomicReference<TargetData<?>> targetData = new AtomicReference<>();
@@ -173,9 +173,9 @@ public abstract class FrcRemoteVisionProcessor
      * @param requireAll If true, require at least numFrames frames to average.
      * @return Average of last numFrames frames, or null if not enough frames and requireAll is true.
      */
-    public TrcPose3D getAveragePose(int numFrames, boolean requireAll)
+    public TrcPose2D getAveragePose(int numFrames, boolean requireAll)
     {
-        TrcPose3D avgPose = null;
+        TrcPose2D avgPose = null;
 
         synchronized (frames)
         {
@@ -185,19 +185,16 @@ public abstract class FrcRemoteVisionProcessor
                 List<TargetData<?>> targets = frames.subList(fromIndex, frames.size());
                 int numFreshFrames = 0;
 
-                avgPose = new TrcPose3D();
+                avgPose = new TrcPose2D();
                 for (TargetData<?> target : targets)
                 {
                     // Only use data if it's fresh.
                     if (isFresh(target))
                     {
-                        TrcPose3D targetPose = getTargetPose(target);
+                        TrcPose2D targetPose = getTargetPose(target);
                         avgPose.x += targetPose.x;
                         avgPose.y += targetPose.y;
-                        avgPose.z += targetPose.z;
-                        avgPose.yaw += targetPose.yaw;
-                        avgPose.pitch += targetPose.pitch;
-                        avgPose.roll += targetPose.roll;
+                        avgPose.angle += targetPose.angle;
                         numFreshFrames++;
                     }
                 }
@@ -206,10 +203,7 @@ public abstract class FrcRemoteVisionProcessor
                 {
                     avgPose.x /= numFreshFrames;
                     avgPose.y /= numFreshFrames;
-                    avgPose.z /= numFreshFrames;
-                    avgPose.yaw /= numFreshFrames;
-                    avgPose.pitch /= numFreshFrames;
-                    avgPose.roll /= numFreshFrames;
+                    avgPose.angle /= numFreshFrames;
                 }
                 else
                 {
@@ -229,7 +223,7 @@ public abstract class FrcRemoteVisionProcessor
      * @param numFrames How many frames to average.
      * @return The average pose.
      */
-    public TrcPose3D getAveragePose(int numFrames)
+    public TrcPose2D getAveragePose(int numFrames)
     {
         return getAveragePose(numFrames, false);
     }   //getAveragePose
@@ -239,7 +233,7 @@ public abstract class FrcRemoteVisionProcessor
      *
      * @return The average pose. (all attributes averaged)
      */
-    public TrcPose3D getAveragePose()
+    public TrcPose2D getAveragePose()
     {
         return getAveragePose(maxCachedFrames, false);
     }   //getAveragePose
@@ -252,9 +246,9 @@ public abstract class FrcRemoteVisionProcessor
      * @return Median of last numFrames frames, or null if not enough frames and requireAll is true, or if all data
      *         is stale.
      */
-    public TrcPose3D getMedianPose(int numFrames, boolean requireAll)
+    public TrcPose2D getMedianPose(int numFrames, boolean requireAll)
     {
-        TrcPose3D median = null;
+        TrcPose2D median = null;
 
         synchronized (frames)
         {
@@ -266,13 +260,10 @@ public abstract class FrcRemoteVisionProcessor
                 targets = targets.stream().filter(this::isFresh).collect(Collectors.toList());
                 if (!targets.isEmpty())
                 {
-                    median = new TrcPose3D();
+                    median = new TrcPose2D();
                     median.x = TrcUtil.median(targets.stream().mapToDouble(e -> getTargetPose(e).x).toArray());
                     median.y = TrcUtil.median(targets.stream().mapToDouble(e -> getTargetPose(e).y).toArray());
-                    median.z = TrcUtil.median(targets.stream().mapToDouble(e -> getTargetPose(e).z).toArray());
-                    median.yaw = TrcUtil.median(frames.stream().mapToDouble(e -> getTargetPose(e).yaw).toArray());
-                    median.pitch = TrcUtil.median(frames.stream().mapToDouble(e -> getTargetPose(e).pitch).toArray());
-                    median.roll = TrcUtil.median(frames.stream().mapToDouble(e -> getTargetPose(e).roll).toArray());
+                    median.angle = TrcUtil.median(frames.stream().mapToDouble(e -> getTargetPose(e).angle).toArray());
                 }
                 else
                 {

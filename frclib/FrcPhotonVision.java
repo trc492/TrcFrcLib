@@ -33,14 +33,13 @@ import java.util.List;
 
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcPose2D;
-import TrcCommonLib.trclib.TrcPose3D;
 import TrcCommonLib.trclib.TrcTimer;
-import TrcCommonLib.trclib.TrcUtil;
 import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
-import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 
 /**
  * This class implements vision detection using PhotonLib extending PhotonCamera.
@@ -69,31 +68,22 @@ public abstract class FrcPhotonVision extends PhotonCamera
         public final PhotonTrackedTarget target;
         public final Rect rect;
         public final double area;
-        public final TrcPose3D targetPose;
-        private final TrcPose3D pose3d;
-        private final TrcPose2D pose2d;
-        private double pitch2d;
+        public final TrcPose2D targetPose;
 
         /**
          * Constructor: Creates an instance of the object.
          *
          * @param timestamp specifies the time stamp of the frame it was taken.
          * @param target specifies the photon detected target.
-         * @param targetGroundOffset specifies the target ground offset in inches.
-         * @param camGroundOffset specifies the camera ground offset in inches.
-         * @param camPitch specifies the camera pitch from horizontal in degrees.
+         * @param robotToCamera specifies the Transform3d of the camera position on the robot.
          */
-        public DetectedObject(
-            double timestamp, PhotonTrackedTarget target, double targetGroundOffset, double camGroundOffset,
-            double camPitch)
+        public DetectedObject(double timestamp, PhotonTrackedTarget target, Transform3d robotToCamera)
         {
             this.timestamp = timestamp;
             this.target = target;
             this.rect = getRect(target);
             this.area = target.getArea();
-            this.pose3d = getPose3d(target);
-            this.pose2d = getPose2d(target, targetGroundOffset, camGroundOffset, camPitch);
-            this.targetPose = getObjectPose();
+            this.targetPose = getPose(target, robotToCamera);
         }   //DetectedObject
 
         /**
@@ -105,13 +95,66 @@ public abstract class FrcPhotonVision extends PhotonCamera
         public String toString()
         {
             return "{time=" + timestamp +
-                   ",pose3d=" + pose3d +
-                   ",pose2d=" + pose2d +
-                   ",pitch2d=" + pitch2d +
+                   ",pose=" + targetPose +
                    ",rect=" + rect +
                    ",area=" + area +
                    ",target=" + target + "}";
         }   //toString
+
+        /**
+         * This method returns the rect of the detected object.
+         *
+         * @return rect of the detected object.
+         */
+        @Override
+        public Rect getObjectRect()
+        {
+            return rect.clone();
+        }   //getObjectRect
+
+        /**
+         * This method returns the area of the detected object.
+         *
+         * @return area of the detected object.
+         */
+        @Override
+        public double getObjectArea()
+        {
+            return area;
+        }   //getObjectArea
+
+        /**
+         * This method returns the pose of the detected object relative to the camera.
+         *
+         * @return pose of the detected object relative to camera.
+         */
+        @Override
+        public TrcPose2D getObjectPose()
+        {
+            return targetPose.clone();
+        }   //getObjectPose
+
+        /**
+         * This method returns the objects real world width.
+         *
+         * @return object real world width, null if not supported.
+         */
+        @Override
+        public Double getObjectWidth()
+        {
+            return null;
+        }   //getObjectWidth
+
+        /**
+         * This method returns the objects real world depth.
+         *
+         * @return object real world depth, null if not supported.
+         */
+        @Override
+        public Double getObjectDepth()
+        {
+            return null;
+        }   //getObjectDepth
 
         /**
          * This method returns the rect of the detected object.
@@ -165,143 +208,68 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * This method calculates the target pose of the detected object.
          *
          * @param target specifies the detected target.
+         * @param robotToCamera specifies the Transform3d of the camera position on the robot.
          * @return target pose of the detected target.
          */
-        private TrcPose3D getPose3d(PhotonTrackedTarget target)
+        private TrcPose2D getPose(PhotonTrackedTarget target, Transform3d robotToCamera)
         {
-            TrcPose3D pose;
-            Transform3d targetTransform3d = target.getBestCameraToTarget();
-            Translation3d targetTranslation = targetTransform3d.getTranslation();
-            Rotation3d targetRotation = targetTransform3d.getRotation();
-
-            pose = new TrcPose3D(
-                -targetTranslation.getY()*TrcUtil.INCHES_PER_METER,
-                targetTranslation.getX()*TrcUtil.INCHES_PER_METER,
-                targetTranslation.getZ()*TrcUtil.INCHES_PER_METER,
-                -Math.toDegrees(targetRotation.getZ()),
-                -Math.toDegrees(targetRotation.getY()),
-                -Math.toDegrees(targetRotation.getX()));
-
-            return pose;
-        }   //getPose3d
-
-        /**
-         * This method calculates the pose of the detected object given the yaw, pitch and height offset of the object
-         * from ground.
-         *
-         * @param target specifies the detected target.
-         * @param targetGroundOffset specifies the target ground offset in inches.
-         * @param camGroundOffset specifies the camera ground offset in inches.
-         * @param camPitch specifies the camera pitch from horizontal in degrees.
-         * @return a 2D pose of the detected object from the camera.
-         */
-        private TrcPose2D getPose2d(
-            PhotonTrackedTarget target, double targetGroundOffset, double camGroundOffset, double camPitch)
-        {
-            double targetYawDegrees = target.getYaw();
-            double targetPitchDegrees = target.getPitch();
-            double targetYawRadians = Math.toRadians(targetYawDegrees);
-            double targetPitchRadians = Math.toRadians(targetPitchDegrees);
-            double camPitchRadians = Math.toRadians(camPitch);
-            double targetDistanceInches =
-                (targetGroundOffset - camGroundOffset)/Math.tan(camPitchRadians + targetPitchRadians);
-            this.pitch2d = camPitch + targetPitchDegrees;
+            Transform3d robotToTarget = robotToCamera.plus(target.getBestCameraToTarget());
+            Translation2d targetTranslation = robotToTarget.getTranslation().toTranslation2d();
+            Rotation2d targetRotation = robotToTarget.getRotation().toRotation2d();
 
             return new TrcPose2D(
-                targetDistanceInches * Math.sin(targetYawRadians),
-                targetDistanceInches * Math.cos(targetYawRadians),
-                targetYawDegrees);
-        }   //getPose2d
+                Units.metersToInches(-targetTranslation.getY()),
+                Units.metersToInches(targetTranslation.getX()),
+                -targetRotation.getDegrees());
+        }   //getPose
 
-        /**
-         * This method returns the rect of the detected object.
-         *
-         * @return rect of the detected object.
-         */
-        @Override
-        public Rect getObjectRect()
-        {
-            return rect.clone();
-        }   //getObjectRect
+        // /**
+        //  * This method calculates the pose of the detected object given the yaw, pitch and height offset of the object
+        //  * from ground.
+        //  *
+        //  * @param target specifies the detected target.
+        //  * @param targetGroundOffset specifies the target ground offset in inches.
+        //  * @param camGroundOffset specifies the camera ground offset in inches.
+        //  * @param camPitch specifies the camera pitch from horizontal in degrees.
+        //  * @return a 2D pose of the detected object from the camera.
+        //  */
+        // private TrcPose2D getPose2d(
+        //     PhotonTrackedTarget target, double targetGroundOffset, double camGroundOffset, double camPitch)
+        // {
+        //     double targetYawDegrees = target.getYaw();
+        //     double targetPitchDegrees = target.getPitch();
+        //     double targetYawRadians = Math.toRadians(targetYawDegrees);
+        //     double targetPitchRadians = Math.toRadians(targetPitchDegrees);
+        //     double camPitchRadians = Math.toRadians(camPitch);
+        //     double targetDistanceInches =
+        //         (targetGroundOffset - camGroundOffset)/Math.tan(camPitchRadians + targetPitchRadians);
+        //     this.pitch2d = camPitch + targetPitchDegrees;
 
-        /**
-         * This method returns the area of the detected object.
-         *
-         * @return area of the detected object.
-         */
-        @Override
-        public double getObjectArea()
-        {
-            return area;
-        }   //getObjectArea
-
-        /**
-         * This method returns the pose of the detected object relative to the camera.
-         *
-         * @return pose of the detected object relative to camera.
-         */
-        @Override
-        public TrcPose3D getObjectPose()
-        {
-            TrcPose3D pose;
-
-            if (pose3d.x == 0.0 && pose3d.y == 0.0 && pose3d.z == 0.0 &&
-                pose3d.yaw == 0.0 && pose3d.pitch == 0.0 && pose3d.roll == 0.0)
-            {
-                pose = new TrcPose3D(pose2d.x, pose2d.y, 0.0, pose2d.angle, pitch2d, 0.0);
-            }
-            else
-            {
-                pose = pose3d.clone();
-            }
-
-            return pose;
-        }   //getObjectPose
-
-        /**
-         * This method returns the objects real world width.
-         *
-         * @return object real world width, null if not supported.
-         */
-        @Override
-        public Double getObjectWidth()
-        {
-            return null;
-        }   //getObjectWidth
-
-        /**
-         * This method returns the objects real world depth.
-         *
-         * @return object real world depth, null if not supported.
-         */
-        @Override
-        public Double getObjectDepth()
-        {
-            return null;
-        }   //getObjectDepth
+        //     return new TrcPose2D(
+        //         targetDistanceInches * Math.sin(targetYawRadians),
+        //         targetDistanceInches * Math.cos(targetYawRadians),
+        //         targetYawDegrees);
+        // }   //getPose2d
 
     }   //class DetectedObject
 
     protected final TrcDbgTrace tracer;
     protected final String instanceName;
-    private final double camGroundOffset;
-    private final double camPitch;
+    private final Transform3d robotToCamera;
     private TrcVisionPerformanceMetrics performanceMetrics = null;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param cameraName specifies the network table name that PhotonVision is broadcasting information over.
-     * @param camGroundOffset specifies the camera ground offset in inches.
-     * @param camPitch specifies the camera pitch from horizontal in degrees.
+     * @param robotToCamera specifies the Transform3d of the camera position on the robot.
      */
-    public FrcPhotonVision(String cameraName, double camGroundOffset, double camPitch)
+    public FrcPhotonVision(String cameraName, Transform3d robotToCamera)
     {
         super(cameraName);
         this.tracer = new TrcDbgTrace();
         this.instanceName = cameraName;
-        this.camGroundOffset = camGroundOffset;
-        this.camPitch = camPitch;
+        this.robotToCamera = robotToCamera;
     }   //FrcPhotonVision
 
     /**
@@ -364,8 +332,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             for (int i = 0; i < targets.size(); i++)
             {
                 PhotonTrackedTarget target = targets.get(i);
-                detectedObjs[i] = new DetectedObject(
-                    timestamp, target, getTargetGroundOffset(target), camGroundOffset, camPitch);
+                detectedObjs[i] = new DetectedObject(timestamp, target, robotToCamera);
                 tracer.traceDebug(instanceName, "[" + i + "] DetectedObj=" + detectedObjs[i]);
             }
         }
@@ -388,9 +355,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
         if (result.hasTargets())
         {
             PhotonTrackedTarget target = result.getBestTarget();
-            bestDetectedObj = new DetectedObject(
-                result.getTimestampSeconds(), target, getTargetGroundOffset(target), camGroundOffset, camPitch);
-            tracer.traceDebug(instanceName, "DetectedObj=" + bestDetectedObj);
+            bestDetectedObj = new DetectedObject(result.getTimestampSeconds(), target, robotToCamera);
+            tracer.traceInfo(instanceName, "DetectedObj=" + bestDetectedObj);
         }
 
         return bestDetectedObj;
@@ -416,10 +382,10 @@ public abstract class FrcPhotonVision extends PhotonCamera
 
             for (PhotonTrackedTarget target: targets)
             {
+                // Return the detected AprilTag with matching ID or the first one if no ID is provided.
                 if (aprilTagId == -1 || aprilTagId == target.getFiducialId())
                 {
-                    detectedAprilTag = new DetectedObject(
-                        timestamp, target, getTargetGroundOffset(target), camGroundOffset, camPitch);
+                    detectedAprilTag = new DetectedObject(timestamp, target, robotToCamera);
                     tracer.traceDebug(instanceName, "DetectedAprilTag=" + detectedAprilTag);
                     break;
                 }
@@ -432,10 +398,10 @@ public abstract class FrcPhotonVision extends PhotonCamera
     /**
      * This method uses the PhotonVision Pose Estimator to get an estimated absolute field position of the robot.
      *
-     * @param robotToCameraPose specifies the camera pose from robot center.
-     * @return absolute robot field position, can be null if cannot determine.
+     * @param robotToCamera specifies the Transform3d position of the camera from the robot center.
+     * @return absolute robot field position, can be null if not provided.
      */
-    public TrcPose2D getRobotEstimatedPose(TrcPose3D robotToCameraPose)
+    public TrcPose2D getRobotEstimatedPose(Transform3d robotToCamera)
     {
         TrcPose2D robotPose = null;
         double startTime = TrcTimer.getCurrentTime();
@@ -445,37 +411,32 @@ public abstract class FrcPhotonVision extends PhotonCamera
         PNPResult estimatedPose = result.getMultiTagResult().estimatedPose;
         if (estimatedPose.isPresent)
         {
-            Transform3d cameraToRobot = new Transform3d(
-                new Translation3d(robotToCameraPose.y*TrcUtil.METERS_PER_INCH,
-                                  -robotToCameraPose.x*TrcUtil.METERS_PER_INCH,
-                                  robotToCameraPose.z*TrcUtil.METERS_PER_INCH),
-                new Rotation3d(0.0, Math.toRadians(-robotToCameraPose.pitch),
-                               Math.toRadians(-robotToCameraPose.yaw)));
-            Transform3d fieldToRobot = estimatedPose.best.plus(cameraToRobot);
-            Translation3d translation = fieldToRobot.getTranslation();
-            Rotation3d rotation = fieldToRobot.getRotation();
+            Transform3d fieldToRobot = estimatedPose.best.plus(robotToCamera.inverse());
+            Translation2d translation = fieldToRobot.getTranslation().toTranslation2d();
+            Rotation2d rotation = fieldToRobot.getRotation().toRotation2d();
+
             robotPose = new TrcPose2D(
-                -translation.getY()*TrcUtil.INCHES_PER_METER,
-                translation.getX()*TrcUtil.INCHES_PER_METER,
-                -Math.toDegrees(rotation.getZ()));
+                Units.metersToInches(-translation.getY()),
+                Units.metersToInches(translation.getX()),
+                rotation.getDegrees());
         }
 
         return robotPose;
     }   //getRobotEstimatedPose
 
     /**
-     * This method uses the AprilTag's absolute field pose and the detected AprilTag relative pose to calculate the
-     * robot's absolute field pose.
+     * This method calculates the robot's field position by subtracting the AprilTag's field position by the AprilTag
+     * position from the camera and the camera position on the robot.
      *
-     * @param cameraToRobot specifies the transform vector of the camera position on the robot.
-     * @return absolute robot field position, can be null if not provided.
+     * @param aprilTagFieldPose specifies the AprilTag's field position.
+     * @param aprilTagTargetPose specifies the AprilTag's position from the camera.
+     * @param robotToCamera specifies the camera's position on the robot.
+     * @return robot's field position.
      */
-    public TrcPose2D getRobotFieldPoseFromAprilTag(
-        TrcPose3D aprilTagFieldPose, TrcPose3D cameraToAprilTagPose, TrcPose3D robotToCameraPose)
+    public TrcPose2D getRobotPoseFromAprilTagFieldPose(
+        TrcPose2D aprilTagFieldPose, TrcPose2D aprilTagTargetPose, TrcPose2D robotToCamera)
     {
-        return aprilTagFieldPose.toPose2D()
-            .subtractRelativePose(cameraToAprilTagPose.toPose2D())
-            .subtractRelativePose(robotToCameraPose.toPose2D());
-    }   //getRobotFieldPoseFromAprilTag
+        return aprilTagFieldPose.subtractRelativePose(aprilTagTargetPose).subtractRelativePose(robotToCamera);
+    }   //getRobotPoseFromAprilTagFieldPose
 
 }   //class FrcPhotonVision

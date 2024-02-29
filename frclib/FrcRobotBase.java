@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcEvent;
+import TrcCommonLib.trclib.TrcLoopProfiler;
 import TrcCommonLib.trclib.TrcPeriodicThread;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcRobot.*;
@@ -54,7 +55,6 @@ public abstract class FrcRobotBase extends RobotBase
     private static final boolean dashboardEnabled = true;
 
     private boolean liveWindowEnabled = false;
-    private boolean debugPerformanceEnabled = false;
 
     /**
      * This method is called to initialize the robot.
@@ -85,24 +85,9 @@ public abstract class FrcRobotBase extends RobotBase
     private TrcWatchdogMgr.Watchdog robotThreadWatchdog;
     private volatile boolean terminate = false;
 
-    private Double prevLoopStartTime = null;
-    private double robotInitElapsedTime = 0.0;
-    private double stopTaskElapsedTime = 0.0;
-    private double stopModeElapsedTime = 0.0;
-    private double robotStopModeElapsedTime = 0.0;
-    private double robotStartModeElapsedTime = 0.0;
-    private double startModeElapsedTime = 0.0;
-    private double startTaskElapsedTime = 0.0;
+    private TrcLoopProfiler robotMainLoopProfiler = new TrcLoopProfiler(moduleName);
     private static long loopCounter = 0;
     private static long slowLoopCounter = 0;
-    private double prePeriodicTaskTotalElapsedTime = 0.0;
-    private double prePeriodicTaskMaxElapsedTime = 0.0;
-    private double periodicTotalElapsedTime = 0.0;
-    private double periodicMaxElapsedTime = 0.0;
-    private double postPeriodicTaskTotalElapsedTime = 0.0;
-    private double postPeriodicTaskMaxElapsedTime = 0.0;
-    private double updatesTotalElapsedTime = 0.0;
-    private double updatesMaxElapsedTime = 0.0;
     private double nextSlowLoopTime = 0.0;
     private RunMode prevMode = RunMode.INVALID_MODE;
     private RunMode currMode = RunMode.INVALID_MODE;
@@ -298,10 +283,9 @@ public abstract class FrcRobotBase extends RobotBase
      */
     public void startCompetition()
     {
-        final double periodicInterval = TrcTaskMgr.PERIODIC_INTERVAL_MS/1000.0;
         final double slowPeriodicInterval = 0.05;   // 50 msec (20 Hz).
-        final double taskTimeThreshold = TrcTaskMgr.TASKTIME_THRESHOLD_MS/1000.0;
-        double startTime, elapsedTime;
+        double periodicInterval = TrcTaskMgr.PERIODIC_INTERVAL_MS/1000.0;
+        long startNanoTime;
 
         globalTracer.traceInfo(
             moduleName,
@@ -315,13 +299,9 @@ public abstract class FrcRobotBase extends RobotBase
         TrcEvent.registerEventCallback();
         // Running robotInit.
         globalTracer.traceDebug(moduleName, "Running robotInit.");
-        startTime = TrcTimer.getCurrentTime();
+        startNanoTime = TrcTimer.getNanoTime();
         robotInit();
-        robotInitElapsedTime = TrcTimer.getCurrentTime() - startTime;
-        if (debugPerformanceEnabled)
-        {
-            globalTracer.traceInfo(moduleName, "robotInitElapsedTime=" + robotInitElapsedTime + "s");
-        }
+        robotMainLoopProfiler.recordProfilePointElapsedTime("RobotInit", startNanoTime, false);
         TrcPeriodicThread.setRobotInitialized(true);
         //
         // WPILib house keeping.
@@ -338,16 +318,7 @@ public abstract class FrcRobotBase extends RobotBase
         //
         while (!Thread.currentThread().isInterrupted() && !terminate)
         {
-            double loopStartTime = TrcTimer.getCurrentTime();
-
-            if (debugLoopTimeEnabled)
-            {
-                if (prevLoopStartTime != null)
-                {
-                    globalTracer.traceInfo(moduleName, "Loop Interval=" + (loopStartTime - prevLoopStartTime) + "s");
-                }
-            }
-            prevLoopStartTime = loopStartTime;
+            robotMainLoopProfiler.recordLoopStartTime();
             //
             // Determine the current run mode.
             //
@@ -385,20 +356,15 @@ public abstract class FrcRobotBase extends RobotBase
                     //
                     // Execute all stop tasks for previous mode.
                     //
-                    globalTracer.traceDebug(moduleName, "Running " + prevMode + ".stopTasks.");
-                    startTime = TrcTimer.getCurrentTime();
+                    globalTracer.traceDebug(moduleName, "Running " + prevMode + ".stopTask.");
+                    startNanoTime = TrcTimer.getNanoTime();
                     TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.STOP_TASK, prevMode, false);
-                    stopTaskElapsedTime = TrcTimer.getCurrentTime() - startTime;
-                    if (debugPerformanceEnabled)
-                    {
-                        globalTracer.traceInfo(
-                            moduleName, prevMode + ".stopTaskElapsedTime=" + stopTaskElapsedTime + "s");
-                    }
+                    robotMainLoopProfiler.recordProfilePointElapsedTime("StopTask", startNanoTime, true);
                     //
                     // Stop previous mode.
                     //
                     globalTracer.traceDebug(moduleName, "Running " + prevMode + ".stopMode.");
-                    startTime = TrcTimer.getCurrentTime();
+                    startNanoTime = TrcTimer.getNanoTime();
                     if (prevMode == RunMode.DISABLED_MODE && disabledMode != null)
                     {
                         disabledMode.stopMode(prevMode, currMode);
@@ -415,24 +381,14 @@ public abstract class FrcRobotBase extends RobotBase
                     {
                         teleOpMode.stopMode(prevMode, currMode);
                     }
-                    stopModeElapsedTime = TrcTimer.getCurrentTime() - startTime;
-                    if (debugPerformanceEnabled)
-                    {
-                        globalTracer.traceInfo(
-                            moduleName, prevMode + ".stopModeElapsedTime=" + stopModeElapsedTime + "s");
-                    }
+                    robotMainLoopProfiler.recordProfilePointElapsedTime("StopMode", startNanoTime, true);
                     //
                     // Run robotStopMode for the previous mode.
                     //
                     globalTracer.traceDebug(moduleName, "Running " + prevMode + ".robotStopMode.");
-                    startTime = TrcTimer.getCurrentTime();
+                    startNanoTime = TrcTimer.getNanoTime();
                     robotStopMode(prevMode, currMode);
-                    robotStopModeElapsedTime = TrcTimer.getCurrentTime() - startTime;
-                    if (debugPerformanceEnabled)
-                    {
-                        globalTracer.traceInfo(
-                            moduleName, prevMode + ".robotStopModeElapsedTime=" + robotStopModeElapsedTime + "s");
-                    }
+                    robotMainLoopProfiler.recordProfilePointElapsedTime("RobotStopMode", startNanoTime, true);
 
                     if (debugLoopTimeEnabled)
                     {
@@ -448,19 +404,14 @@ public abstract class FrcRobotBase extends RobotBase
                     // Run robotStartMode for the current mode.
                     //
                     globalTracer.traceDebug(moduleName, "Running " + currMode + ".robotStartMode.");
-                    startTime = TrcTimer.getCurrentTime();
+                    startNanoTime = TrcTimer.getNanoTime();
                     robotStartMode(currMode, prevMode);
-                    robotStartModeElapsedTime = TrcTimer.getCurrentTime() - startTime;
-                    if (debugPerformanceEnabled)
-                    {
-                        globalTracer.traceInfo(
-                            moduleName, currMode + ".robotStartModeElapsedTime=" + robotStartModeElapsedTime + "s");
-                    }
+                    robotMainLoopProfiler.recordProfilePointElapsedTime("RobotStartMode", startNanoTime, true);
                     //
                     // Start current mode.
                     //
                     globalTracer.traceDebug(moduleName, "Running " + currMode + ".startMode.");
-                    startTime = TrcTimer.getCurrentTime();
+                    startNanoTime = TrcTimer.getNanoTime();
                     if (currMode == RunMode.DISABLED_MODE)
                     {
                         liveWindowEnabled = false;
@@ -494,46 +445,28 @@ public abstract class FrcRobotBase extends RobotBase
                         }
                     }
                     LiveWindow.setEnabled(liveWindowEnabled);
-                    startModeElapsedTime = TrcTimer.getCurrentTime() - startTime;
-                    if (debugPerformanceEnabled)
-                    {
-                        globalTracer.traceInfo(
-                            moduleName, currMode + ".startModeElapsedTime=" + startModeElapsedTime + "s");
-                    }
+                    robotMainLoopProfiler.recordProfilePointElapsedTime("StartMode", startNanoTime, true);
                     //
                     // Execute all start tasks for current mode.
                     //
-                    globalTracer.traceDebug(moduleName, "Running " + ".startTasks.");
-                    startTime = TrcTimer.getCurrentTime();
+                    globalTracer.traceDebug(moduleName, "Running " + ".startTask.");
+                    startNanoTime = TrcTimer.getNanoTime();
                     TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.START_TASK, currMode, false);
-                    startTaskElapsedTime = TrcTimer.getCurrentTime() - startTime;
-                    if (debugPerformanceEnabled)
-                    {
-                        globalTracer.traceInfo(
-                            moduleName, currMode + ".startTaskElapsedTime=" + startTaskElapsedTime + "s");
-                    }
+                    robotMainLoopProfiler.recordProfilePointElapsedTime("StartTask", startNanoTime, true);
                 }
                 //
                 // Reset all performance counters for the mode.
                 //
                 loopCounter = 0;
                 slowLoopCounter = 0;
-                prePeriodicTaskTotalElapsedTime = 0.0;
-                prePeriodicTaskMaxElapsedTime = 0.0;
-                periodicTotalElapsedTime = 0.0;
-                periodicMaxElapsedTime = 0.0;
-                postPeriodicTaskTotalElapsedTime = 0.0;
-                postPeriodicTaskMaxElapsedTime = 0.0;
-                updatesTotalElapsedTime = 0.0;
-                updatesMaxElapsedTime = 0.0;
-                nextSlowLoopTime = loopStartTime;
+                nextSlowLoopTime = robotMainLoopProfiler.getLoopStartTime();
             }
 
             //
             // Run the time slice.
             //
             double modeElapsedTime = TrcTimer.getModeElapsedTime();
-            double currTime = TrcTimer.getCurrentTime();
+            double currTime = robotMainLoopProfiler.getHighPrecisionCurrentTime();
             boolean slowPeriodicLoop = currTime >= nextSlowLoopTime;
 
             loopCounter++;
@@ -545,26 +478,10 @@ public abstract class FrcRobotBase extends RobotBase
             //
             // PrePeriodic.
             //
-            globalTracer.traceDebug(moduleName, "Running " + currMode + ".prePeriodicTasks.");
-            startTime = TrcTimer.getCurrentTime();
+            globalTracer.traceDebug(moduleName, "Running " + currMode + ".prePeriodicTask.");
+            startNanoTime = TrcTimer.getNanoTime();
             TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.PRE_PERIODIC_TASK, currMode, slowPeriodicLoop);
-            elapsedTime = TrcTimer.getCurrentTime() - startTime;
-            prePeriodicTaskTotalElapsedTime += elapsedTime;
-            if (elapsedTime > prePeriodicTaskMaxElapsedTime) prePeriodicTaskMaxElapsedTime = elapsedTime;
-            if (debugPerformanceEnabled)
-            {
-                globalTracer.traceInfo(
-                    moduleName, currMode + ".prePeriodicTaskElapsedTime=" +
-                    elapsedTime + "s/" +
-                    (prePeriodicTaskTotalElapsedTime/loopCounter) + "s/" +
-                    prePeriodicTaskMaxElapsedTime + "s");
-            }
-            if (elapsedTime > taskTimeThreshold)
-            {
-                globalTracer.traceWarn(
-                    moduleName, currMode + ".prePeriodicTasks took too long (" +
-                    elapsedTime + "s/" + taskTimeThreshold + "s)");
-            }
+            robotMainLoopProfiler.recordProfilePointElapsedTime("PrePeriodicTask", startNanoTime, true);
             //
             // Perform event callback here because pre-periodic tasks have finished processing sensor inputs and
             // may have signaled events. We will do all the callbacks before running periodic code.
@@ -574,7 +491,7 @@ public abstract class FrcRobotBase extends RobotBase
             // Periodic.
             //
             globalTracer.traceDebug(moduleName, "Running " + currMode + ".periodic.");
-            startTime = TrcTimer.getCurrentTime();
+            startNanoTime = TrcTimer.getNanoTime();
             if (currMode == RunMode.DISABLED_MODE && disabledMode != null)
             {
                 modeThread.inDisabled(true);
@@ -599,45 +516,16 @@ public abstract class FrcRobotBase extends RobotBase
                 teleOpMode.periodic(modeElapsedTime, slowPeriodicLoop);
                 modeThread.inTeleop(false);
             }
-            elapsedTime = TrcTimer.getCurrentTime() - startTime;
-            periodicTotalElapsedTime += elapsedTime;
-            if (elapsedTime > periodicMaxElapsedTime) periodicMaxElapsedTime = elapsedTime;
-            if (debugPerformanceEnabled)
-            {
-                globalTracer.traceInfo(
-                    moduleName, currMode + ".periodicElapsedTime=" +
-                    elapsedTime + "s/" + periodicTotalElapsedTime/loopCounter + "s/" + periodicMaxElapsedTime + "s");
-            }
-            if (elapsedTime > taskTimeThreshold)
-            {
-                globalTracer.traceWarn(
-                    moduleName, currMode + ".periodic took too long (" +
-                    elapsedTime + "s/" + taskTimeThreshold + "s)");
-            }
+            robotMainLoopProfiler.recordProfilePointElapsedTime("Periodic", startNanoTime, true);
             //
             // PostPeriodic.
             //
             globalTracer.traceDebug(moduleName, "Running " + currMode + ".postPeriodicTasks.");
-            startTime = TrcTimer.getCurrentTime();
+            startNanoTime = TrcTimer.getNanoTime();
             TrcTaskMgr.executeTaskType(TrcTaskMgr.TaskType.POST_PERIODIC_TASK, currMode, slowPeriodicLoop);
-            elapsedTime = TrcTimer.getCurrentTime() - startTime;
-            postPeriodicTaskTotalElapsedTime += elapsedTime;
-            if (elapsedTime > postPeriodicTaskMaxElapsedTime) postPeriodicTaskMaxElapsedTime = elapsedTime;
-            if (debugPerformanceEnabled)
-            {
-                globalTracer.traceInfo(
-                    moduleName, currMode + ".fastPostPeriodicTaskElapsedTime=" +
-                    elapsedTime + "s/" + (postPeriodicTaskTotalElapsedTime/loopCounter) + "s/" +
-                    postPeriodicTaskMaxElapsedTime + "s");
-            }
-            if (elapsedTime > taskTimeThreshold)
-            {
-                globalTracer.traceWarn(
-                    moduleName, currMode + ".postPeriodicTasks took too long (" +
-                    elapsedTime + "s/" + taskTimeThreshold + "s");
-            }
+            robotMainLoopProfiler.recordProfilePointElapsedTime("PostPeriodicTask", startNanoTime, true);
 
-            startTime = TrcTimer.getCurrentTime();
+            startNanoTime = TrcTimer.getNanoTime();
             SmartDashboard.updateValues();
             if (liveWindowEnabled)
             {
@@ -651,22 +539,7 @@ public abstract class FrcRobotBase extends RobotBase
                 //
                 dashboard.displayPrintf(0, "[%3d:%06.3f] %s", (int)(modeElapsedTime/60), modeElapsedTime%60, currMode);
             }
-            elapsedTime = TrcTimer.getCurrentTime() - startTime;
-            updatesTotalElapsedTime += elapsedTime;
-            if (elapsedTime > updatesMaxElapsedTime) updatesMaxElapsedTime = elapsedTime;
-            if (debugPerformanceEnabled)
-            {
-                globalTracer.traceInfo(
-                    moduleName, currMode + ".updatesElapsedTime=" +
-                    elapsedTime + "s/" + (updatesTotalElapsedTime/loopCounter) + "s/" +
-                    updatesTotalElapsedTime + "s");
-            }
-            if (elapsedTime > taskTimeThreshold)
-            {
-                globalTracer.traceWarn(
-                    moduleName, currMode + ".updates took too long (" +
-                    elapsedTime + "s/" + taskTimeThreshold + "s)");
-            }
+            robotMainLoopProfiler.recordProfilePointElapsedTime("UpdateTask", startNanoTime, true);
 
             robotThreadWatchdog.sendHeartBeat();
             //
@@ -676,7 +549,7 @@ public abstract class FrcRobotBase extends RobotBase
             //
             if (periodicInterval > 0.0)
             {
-                double loopTime = TrcTimer.getCurrentTime() - loopStartTime;
+                double loopTime = robotMainLoopProfiler.getHighPrecisionCurrentTime() - robotMainLoopProfiler.getLoopStartTime();
                 if (loopTime >= periodicInterval*2.0)
                 {
                     globalTracer.traceWarn(
@@ -712,25 +585,7 @@ public abstract class FrcRobotBase extends RobotBase
      */
     public void printPerformanceMetrics(TrcDbgTrace tracer)
     {
-        tracer.traceInfo(
-            moduleName, "***** Performance Metrics *****" +
-            "\n(" + prevMode + "->" + currMode + ") Performance Metrics: LoopCount=" + loopCounter +
-            "\nRobotInit=" + robotInitElapsedTime + "s" +
-            "\nPrevModeStopTask=" + stopTaskElapsedTime + "s" +
-            "\nPrevStopMode=" + stopModeElapsedTime + "s" +
-            "\nPrevRobotStopMode=" + robotStopModeElapsedTime + "s" +
-            "\nRobotStartMode=" + robotStartModeElapsedTime + "s" +
-            "\nstartMode=" + startModeElapsedTime + "s" +
-            "\nstartTask=" + startTaskElapsedTime + "s" +
-            "\nPrePeriodicTask(Avg/Max)=" + (prePeriodicTaskTotalElapsedTime/loopCounter) +"s/" +
-             prePeriodicTaskMaxElapsedTime + "s" +
-            "\nPeriodic(Avg/Max)=" + (periodicTotalElapsedTime/loopCounter) + "s/" +
-            periodicMaxElapsedTime + "s" +
-            "\nPostPeriodicTask(Avg/Max)=" + (postPeriodicTaskTotalElapsedTime/loopCounter) + "s/" +
-            postPeriodicTaskMaxElapsedTime + "s" +
-            "\nUpdates(Avg/Max)=" + (updatesTotalElapsedTime/slowLoopCounter) + "s/" +
-            updatesMaxElapsedTime + "s");
-
+        robotMainLoopProfiler.printPerformanceMetrics(tracer);
         TrcTaskMgr.printTaskPerformanceMetrics();
     }   //printPerformanceMetrics
 
