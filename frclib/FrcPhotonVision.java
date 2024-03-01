@@ -356,7 +356,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         {
             PhotonTrackedTarget target = result.getBestTarget();
             bestDetectedObj = new DetectedObject(result.getTimestampSeconds(), target, robotToCamera);
-            tracer.traceInfo(instanceName, "DetectedObj=" + bestDetectedObj);
+            tracer.traceDebug(instanceName, "DetectedObj=" + bestDetectedObj);
         }
 
         return bestDetectedObj;
