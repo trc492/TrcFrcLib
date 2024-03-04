@@ -242,7 +242,7 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
         return motor.getSupplyVoltage().getValueAsDouble();
     }   //getBusVoltage
 
-   /**
+    /**
      * This method sets the current limit of the motor.
      *
      * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
@@ -259,6 +259,19 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
         talonFxConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
         recordResponseCode("setCurrentLimit", motor.getConfigurator().apply(talonFxConfigs.CurrentLimits));
     }   //setCurrentLimit
+
+    /**
+     * This method sets the stator current limit of the motor.
+     *
+     * @param currentLimit specifies the stator current limit in amperes.
+     */
+    @Override
+    public void setStatorCurrentLimit(double currentLimit)
+    {
+        talonFxConfigs.CurrentLimits.StatorCurrentLimit = currentLimit;
+        talonFxConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
+        recordResponseCode("setStatorCurrentLimit", motor.getConfigurator().apply(talonFxConfigs.CurrentLimits));
+    }   //setStatorCurrentLimit
 
     /**
      * This method sets the close loop ramp rate.

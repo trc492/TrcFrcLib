@@ -218,7 +218,7 @@ public class FrcCANSparkMax extends TrcMotor
         return motor.getBusVoltage();
     }   //getBusVoltage
 
-   /**
+    /**
      * This method sets the current limit of the motor.
      *
      * @param currentLimit specifies the current limit (holding current) in amperes when feature is activated.
@@ -230,6 +230,17 @@ public class FrcCANSparkMax extends TrcMotor
     {
         recordResponseCode("setSmartCurrentLimit", motor.setSmartCurrentLimit((int) currentLimit));
     }   //setCurrentLimit
+
+    /**
+     * This method sets the stator current limit of the motor.
+     *
+     * @param currentLimit specifies the stator current limit in amperes.
+     */
+    @Override
+    public void setStatorCurrentLimit(double currentLimit)
+    {
+        throw new UnsupportedOperationException("Motor controller does not support setStatorCurrentLimit.");
+    }   //setStatorCurrentLimit
 
     // /**
     //  * This method sets the close loop percentage output limits. By default the limits are set to the max at -1 to 1.
