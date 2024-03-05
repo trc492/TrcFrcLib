@@ -39,6 +39,7 @@ import TrcCommonLib.trclib.TrcVisionTargetInfo;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -62,7 +63,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
      * it to provide a method to return the detected object rect and area.
      */
-    public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
+    public class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
         public final double timestamp;
         public final PhotonTrackedTarget target;
@@ -86,7 +87,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             this.target = target;
             this.rect = getRect(target);
             this.area = target.getArea();
-            this.targetPose = getPose(target, robotToCamera);
+            this.targetPose = getTargetPose(target, robotToCamera);
             this.robotPose = robotPose;
         }   //DetectedObject
 
@@ -210,51 +211,50 @@ public abstract class FrcPhotonVision extends PhotonCamera
         }   //getRect
 
         /**
-         * This method calculates the target pose of the detected object.
+         * This method calculates the target pose of the detected object. If PhotonVision 3D model is enabled
+         * (transform3d.translation3d is not zero), it will use the 3D info to calculate the detected object pose
+         * projected on the ground. Otherwise, it will use the 2D model (yaw and pitch angles).
          *
          * @param target specifies the detected target.
          * @param robotToCamera specifies the Transform3d of the camera position on the robot.
          * @return target pose of the detected target.
          */
-        private TrcPose2D getPose(PhotonTrackedTarget target, Transform3d robotToCamera)
+        private TrcPose2D getTargetPose(PhotonTrackedTarget target, Transform3d robotToCamera)
         {
-            Transform3d robotToTarget = robotToCamera.plus(target.getBestCameraToTarget());
-            Translation2d targetTranslation = robotToTarget.getTranslation().toTranslation2d();
-            Rotation2d targetRotation = robotToTarget.getRotation().toRotation2d();
+            TrcPose2D targetPose = null;
+            Translation3d camToTargetTranslation = target.getBestCameraToTarget().getTranslation();
 
-            return new TrcPose2D(
-                Units.metersToInches(-targetTranslation.getY()),
-                Units.metersToInches(targetTranslation.getX()),
-                -targetRotation.getDegrees());
-        }   //getPose
+            if (camToTargetTranslation.getX() != 0.0 || camToTargetTranslation.getY() != 0.0 ||
+                camToTargetTranslation.getZ() != 0.0)
+            {
+                // Use 3D model
+                Transform3d robotToTarget = robotToCamera.plus(target.getBestCameraToTarget());
+                Translation2d targetTranslation = robotToTarget.getTranslation().toTranslation2d();
+                Rotation2d targetRotation = robotToTarget.getRotation().toRotation2d();
+                targetPose = new TrcPose2D(
+                    Units.metersToInches(-targetTranslation.getY()),
+                    Units.metersToInches(targetTranslation.getX()),
+                    -targetRotation.getDegrees());
+            }
+            else
+            {
+                // Use 2D model.
+                double targetYawDegrees = target.getYaw();
+                double targetPitchDegrees = target.getPitch();
+                double targetYawRadians = Math.toRadians(targetYawDegrees);
+                double targetPitchRadians = Math.toRadians(targetPitchDegrees);
+                double camPitchRadians = -robotToCamera.getRotation().getY();
+                double targetDistanceInches =
+                    (getTargetGroundOffset(target) - Units.inchesToMeters(robotToCamera.getTranslation().getZ())) /
+                    Math.tan(camPitchRadians + targetPitchRadians);
+                targetPose = new TrcPose2D(
+                    targetDistanceInches * Math.sin(targetYawRadians),
+                    targetDistanceInches * Math.cos(targetYawRadians),
+                    targetYawDegrees);
+            }
 
-        // /**
-        //  * This method calculates the pose of the detected object given the yaw, pitch and height offset of the object
-        //  * from ground.
-        //  *
-        //  * @param target specifies the detected target.
-        //  * @param targetGroundOffset specifies the target ground offset in inches.
-        //  * @param camGroundOffset specifies the camera ground offset in inches.
-        //  * @param camPitch specifies the camera pitch from horizontal in degrees.
-        //  * @return a 2D pose of the detected object from the camera.
-        //  */
-        // private TrcPose2D getPose2d(
-        //     PhotonTrackedTarget target, double targetGroundOffset, double camGroundOffset, double camPitch)
-        // {
-        //     double targetYawDegrees = target.getYaw();
-        //     double targetPitchDegrees = target.getPitch();
-        //     double targetYawRadians = Math.toRadians(targetYawDegrees);
-        //     double targetPitchRadians = Math.toRadians(targetPitchDegrees);
-        //     double camPitchRadians = Math.toRadians(camPitch);
-        //     double targetDistanceInches =
-        //         (targetGroundOffset - camGroundOffset)/Math.tan(camPitchRadians + targetPitchRadians);
-        //     this.pitch2d = camPitch + targetPitchDegrees;
-
-        //     return new TrcPose2D(
-        //         targetDistanceInches * Math.sin(targetYawRadians),
-        //         targetDistanceInches * Math.cos(targetYawRadians),
-        //         targetYawDegrees);
-        // }   //getPose2d
+            return targetPose;
+        }   //getTargetPose
 
     }   //class DetectedObject
 
