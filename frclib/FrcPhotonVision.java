@@ -227,7 +227,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             if (camToTargetTranslation.getX() != 0.0 || camToTargetTranslation.getY() != 0.0 ||
                 camToTargetTranslation.getZ() != 0.0)
             {
-                // Use 3D model
+                // Use PhotonVision 3D model
                 Transform3d robotToTarget = robotToCamera.plus(target.getBestCameraToTarget());
                 Translation2d targetTranslation = robotToTarget.getTranslation().toTranslation2d();
                 Rotation2d targetRotation = robotToTarget.getRotation().toRotation2d();
@@ -238,14 +238,14 @@ public abstract class FrcPhotonVision extends PhotonCamera
             }
             else
             {
-                // Use 2D model.
+                // Use PhotonVision 2D model.
                 double targetYawDegrees = target.getYaw();
                 double targetPitchDegrees = target.getPitch();
                 double targetYawRadians = Math.toRadians(targetYawDegrees);
                 double targetPitchRadians = Math.toRadians(targetPitchDegrees);
                 double camPitchRadians = -robotToCamera.getRotation().getY();
                 double targetDistanceInches =
-                    (getTargetGroundOffset(target) - Units.inchesToMeters(robotToCamera.getTranslation().getZ())) /
+                    (getTargetGroundOffset(target) - Units.metersToInches(robotToCamera.getTranslation().getZ())) /
                     Math.tan(camPitchRadians + targetPitchRadians);
                 targetPose = new TrcPose2D(
                     targetDistanceInches * Math.sin(targetYawRadians),
