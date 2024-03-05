@@ -69,6 +69,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         public final Rect rect;
         public final double area;
         public final TrcPose2D targetPose;
+        public final TrcPose2D robotPose;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -76,14 +77,17 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param timestamp specifies the time stamp of the frame it was taken.
          * @param target specifies the photon detected target.
          * @param robotToCamera specifies the Transform3d of the camera position on the robot.
+         * @param robotPose specifies the estimated robot pose.
          */
-        public DetectedObject(double timestamp, PhotonTrackedTarget target, Transform3d robotToCamera)
+        public DetectedObject(
+            double timestamp, PhotonTrackedTarget target, Transform3d robotToCamera, TrcPose2D robotPose)
         {
             this.timestamp = timestamp;
             this.target = target;
             this.rect = getRect(target);
             this.area = target.getArea();
             this.targetPose = getPose(target, robotToCamera);
+            this.robotPose = robotPose;
         }   //DetectedObject
 
         /**
@@ -98,7 +102,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
                    ",pose=" + targetPose +
                    ",rect=" + rect +
                    ",area=" + area +
-                   ",target=" + target + "}";
+                   ",target=" + target +
+                   ",robotPose=" + robotPose + "}";
         }   //toString
 
         /**
@@ -332,7 +337,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
             for (int i = 0; i < targets.size(); i++)
             {
                 PhotonTrackedTarget target = targets.get(i);
-                detectedObjs[i] = new DetectedObject(timestamp, target, robotToCamera);
+                detectedObjs[i] = new DetectedObject(
+                    timestamp, target, robotToCamera, getRobotEstimatedPose(result, robotToCamera));
                 tracer.traceDebug(instanceName, "[" + i + "] DetectedObj=" + detectedObjs[i]);
             }
         }
@@ -355,7 +361,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
         if (result.hasTargets())
         {
             PhotonTrackedTarget target = result.getBestTarget();
-            bestDetectedObj = new DetectedObject(result.getTimestampSeconds(), target, robotToCamera);
+            bestDetectedObj = new DetectedObject(
+                result.getTimestampSeconds(), target, robotToCamera, getRobotEstimatedPose(result, robotToCamera));
             tracer.traceDebug(instanceName, "DetectedObj=" + bestDetectedObj);
         }
 
@@ -385,7 +392,8 @@ public abstract class FrcPhotonVision extends PhotonCamera
                 // Return the detected AprilTag with matching ID or the first one if no ID is provided.
                 if (aprilTagId == -1 || aprilTagId == target.getFiducialId())
                 {
-                    detectedAprilTag = new DetectedObject(timestamp, target, robotToCamera);
+                    detectedAprilTag = new DetectedObject(
+                        timestamp, target, robotToCamera, getRobotEstimatedPose(result, robotToCamera));
                     tracer.traceDebug(instanceName, "DetectedAprilTag=" + detectedAprilTag);
                     break;
                 }
@@ -398,17 +406,15 @@ public abstract class FrcPhotonVision extends PhotonCamera
     /**
      * This method uses the PhotonVision Pose Estimator to get an estimated absolute field position of the robot.
      *
+     * @param result specifies the latest pipeline result.
      * @param robotToCamera specifies the Transform3d position of the camera from the robot center.
      * @return absolute robot field position, can be null if not provided.
      */
-    public TrcPose2D getRobotEstimatedPose(Transform3d robotToCamera)
+    public TrcPose2D getRobotEstimatedPose(PhotonPipelineResult result, Transform3d robotToCamera)
     {
         TrcPose2D robotPose = null;
-        double startTime = TrcTimer.getCurrentTime();
-        PhotonPipelineResult result = getLatestResult();
-        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
-
         PNPResult estimatedPose = result.getMultiTagResult().estimatedPose;
+
         if (estimatedPose.isPresent)
         {
             Transform3d fieldToRobot = estimatedPose.best.plus(robotToCamera.inverse());
@@ -422,6 +428,21 @@ public abstract class FrcPhotonVision extends PhotonCamera
         }
 
         return robotPose;
+    }   //getRobotEstimatedPose
+
+    /**
+     * This method uses the PhotonVision Pose Estimator to get an estimated absolute field position of the robot.
+     *
+     * @param robotToCamera specifies the Transform3d position of the camera from the robot center.
+     * @return absolute robot field position, can be null if not provided.
+     */
+    public TrcPose2D getRobotEstimatedPose(Transform3d robotToCamera)
+    {
+        double startTime = TrcTimer.getCurrentTime();
+        PhotonPipelineResult result = getLatestResult();
+        if (performanceMetrics != null) performanceMetrics.logProcessingTime(startTime);
+
+        return getRobotEstimatedPose(result, robotToCamera);
     }   //getRobotEstimatedPose
 
     /**
