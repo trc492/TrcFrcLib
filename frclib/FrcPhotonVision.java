@@ -36,7 +36,10 @@ import TrcCommonLib.trclib.TrcPose2D;
 import TrcCommonLib.trclib.TrcTimer;
 import TrcCommonLib.trclib.TrcVisionPerformanceMetrics;
 import TrcCommonLib.trclib.TrcVisionTargetInfo;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -459,5 +462,23 @@ public abstract class FrcPhotonVision extends PhotonCamera
     {
         return aprilTagFieldPose.subtractRelativePose(aprilTagTargetPose).subtractRelativePose(robotToCamera);
     }   //getRobotPoseFromAprilTagFieldPose
+
+    /**
+     * This method calculates the target pose with an offset from the given AprilTag pose.
+     *
+     * @param aprilTagFieldPose3d specifies the AprilTag 3D field pose.
+     * @param xOffset specifies the x-offset from AprilTag in inches.
+     * @param yOffset specifies the y-offset from AprilTag in inches.
+     * @param targetAngle specifies the target field angle in degrees.
+     * @return calculated target pose.
+     */
+    public TrcPose2D getTargetPoseOffsetFromAprilTag(Pose3d aprilTagFieldPose3d, double xOffset, double yOffset, double targetAngle)
+    {
+        Transform2d offset = new Transform2d(
+            new Translation2d(Units.inchesToMeters(yOffset), Units.inchesToMeters(-xOffset)),
+            new Rotation2d(Units.degreesToRadians(targetAngle)));
+        Pose2d targetPose2d = aprilTagFieldPose3d.toPose2d().plus(offset);
+        return new TrcPose2D(targetPose2d.getX(), -targetPose2d.getY(), -targetPose2d.getRotation().getDegrees());
+    }   //getTargetPoseOffsetFromAprilTag
 
 }   //class FrcPhotonVision
