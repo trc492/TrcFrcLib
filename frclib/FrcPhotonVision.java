@@ -39,11 +39,9 @@ import TrcCommonLib.trclib.TrcVisionTargetInfo;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -220,40 +218,38 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * projected on the ground. Otherwise, it will use the 2D model (yaw and pitch angles).
          *
          * @param target specifies the detected target.
-         * @param robotToCamera specifies the Transform3d of the camera position on the robot.
-         * @return target pose of the detected target.
+         * @param robotToCam specifies the Transform3d of the camera position on the robot.
+         * @return target pose from the camera.
          */
-        private TrcPose2D getTargetPose(PhotonTrackedTarget target, Transform3d robotToCamera)
+        private TrcPose2D getTargetPose(PhotonTrackedTarget target, Transform3d robotToCam)
         {
             TrcPose2D targetPose = null;
-            Translation3d camToTargetTranslation = target.getBestCameraToTarget().getTranslation();
+            Transform3d camToTarget = target.getBestCameraToTarget();
+            Translation2d camToTargetTranslation = camToTarget.getTranslation().toTranslation2d();
+            Rotation2d camToTargetRotation = camToTarget.getRotation().toRotation2d();
 
-            if (camToTargetTranslation.getX() != 0.0 || camToTargetTranslation.getY() != 0.0 ||
-                camToTargetTranslation.getZ() != 0.0)
+            if (camToTarget.getX() != 0.0 || camToTarget.getY() != 0.0 || camToTarget.getZ() != 0.0)
             {
                 // Use PhotonVision 3D model
-                Transform3d robotToTarget = robotToCamera.plus(target.getBestCameraToTarget());
-                Translation2d targetTranslation = robotToTarget.getTranslation().toTranslation2d();
-                Rotation2d targetRotation = robotToTarget.getRotation().toRotation2d();
                 targetPose = new TrcPose2D(
-                    Units.metersToInches(-targetTranslation.getY()),
-                    Units.metersToInches(targetTranslation.getX()),
-                    -targetRotation.getDegrees());
+                    Units.metersToInches(-camToTargetTranslation.getY()),
+                    Units.metersToInches(camToTargetTranslation.getX()),
+                    -camToTargetRotation.getDegrees());
             }
             else
             {
                 // Use PhotonVision 2D model.
-                Rotation3d camRotation = robotToCamera.getRotation();
-                double targetYawRadians = Units.degreesToRadians(target.getYaw()) - camRotation.getZ();
+                double camPitchRadians = -robotToCam.getRotation().getY();
                 double targetPitchRadians = Units.degreesToRadians(target.getPitch());
-                double camPitchRadians = -camRotation.getY();
+                double targetYawDegrees = target.getYaw();
+                double targetYawRadians = Units.degreesToRadians(targetYawDegrees);
                 double targetDistanceInches =
-                    (getTargetGroundOffset(target) - Units.metersToInches(robotToCamera.getTranslation().getZ())) /
+                    (getTargetGroundOffset(target) - Units.metersToInches(robotToCam.getZ())) /
                     Math.tan(camPitchRadians + targetPitchRadians);
                 targetPose = new TrcPose2D(
                     targetDistanceInches * Math.sin(targetYawRadians),
                     targetDistanceInches * Math.cos(targetYawRadians),
-                    Units.radiansToDegrees(targetYawRadians));
+                    targetYawDegrees);
             }
 
             return targetPose;
