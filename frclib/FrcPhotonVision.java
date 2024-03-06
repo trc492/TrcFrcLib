@@ -39,6 +39,7 @@ import TrcCommonLib.trclib.TrcVisionTargetInfo;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -242,18 +243,17 @@ public abstract class FrcPhotonVision extends PhotonCamera
             else
             {
                 // Use PhotonVision 2D model.
-                double targetYawDegrees = target.getYaw();
-                double targetPitchDegrees = target.getPitch();
-                double targetYawRadians = Math.toRadians(targetYawDegrees);
-                double targetPitchRadians = Math.toRadians(targetPitchDegrees);
-                double camPitchRadians = -robotToCamera.getRotation().getY();
+                Rotation3d camRotation = robotToCamera.getRotation();
+                double targetYawRadians = Units.degreesToRadians(target.getYaw()) - camRotation.getZ();
+                double targetPitchRadians = Units.degreesToRadians(target.getPitch());
+                double camPitchRadians = -camRotation.getY();
                 double targetDistanceInches =
                     (getTargetGroundOffset(target) - Units.metersToInches(robotToCamera.getTranslation().getZ())) /
                     Math.tan(camPitchRadians + targetPitchRadians);
                 targetPose = new TrcPose2D(
                     targetDistanceInches * Math.sin(targetYawRadians),
                     targetDistanceInches * Math.cos(targetYawRadians),
-                    targetYawDegrees);
+                    Units.radiansToDegrees(targetYawRadians));
             }
 
             return targetPose;
