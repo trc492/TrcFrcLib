@@ -22,23 +22,17 @@
 
 package TrcFrcLib.frclib;
 
-import TrcCommonLib.trclib.TrcAnalogInput;
-import TrcCommonLib.trclib.TrcCardinalConverter;
-import TrcCommonLib.trclib.TrcEncoder;
+import TrcCommonLib.trclib.TrcAbsoluteEncoder;
 import TrcCommonLib.trclib.TrcAnalogInput.DataType;
 
 /**
  * This class implements an Analog Absolute Encoders that implements the TrcEncoder interface to allow compatibility
  * to other types of encoders.
  */
-public class FrcAnalogEncoder implements TrcEncoder
+public class FrcAnalogEncoder
 {
     private final FrcAnalogInput analogInput;
-    private final TrcCardinalConverter<TrcAnalogInput.DataType> cardinalConverter;
-    private double sign = 1.0;
-    private double scale = 1.0;
-    private double offset = 0.0;
-    private double zeroOffset = 0.0;
+    private final TrcAbsoluteEncoder absEncoder;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -50,11 +44,7 @@ public class FrcAnalogEncoder implements TrcEncoder
     public FrcAnalogEncoder(String instanceName, int channel, boolean powerRailIs3V3)
     {
         analogInput = new FrcAnalogInput(instanceName, channel, null, powerRailIs3V3);
-        cardinalConverter = new TrcCardinalConverter<TrcAnalogInput.DataType>(
-            instanceName, analogInput, TrcAnalogInput.DataType.NORMALIZED_DATA);
-        // Data provided to the Cardinal Converter is normalized to the range of 0.0 to 1.0 regardless of the analog
-        // power rail being 3.3V or 5V.
-        cardinalConverter.setCardinalRange(0, 0.0, 1.0);
+        absEncoder = new TrcAbsoluteEncoder(instanceName, this::getNormalizedValue, 0.0, 1.0);
     }   //FrcAnalogEncoder
 
     /**
@@ -69,24 +59,14 @@ public class FrcAnalogEncoder implements TrcEncoder
     }   //FrcAnalogEncoder
 
     /**
-     * This method enables/disables the Cardinal Converter task.
+     * This method returns the created Absolute Encoder object.
      *
-     * @param enabled specifies true to enable cardinal converter, false to disable.
+     * @return absolute encoder object.
      */
-    public void setEnabled(boolean enabled)
+    public TrcAbsoluteEncoder getAbsoluteEncoder()
     {
-        cardinalConverter.setEnabled(enabled);
-    }   //setEnabled
-
-    /**
-     * This method checks if the Cardinal Converter task is enabled.
-     *
-     * @return true if cardinal converter is enabled, false if disabled.
-     */
-    public boolean isEnabled()
-    {
-        return cardinalConverter.isEnabled();
-    }   //isEnabled
+        return absEncoder;
+    }   //getAbsoluteEncoder
 
     /**
      * This method reads the raw voltage from the analog input of the encoder.
@@ -98,78 +78,14 @@ public class FrcAnalogEncoder implements TrcEncoder
         return analogInput.getRawData(0, DataType.RAW_DATA).value;
     }   //getRawVoltage
 
-    //
-    // Implements the TrcEncoder interface.
-    //
-
     /**
-     * This method resets the encoder revolution counter (Cardinal Converter).
-     */
-    @Override
-    public void reset()
-    {
-        cardinalConverter.reset(0);
-    }   //reset
-
-    /**
-     * This method reads the normalized analog input of the encoder.
+     * This method reads the normalized analog input value in the range of 0.0 and 1.0.
      *
-     * @return normalized input of the encoder in the unit of percent rotation (0 to 1).
+     * @return normalized value.
      */
-    @Override
-    public double getRawPosition()
+    private double getNormalizedValue()
     {
-        return analogInput.getRawData(0, DataType.NORMALIZED_DATA).value;
-    }   //getRawPosition
-
-    /**
-     * This method returns the encoder position adjusted by scale and offset.
-     *
-     * @return encoder position adjusted by scale and offset.
-     */
-    @Override
-    public double getScaledPosition()
-    {
-        // getCartesianData returns the normalized reading from AnalogInput.
-        // Offset must also be normalized.
-        return sign * ((cardinalConverter.getCartesianData(0).value - zeroOffset) * scale + offset);
-    }   //getScaledPosition
-
-    /**
-     * This method reverses the direction of the encoder.
-     *
-     * @param inverted specifies true to reverse the encoder direction, false otherwise.
-     */
-    @Override
-    public void setInverted(boolean inverted)
-    {
-        sign = inverted ? -1.0 : 1.0;
-    }   //setInverted
-
-    /**
-     * This method checks if the encoder direction is inverted.
-     *
-     * @return true if encoder direction is rerversed, false otherwise.
-     */
-    @Override
-    public boolean isInverted()
-    {
-        return sign == -1.0;
-    }   //isInverted
-
-    /**
-     * This method sets the encoder scale and offset.
-     *
-     * @param scale specifies the scale value.
-     * @param offset specifies the offset value.
-     * @param zeroOffset specifies the zero offset for absolute encoder.
-     */
-    @Override
-    public void setScaleAndOffset(double scale, double offset, double zeroOffset)
-    {
-        this.scale = scale;
-        this.offset = offset;
-        this.zeroOffset = zeroOffset;
-    }   //setScaleAndOffset
+        return analogInput.getProcessedData(0, DataType.NORMALIZED_DATA).value;
+    }   //getNormalizedData
 
 }   //class FrcAnalogEncoder
