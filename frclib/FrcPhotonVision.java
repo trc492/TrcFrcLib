@@ -42,6 +42,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -225,12 +226,14 @@ public abstract class FrcPhotonVision extends PhotonCamera
         {
             TrcPose2D targetPose = null;
             Transform3d camToTarget = target.getBestCameraToTarget();
-            Translation2d camToTargetTranslation = camToTarget.getTranslation().toTranslation2d();
-            Rotation2d camToTargetRotation = camToTarget.getRotation().toRotation2d();
 
             if (camToTarget.getX() != 0.0 || camToTarget.getY() != 0.0 || camToTarget.getZ() != 0.0)
             {
                 // Use PhotonVision 3D model
+                Transform3d projectedTransform = new Transform3d(new Translation3d(0, 0, 0), robotToCam.getRotation());
+                Transform3d projectedCamToTarget = projectedTransform.plus(camToTarget);
+                Translation2d camToTargetTranslation = projectedCamToTarget.getTranslation().toTranslation2d();
+                Rotation2d camToTargetRotation = projectedCamToTarget.getRotation().toRotation2d();
                 targetPose = new TrcPose2D(
                     Units.metersToInches(-camToTargetTranslation.getY()),
                     Units.metersToInches(camToTargetTranslation.getX()),
