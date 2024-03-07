@@ -91,6 +91,7 @@ public class FrcCANSparkMax extends TrcMotor
             relativeEncoder = null;
             absoluteEncoder = motor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
             absEncoderConverter = new TrcAbsoluteEncoder(instanceName, absoluteEncoder::getPosition, 0.0, 1.0);
+            absEncoderConverter.setTaskEnabled(true);
         }
         else
         {
