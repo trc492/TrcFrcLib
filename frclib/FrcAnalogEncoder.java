@@ -28,7 +28,7 @@ import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcAnalogInput.DataType;
 
 /**
- * This class implements an Analog Absolute Encoders that implements the FrcEncoder interface to allow compatibility
+ * This class implements an Analog Absolute Encoders that implements the TrcEncoder interface to allow compatibility
  * to other types of encoders.
  */
 public class FrcAnalogEncoder implements TrcEncoder

@@ -35,6 +35,7 @@ import com.revrobotics.CANSparkBase.SoftLimitDirection;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.SparkLimitSwitch.Type;
 
+import TrcCommonLib.trclib.TrcAbsoluteEncoder;
 import TrcCommonLib.trclib.TrcDigitalInput;
 import TrcCommonLib.trclib.TrcEncoder;
 import TrcCommonLib.trclib.TrcMotor;
@@ -57,6 +58,7 @@ public class FrcCANSparkMax extends TrcMotor
     private final SparkPIDController pidCtrl;
     private final RelativeEncoder relativeEncoder;
     private final SparkAbsoluteEncoder absoluteEncoder;
+    private final TrcAbsoluteEncoder absEncoderConverter;
     private SparkLimitSwitch sparkMaxRevLimitSwitch, sparkMaxFwdLimitSwitch;
     private Double velSetpoint = null;
     private Double posSetpoint = null;
@@ -88,11 +90,13 @@ public class FrcCANSparkMax extends TrcMotor
         {
             relativeEncoder = null;
             absoluteEncoder = motor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
+            absEncoderConverter = new TrcAbsoluteEncoder(instanceName, absoluteEncoder::getPosition, 0.0, 1.0);
         }
         else
         {
             relativeEncoder = motor.getEncoder();
             absoluteEncoder = null;
+            absEncoderConverter = null;
         }
 
         sparkMaxRevLimitSwitch = sparkMaxFwdLimitSwitch = null;
@@ -592,7 +596,7 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public double getMotorPosition()
     {
-        return relativeEncoder != null? relativeEncoder.getPosition(): absoluteEncoder.getPosition();
+        return relativeEncoder != null? relativeEncoder.getPosition(): absEncoderConverter.getContinuousValue();
     }   //getMotorPosition
 
     /**
