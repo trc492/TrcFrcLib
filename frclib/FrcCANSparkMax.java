@@ -490,7 +490,11 @@ public class FrcCANSparkMax extends TrcMotor
         // Only relative encoder allows reset its position.
         if (relativeEncoder != null)
         {
-            recordResponseCode("encoderReset", relativeEncoder.setPosition(0.0));
+            recordResponseCode("relEncoderReset", relativeEncoder.setPosition(0.0));
+        }
+        else if (absoluteEncoder != null)
+        {
+            recordResponseCode("absEncoderReset", absoluteEncoder.setZeroOffset(absoluteEncoder.getPosition()));
         }
     }   //resetMotorPosition
 
