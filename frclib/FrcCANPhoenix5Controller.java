@@ -665,17 +665,6 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
     }   //getPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the the specified slot.
-     *
-     * @param slotIdx specifies the slot index.
-     * @param tolerance specifies PID tolerance.
-     */
-    private void setPidTolerance(int slotIdx, double tolerance)
-    {
-        recordResponseCode("configAllowableClosedloopError", motor.configAllowableClosedloopError(slotIdx, tolerance));
-    }   //setPidTolerance
-
-    /**
      * This method sets the PID coefficients of the motor controller's velocity PID controller.
      *
      * @param pidCoeff specifies the PID coefficients to set.
@@ -696,30 +685,6 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
     {
         return getPidCoefficients(PIDSLOT_VELOCITY);
     }   //getMotorVelocityPidCoefficients
-
-    /**
-     * This method sets the PID tolerance of the motor controller's velocity PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorVelocityPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
-    }   //setMotorVelocityPidTolerance
-
-    /**
-     * This method checks if the motor is at the set velocity.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorVelocityOnTarget(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
-        return motor.getClosedLoopError(PIDSLOT_VELOCITY) <= tolerance;
-    }   //getMotorVelocityOnTarget
 
     /**
      * This method sets the PID coefficients of the motor controller's position PID controller.
@@ -744,30 +709,6 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
     }   //getMotorPositionPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's position PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorPositionPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_POSITION, tolerance);
-    }   //setMotorPositionPidTolerance
-
-    /**
-     * This method checks if the motor is at the set position.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorPositionOnTarget(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_POSITION, tolerance);
-        return motor.getClosedLoopError(PIDSLOT_POSITION) <= tolerance;
-    }   //getMotorPositionOnTarget
-
-    /**
      * This method sets the PID coefficients of the motor controller's current PID controller.
      *
      * @param pidCoeff specifies the PID coefficients to set.
@@ -788,30 +729,6 @@ public abstract class FrcCANPhoenix5Controller<T extends BaseTalon> extends TrcM
     {
         return getPidCoefficients(PIDSLOT_CURRENT);
     }   //geteMotorCurrentPidCoefficients
-
-    /**
-     * This method sets the PID tolerance of the motor controller's current PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorCurrentPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_CURRENT, tolerance);
-    }   //setMotorCurrentPidTolerance
-
-    /**
-     * This method checks if the motor is at the set current.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorCurrentOnTarget(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_CURRENT, tolerance);
-        return motor.getClosedLoopError(PIDSLOT_CURRENT) <= tolerance;
-    }   //getMotorCurrentOnTarget
 
     //
     // The following methods override the software simulation in TrcMotor providing direct support in hardware.

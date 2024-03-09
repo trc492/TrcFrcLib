@@ -38,7 +38,6 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.core.CoreTalonFX;
 import com.ctre.phoenix6.signals.AppliedRotorPolarityValue;
-import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.ForwardLimitTypeValue;
 import com.ctre.phoenix6.signals.ForwardLimitValue;
@@ -847,35 +846,6 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     }   //getMotorVelocityPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's velocity PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorVelocityPidTolerance(double tolerance)
-    {
-        throw new UnsupportedOperationException("Controller does not support setting PID Tolerance.");
-    }   //setMotorVelocityPidTolerance
-
-    /**
-     * This method checks if the motor is at the set velocity.
-     *
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorVelocityOnTarget(double tolerance)
-    {
-        boolean onTarget = false;
-
-        if (motor.getControlMode().getValue().equals(ControlModeValue.VelocityDutyCycle))
-        {
-            onTarget = motor.getClosedLoopError().getValueAsDouble() <= tolerance;
-        }
-
-        return onTarget;
-    }   //getMotorVelocityOnTarget
-
-    /**
      * This method sets the PID coefficients of the motor controller's position PID controller.
      *
      * @param pidCoeff specifies the PID coefficients to set.
@@ -898,36 +868,6 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     }   //getMotorPositionPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's position PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorPositionPidTolerance(double tolerance)
-    {
-        throw new UnsupportedOperationException("Controller does not support setting PID Tolerance.");
-    }   //setMotorPositionPidTolerance
-
-    /**
-     * This method checks if the motor is at the set position.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorPositionOnTarget(double tolerance)
-    {
-        boolean onTarget = false;
-
-        if (motor.getControlMode().getValue().equals(ControlModeValue.PositionDutyCycle))
-        {
-            onTarget = motor.getClosedLoopError().getValueAsDouble() <= tolerance;
-        }
-
-        return onTarget;
-    }   //getMotorPositionOnTarget
-
-    /**
      * This method sets the PID coefficients of the motor controller's current PID controller.
      *
      * @param pidCoeff specifies the PID coefficients to set.
@@ -948,36 +888,6 @@ public abstract class FrcCANPhoenix6Controller<T extends CoreTalonFX> extends Tr
     {
         throw new UnsupportedOperationException("Controller does not support current control PID coefficients.");
     }   //geteMotorCurrentPidCoefficients
-
-    /**
-     * This method sets the PID tolerance of the motor controller's current PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorCurrentPidTolerance(double tolerance)
-    {
-        throw new UnsupportedOperationException("Controller does not support setting PID Tolerance.");
-    }   //setMotorCurrentPidTolerance
-
-    /**
-     * This method checks if the motor is at the set current.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorCurrentOnTarget(double tolerance)
-    {
-        boolean onTarget = false;
-
-        if (motor.getControlMode().getValue().equals(ControlModeValue.TorqueCurrentFOC))
-        {
-            onTarget = motor.getClosedLoopError().getValueAsDouble() <= tolerance;
-        }
-
-        return onTarget;
-    }   //getMotorCurrentOnTarget
 
     //
     // The following methods override the software simulation in TrcMotor providing direct support in hardware.

@@ -476,17 +476,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     }   //setMotorVelocityPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's velocity PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorVelocityPidTolerance(double tolerance)
-    {
-        throw new UnsupportedOperationException("Motor controller does not support setMotorVelocityPidTolerance.");
-    }   //setMotorVelocityPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's velocity PID controller.
      *
      * @return PID coefficients of the motor's veloicty PID controller.
@@ -496,18 +485,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     {
         throw new UnsupportedOperationException("Motor controller does not support getMotorVelocityPidCoefficients.");
     }   //getMotorVelocityPidCoefficients
-
-    /**
-     * This method checks if the motor is at the set velocity.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorVelocityOnTarget(double tolerance)
-    {
-        throw new UnsupportedOperationException("Motor controller does not support getMotorVelocityOnTarget.");
-    }   //getMotorVelocityOnTarget
 
     /**
      * This method sets the PID coefficients of the motor controller's position PID controller.
@@ -521,17 +498,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     }   //setMotorPositionPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's position PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorPositionPidTolerance(double tolerance)
-    {
-        throw new UnsupportedOperationException("Motor controller does not support setMotorPositionPidTolerance.");
-    }   //setMotorPositionPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's position PID controller.
      *
      * @return PID coefficients of the motor's position PID controller.
@@ -541,18 +507,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     {
         throw new UnsupportedOperationException("Motor controller does not support getMotorPositionPidCoefficients.");
     }   //getMotorPositionPidCoefficients
-
-    /**
-     * This method checks if the motor is at the set position.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorPositionOnTarget(double tolerance)
-    {
-        throw new UnsupportedOperationException("Motor controller does not support getMotorPositionOnTarget.");
-    }   //getMotorPositionOnTarget
 
     /**
      * This method sets the PID coefficients of the motor controller's current PID controller.
@@ -566,17 +520,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     }   //setMotorCurrentPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's current PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorCurrentPidTolerance(double tolerance)
-    {
-        throw new UnsupportedOperationException("Motor controller does not support setMotorCurretPidTolerance.");
-    }   //setMotorCurrentPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's current PID controller.
      *
      * @return PID coefficients of the motor's current PID controller.
@@ -586,18 +529,6 @@ public class FrcPWMMotorController<T extends PWMMotorController> extends TrcMoto
     {
         throw new UnsupportedOperationException("Motor controller does not support getMotorCurretPidCoefficients.");
     }   //geteMotorCurrentPidCoefficients
-
-    /**
-     * This method checks if the motor is at the set current.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorCurrentOnTarget(double tolerance)
-    {
-        throw new UnsupportedOperationException("Motor controller does not support getMotorCurretOnTarget.");
-    }   //getMotorCurrentOnTarget
 
     //
     // The following methods override the software simulation in TrcMotor providing direct support in hardware.

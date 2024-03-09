@@ -60,9 +60,6 @@ public class FrcCANSparkMax extends TrcMotor
     private final SparkAbsoluteEncoder absoluteEncoder;
     private final TrcAbsoluteEncoder absEncoderConverter;
     private SparkLimitSwitch sparkMaxRevLimitSwitch, sparkMaxFwdLimitSwitch;
-    private Double velSetpoint = null;
-    private Double posSetpoint = null;
-    private Double currentSetpoint = null;
     // The number of non-success error codes reported by the device after sending a command.
     private int errorCount = 0;
     private REVLibError lastError = null;
@@ -555,7 +552,6 @@ public class FrcCANSparkMax extends TrcMotor
     public void setMotorVelocity(double velocity, double acceleration, double feedForward)
     {
         // setVelocity takes a velocity value in RPM.
-        velSetpoint = velocity;
         recordResponseCode(
             "setVelocity", pidCtrl.setReference(velocity*60.0, ControlType.kVelocity, PIDSLOT_VELOCITY));
     }   //setMotorVelocity
@@ -589,7 +585,6 @@ public class FrcCANSparkMax extends TrcMotor
         {
             recordResponseCode("setOutputRange", pidCtrl.setOutputRange(-powerLimit, powerLimit, PIDSLOT_POSITION));
         }
-        posSetpoint = position;
         recordResponseCode("setPosition", pidCtrl.setReference(position, ControlType.kPosition, PIDSLOT_POSITION));
     }   //setMotorPosition
 
@@ -612,7 +607,6 @@ public class FrcCANSparkMax extends TrcMotor
     @Override
     public void setMotorCurrent(double current)
     {
-        currentSetpoint = current;
         recordResponseCode("setCurret", pidCtrl.setReference(current, ControlType.kCurrent, PIDSLOT_CURRENT));
     }   //setMotorCurrent
 
@@ -643,18 +637,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the the specified slot.
-     *
-     * @param slotIdx specifies the slot index.
-     * @param tolerance specifies PID tolerance.
-     */
-    private void setPidTolerance(int slotIdx, double tolerance)
-    {
-        recordResponseCode(
-            "setSmartMotionAllowedClosedLoopError", pidCtrl.setSmartMotionAllowedClosedLoopError(tolerance, slotIdx));
-    }   //setPidTolerance
-
-    /**
      * This method returns the PID coefficients of the specified slot.
      *
      * @param pidSlot specifies the PID slot.
@@ -679,17 +661,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setMotorVelocityPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's velocity PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorVelocityPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
-    }   //setMotorVelocityPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's velocity PID controller.
      *
      * @return PID coefficients of the motor's veloicty PID controller.
@@ -699,19 +670,6 @@ public class FrcCANSparkMax extends TrcMotor
     {
         return getPidCoefficients(PIDSLOT_VELOCITY);
     }   //getMotorVelocityPidCoefficients
-
-    /**
-     * This method checks if the motor is at the set velocity.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorVelocityOnTarget(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_VELOCITY, tolerance);
-        return velSetpoint != null && Math.abs(velSetpoint - getMotorVelocity()) <= tolerance;
-    }   //getMotorVelocityOnTarget
 
     /**
      * This method sets the PID coefficients of the motor controller's position PID controller.
@@ -725,17 +683,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setMotorPositionPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's position PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorPositionPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_POSITION, tolerance);
-    }   //setMotorPositionPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's position PID controller.
      *
      * @return PID coefficients of the motor's position PID controller.
@@ -745,19 +692,6 @@ public class FrcCANSparkMax extends TrcMotor
     {
         return getPidCoefficients(PIDSLOT_POSITION);
     }   //getMotorPositionPidCoefficients
-
-    /**
-     * This method checks if the motor is at the set position.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorPositionOnTarget(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_POSITION, tolerance);
-        return posSetpoint != null && Math.abs(posSetpoint - getMotorPosition()) <= tolerance;
-    }   //getMotorPositionOnTarget
 
     /**
      * This method sets the PID coefficients of the motor controller's current PID controller.
@@ -771,17 +705,6 @@ public class FrcCANSparkMax extends TrcMotor
     }   //setMotorCurrentPidCoefficients
 
     /**
-     * This method sets the PID tolerance of the motor controller's current PID controller.
-     *
-     * @param tolerance specifies the PID tolerance to set.
-     */
-    @Override
-    public void setMotorCurrentPidTolerance(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_CURRENT, tolerance);
-    }   //setMotorCurrentPidTolerance
-
-    /**
      * This method returns the PID coefficients of the motor controller's current PID controller.
      *
      * @return PID coefficients of the motor's current PID controller.
@@ -791,19 +714,6 @@ public class FrcCANSparkMax extends TrcMotor
     {
         return getPidCoefficients(PIDSLOT_CURRENT);
     }   //geteMotorCurrentPidCoefficients
-
-    /**
-     * This method checks if the motor is at the set current.
-     *
-     * @param tolerance specifies the PID tolerance.
-     * @return true if motor is on target, false otherwise.
-     */
-    @Override
-    public boolean getMotorCurrentOnTarget(double tolerance)
-    {
-        setPidTolerance(PIDSLOT_CURRENT, tolerance);
-        return currentSetpoint != null && Math.abs(currentSetpoint - getMotorCurrent()) <= tolerance;
-    }   //getMotorCurrentOnTarget
 
     //
     // The following methods override the software simulation in TrcMotor providing direct support in hardware.
