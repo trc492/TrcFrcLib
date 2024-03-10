@@ -63,6 +63,7 @@ public class FrcCANSparkMax extends TrcMotor
     // The number of non-success error codes reported by the device after sending a command.
     private int errorCount = 0;
     private REVLibError lastError = null;
+    private double zeroOffset = 0.0;
 
     /**
      * Constructor: Create an instance of the object.
@@ -481,18 +482,33 @@ public class FrcCANSparkMax extends TrcMotor
     /**
      * This method resets the motor position sensor, typically an encoder.
      */
+    public void resetMotorPosition(boolean hardware)
+    {
+        if (hardware)
+        {
+            // Only relative encoder allows reset its position.
+            if (relativeEncoder != null)
+            {
+                recordResponseCode("relEncoderReset", relativeEncoder.setPosition(0.0));
+            }
+            else if (absoluteEncoder != null)
+            {
+                recordResponseCode("absEncoderReset", absoluteEncoder.setZeroOffset(absoluteEncoder.getPosition()));
+            }
+        }
+        else
+        {
+            zeroOffset = getRawMotorPosition();
+        }
+    }   //resetMotorPosition
+
+    /**
+     * This method resets the motor position sensor, typically an encoder.
+     */
     @Override
     public void resetMotorPosition()
     {
-        // Only relative encoder allows reset its position.
-        if (relativeEncoder != null)
-        {
-            recordResponseCode("relEncoderReset", relativeEncoder.setPosition(0.0));
-        }
-        else if (absoluteEncoder != null)
-        {
-            recordResponseCode("absEncoderReset", absoluteEncoder.setZeroOffset(absoluteEncoder.getPosition()));
-        }
+        resetMotorPosition(true);
     }   //resetMotorPosition
 
     /**
@@ -593,10 +609,20 @@ public class FrcCANSparkMax extends TrcMotor
      *
      * @return current motor position in number of rotations.
      */
+    private double getRawMotorPosition()
+    {
+        return relativeEncoder != null? relativeEncoder.getPosition(): absEncoderConverter.getContinuousValue();
+    }   //getRawMotorPosition
+
+    /**
+     * This method returns the motor position by reading the position sensor.
+     *
+     * @return current motor position in number of rotations.
+     */
     @Override
     public double getMotorPosition()
     {
-        return relativeEncoder != null? relativeEncoder.getPosition(): absEncoderConverter.getContinuousValue();
+        return getRawMotorPosition() - zeroOffset;
     }   //getMotorPosition
 
     /**
