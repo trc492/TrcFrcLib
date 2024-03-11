@@ -90,7 +90,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             this.target = target;
             this.rect = getRect(target);
             this.area = target.getArea();
-            this.targetPose = getTargetPose(target, robotToCamera);
+            this.targetPose = getTargetPose(target.getBestCameraToTarget(), robotToCamera);
             this.robotPose = robotPose;
         }   //DetectedObject
 
@@ -222,14 +222,13 @@ public abstract class FrcPhotonVision extends PhotonCamera
          * @param robotToCam specifies the Transform3d of the camera position on the robot.
          * @return target pose from the camera.
          */
-        private TrcPose2D getTargetPose(PhotonTrackedTarget target, Transform3d robotToCam)
+        private TrcPose2D getTargetPose(Transform3d camToTarget, Transform3d robotToCam)
         {
             TrcPose2D targetPose = null;
-            Transform3d camToTarget = target.getBestCameraToTarget();
 
             if (camToTarget.getX() != 0.0 || camToTarget.getY() != 0.0 || camToTarget.getZ() != 0.0)
             {
-                // Use PhotonVision 3D model
+                // Use PhotonVision 3D model.
                 Transform3d translatedCamTransform = new Transform3d(new Translation3d(0, 0, 0), robotToCam.getRotation());
                 Transform3d projectedCamToTarget = translatedCamTransform.plus(camToTarget);
                 Translation2d camToTargetTranslation = projectedCamToTarget.getTranslation().toTranslation2d();
@@ -257,6 +256,20 @@ public abstract class FrcPhotonVision extends PhotonCamera
 
             return targetPose;
         }   //getTargetPose
+
+        /**
+         * This method adds a transform to the detected target and returns the result 2D pose projected on the ground.
+         *
+         * @param target specifies the photon detected target object.
+         * @param robotToCam specifies the Transform3d of the camera position on the robot.
+         * @param transform specifies the transform to be added to the detected target.
+         * @return 2D pose of the new target projected on the ground.
+         */
+        public TrcPose2D addTransformToTarget(
+            PhotonTrackedTarget target, Transform3d robotToCam, Transform3d transform)
+        {
+            return getTargetPose(target.getBestCameraToTarget().plus(transform), robotToCam);
+        }   //addTransformToTarget
 
     }   //class DetectedObject
 
