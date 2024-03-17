@@ -77,6 +77,16 @@ public abstract class FrcRobotBase extends RobotBase
      */
     public abstract void robotStopMode(RunMode runMode, RunMode nextMode);
 
+    /**
+     * This method is called periodically in the specified run mode. This is typically used to execute periodic tasks
+     * that's common to all run modes.
+     *
+     * @param runMode specifies the current run mode.
+     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
+     *        false otherwise.
+     */
+    public abstract void robotPeriodic(RunMode runMode, boolean slowPeriodicLoop);
+
     private final TrcDbgTrace globalTracer;
     private final FrcDashboard dashboard;
     private final String robotName;
@@ -495,24 +505,28 @@ public abstract class FrcRobotBase extends RobotBase
             if (currMode == RunMode.DISABLED_MODE && disabledMode != null)
             {
                 modeThread.inDisabled(true);
+                robotPeriodic(currMode, slowPeriodicLoop);
                 disabledMode.periodic(modeElapsedTime, slowPeriodicLoop);
                 modeThread.inDisabled(false);
             }
             else if (currMode == RunMode.TEST_MODE && testMode != null)
             {
                 modeThread.inTest(true);
+                robotPeriodic(currMode, slowPeriodicLoop);
                 testMode.periodic(modeElapsedTime, slowPeriodicLoop);
                 modeThread.inTest(false);
             }
             else if (currMode == RunMode.AUTO_MODE && autoMode != null)
             {
                 modeThread.inAutonomous(true);
+                robotPeriodic(currMode, slowPeriodicLoop);
                 autoMode.periodic(modeElapsedTime, slowPeriodicLoop);
                 modeThread.inAutonomous(false);
             }
             else if (currMode == RunMode.TELEOP_MODE && teleOpMode != null)
             {
                 modeThread.inTeleop(true);
+                robotPeriodic(currMode, slowPeriodicLoop);
                 teleOpMode.periodic(modeElapsedTime, slowPeriodicLoop);
                 modeThread.inTeleop(false);
             }
