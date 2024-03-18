@@ -32,24 +32,35 @@ import TrcCommonLib.trclib.TrcUtil;
 
 public class FrcXboxController extends XboxController
 {
-    public static final int BUTTON_A = 1;
-    public static final int BUTTON_B = 2;
-    public static final int BUTTON_X = 3;
-    public static final int BUTTON_Y = 4;
-    public static final int LEFT_BUMPER = 5;
-    public static final int RIGHT_BUMPER = 6;
-    public static final int BACK = 7;
-    public static final int START = 8;
-    public static final int LEFT_STICK_BUTTON = 9;
-    public static final int RIGHT_STICK_BUTTON = 10;
-    public static final int DPAD_UP = 11;
-    public static final int DPAD_RIGHT_UP = 12;
-    public static final int DPAD_RIGHT = 13;
-    public static final int DPAD_RIGHT_DOWN = 14;
-    public static final int DPAD_DOWN = 15;
-    public static final int DPAD_LEFT_DOWN = 16;
-    public static final int DPAD_LEFT = 17;
-    public static final int DPAD_LEFT_UP = 18;
+    public enum Button
+    {
+        BUTTON_A(0),
+        BUTTON_B(1),
+        BUTTON_X(2),
+        BUTTON_Y(3),
+        LEFT_BUMPER(4),
+        RIGHT_BUMPER(5),
+        BACK(6),
+        START(7),
+        LEFT_STICK_BUTTON(8),
+        RIGHT_STICK_BUTTON(9),
+        DPAD_UP(10),
+        DPAD_RIGHT_UP(11),
+        DPAD_RIGHT(12),
+        DPAD_RIGHT_DOWN(13),
+        DPAD_DOWN(14),
+        DPAD_LEFT_DOWN(15),
+        DPAD_LEFT(16),
+        DPAD_LEFT_UP(17);
+
+        int value;
+
+        Button(int value)
+        {
+            this.value = value;
+        }   //Button
+
+    }   //enum Button
 
     private static final double DEF_DEADBAND_THRESHOLD = 0.15;
     private static final double DEF_SAMPLING_PERIOD = 0.02;     //Sampling at 50Hz.
@@ -264,35 +275,35 @@ public class FrcXboxController extends XboxController
         switch (pov)
         {
             case 0:
-                buttons |= 1 << (DPAD_UP - 1);
+                buttons |= 1 << (Button.DPAD_UP.value);
                 break;
 
             case 45:
-                buttons |= 1 << (DPAD_RIGHT_UP - 1);
+                buttons |= 1 << (Button.DPAD_RIGHT_UP.value);
                 break;
 
             case 90:
-                buttons |= 1 << (DPAD_RIGHT - 1);
+                buttons |= 1 << (Button.DPAD_RIGHT.value);
                 break;
 
             case 135:
-                buttons |= 1 << (DPAD_RIGHT_DOWN - 1);
+                buttons |= 1 << (Button.DPAD_RIGHT_DOWN.value);
                 break;
 
             case 180:
-                buttons |= 1 << (DPAD_DOWN - 1);
+                buttons |= 1 << (Button.DPAD_DOWN.value);
                 break;
 
             case 225:
-                buttons |= 1 << (DPAD_LEFT_DOWN - 1);
+                buttons |= 1 << (Button.DPAD_LEFT_DOWN.value);
                 break;
 
             case 270:
-                buttons |= 1 << (DPAD_LEFT - 1);
+                buttons |= 1 << (Button.DPAD_LEFT.value);
                 break;
 
             case 315:
-                buttons |= 1 << (DPAD_LEFT_UP - 1);
+                buttons |= 1 << (Button.DPAD_LEFT_UP.value);
                 break;
         }
 
@@ -330,22 +341,22 @@ public class FrcXboxController extends XboxController
                         //
                         int buttonMask = changedButtons & ~(changedButtons ^ -changedButtons);
                         boolean pressed = (currButtons & buttonMask) != 0;
-                        int buttonNum = TrcUtil.leastSignificantSetBitPosition(buttonMask) + 1;
+                        int buttonValue = TrcUtil.leastSignificantSetBitPosition(buttonMask);
 
-                        tracer.traceDebug(instanceName, "button=" + buttonNum + ", pressed=" + pressed);
+                        tracer.traceDebug(instanceName, "button=" + buttonValue + ", pressed=" + pressed);
                         if (pressed)
                         {
                             //
                             // Button is pressed.
                             //
-                            buttonHandler.buttonEvent(buttonNum, true);
+                            buttonHandler.buttonEvent(buttonValue, true);
                         }
                         else
                         {
                             //
                             // Button is released.
                             //
-                            buttonHandler.buttonEvent(buttonNum, false);
+                            buttonHandler.buttonEvent(buttonValue, false);
                         }
                         //
                         // Clear the least significant set bit.

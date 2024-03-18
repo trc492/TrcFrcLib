@@ -31,9 +31,9 @@ public interface FrcButtonHandler
     /**
      * This method is called when button event is detected.
      *
-     * @param buttonNum specifies the button number (1-based) that generates the event
+     * @param buttonValue specifies the button enum value that generates the event.
      * @param pressed   specifies true if the button is pressed, false otherwise.
      */
-    void buttonEvent(int buttonNum, boolean pressed);
+    void buttonEvent(int buttonValue, boolean pressed);
 
 }   //interface ButonHandler

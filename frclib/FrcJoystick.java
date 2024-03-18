@@ -24,6 +24,7 @@ package TrcFrcLib.frclib;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
+
 import TrcCommonLib.trclib.TrcDbgTrace;
 import TrcCommonLib.trclib.TrcRobot;
 import TrcCommonLib.trclib.TrcTaskMgr;
@@ -36,88 +37,14 @@ import TrcCommonLib.trclib.TrcUtil;
  */
 public class FrcJoystick extends Joystick
 {
-    //
-    // Logitech Joystick:
-    // UsagePage=0x01, Usage=0x04
-    //
-    public static final int LOGITECH_TRIGGER    = 1;
-    public static final int LOGITECH_BUTTON2    = 2;
-    public static final int LOGITECH_BUTTON3    = 3;
-    public static final int LOGITECH_BUTTON4    = 4;
-    public static final int LOGITECH_BUTTON5    = 5;
-    public static final int LOGITECH_BUTTON6    = 6;
-    public static final int LOGITECH_BUTTON7    = 7;
-    public static final int LOGITECH_BUTTON8    = 8;
-    public static final int LOGITECH_BUTTON9    = 9;
-    public static final int LOGITECH_BUTTON10   = 10;
-    public static final int LOGITECH_BUTTON11   = 11;
-    public static final int LOGITECH_BUTTON12   = 12;
-    //
-    // Logitech DualAction Game Controller:
-    // UsagePage=0x01, Usage=0x04
-    //
-    public static final int DUALACTION_BUTTONX  = 1;
-    public static final int DUALACTION_BUTTONA  = 2;
-    public static final int DUALACTION_BUTTONB  = 3;
-    public static final int DUALACTION_BUTTONY  = 4;
-    public static final int DUALACTION_LB       = 5;
-    public static final int DUALACTION_RB       = 6;
-    public static final int DUALACTION_LT       = 7;
-    public static final int DUALACTION_RT       = 8;
-    public static final int DUALACTION_BACK     = 9;
-    public static final int DUALACTION_START    = 10;
-    public static final int DUALACTION_LTOP     = 11;
-    public static final int DUALACTION_RTOP     = 12;
-    //
-    // Microsoft SideWinder Joystick:
-    // UsagePage=0x01, Usage=0x04
-    //
-    public static final int SIDEWINDER_TRIGGER  = 1;
-    public static final int SIDEWINDER_BUTTON2  = 2;
-    public static final int SIDEWINDER_BUTTON3  = 3;
-    public static final int SIDEWINDER_BUTTON4  = 4;
-    public static final int SIDEWINDER_BUTTON5  = 5;
-    public static final int SIDEWINDER_BUTTON6  = 6;
-    public static final int SIDEWINDER_BUTTON7  = 7;
-    public static final int SIDEWINDER_BUTTON8  = 8;
-    public static final int SIDEWINDER_BUTTON9  = 9;
-    //
-    // Generic USB Button Panel:
-    // UsagePage=0x01, Usage=0x04 (i have no idea what this means)
-    //
-    public static final int PANEL_BUTTON_RED1   = 1;
-    public static final int PANEL_BUTTON_GREEN1 = 2;
-    public static final int PANEL_BUTTON_BLUE1  = 3;
-    public static final int PANEL_BUTTON_YELLOW1= 4;
-    public static final int PANEL_BUTTON_WHITE1 = 5;
-    public static final int PANEL_BUTTON_RED2   = 6;
-    public static final int PANEL_BUTTON_GREEN2 = 7;
-    public static final int PANEL_BUTTON_BLUE2  = 8;
-    public static final int PANEL_BUTTON_YELLOW2= 9;
-    public static final int PANEL_BUTTON_WHITE2 = 10;
-    //
-    // Generic USB Switch Panel:
-    // UsagePage=0x01, Usage=0x04 (i have no idea what this means)
-    //
-    public static final int PANEL_SWITCH_WHITE1 = 1;
-    public static final int PANEL_SWITCH_RED1   = 2;
-    public static final int PANEL_SWITCH_GREEN1 = 3;
-    public static final int PANEL_SWITCH_BLUE1  = 4;
-    public static final int PANEL_SWITCH_YELLOW1= 5;
-    public static final int PANEL_SWITCH_WHITE2 = 6;
-    public static final int PANEL_SWITCH_RED2   = 7;
-    public static final int PANEL_SWITCH_GREEN2 = 8;
-    public static final int PANEL_SWITCH_BLUE2  = 9;
-    public static final int PANEL_SWITCH_YELLOW2= 10;
-
     private static final double DEF_DEADBAND_THRESHOLD = 0.15;
     private static final double DEF_SAMPLING_PERIOD = 0.02;     //Sampling at 50Hz.
     private double samplingPeriod = DEF_SAMPLING_PERIOD;
     private double nextPeriod = 0.0;
     private double deadbandThreshold = DEF_DEADBAND_THRESHOLD;
 
-    private final TrcDbgTrace tracer;
-    private final String instanceName;
+    protected final TrcDbgTrace tracer;
+    protected final String instanceName;
     private final int port;
     private final TrcTaskMgr.TaskObject buttonEventTaskObj;
     private int prevButtons;
@@ -441,22 +368,22 @@ public class FrcJoystick extends Joystick
                         //
                         int buttonMask = changedButtons & ~(changedButtons ^ -changedButtons);
                         boolean pressed = (currButtons & buttonMask) != 0;
-                        int buttonNum = TrcUtil.leastSignificantSetBitPosition(buttonMask) + 1;
+                        int buttonValue = TrcUtil.leastSignificantSetBitPosition(buttonMask);
 
-                        tracer.traceDebug(instanceName, "button=" + buttonNum + ", pressed=" + pressed);
+                        tracer.traceDebug(instanceName, "button=" + buttonValue + ", pressed=" + pressed);
                         if (pressed)
                         {
                             //
                             // Button is pressed.
                             //
-                            buttonHandler.buttonEvent(buttonNum, true);
+                            buttonHandler.buttonEvent(buttonValue, true);
                         }
                         else
                         {
                             //
                             // Button is released.
                             //
-                            buttonHandler.buttonEvent(buttonNum, false);
+                            buttonHandler.buttonEvent(buttonValue, false);
                         }
                         //
                         // Clear the least significant set bit.

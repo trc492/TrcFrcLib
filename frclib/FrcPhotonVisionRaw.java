@@ -150,17 +150,13 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
     {
         AUTO(0), OFF(1), BLINK(2), ON(3);
 
-        private int value;
+        int value;
 
         LEDMode(int value)
         {
             this.value = value;
         }
 
-        public int getValue()
-        {
-            return value;
-        }
     }   //enum LEDMode
 
     private final NetworkTable networkTable;
@@ -369,7 +365,7 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
      */
     public void setLEDMode(LEDMode mode)
     {
-        ledMode.setDouble(mode.getValue());
+        ledMode.setDouble(mode.value);
     }   // setLEDMode
 
     /**
