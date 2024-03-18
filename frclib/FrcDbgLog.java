@@ -56,6 +56,10 @@ public class FrcDbgLog implements TrcDbgTrace.DbgLog
             case INFO:
                 prefix = "_Info: ";
                 break;
+
+            case DEBUG:
+                prefix = "_Debug: ";
+                break;
     
             case VERBOSE:
                 prefix = "_Verbose: ";
