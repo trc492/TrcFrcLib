@@ -488,9 +488,11 @@ public abstract class FrcPhotonVision extends PhotonCamera
     {
         Transform2d offset = new Transform2d(
             new Translation2d(Units.inchesToMeters(yOffset), Units.inchesToMeters(-xOffset)),
-            new Rotation2d(Units.degreesToRadians(targetAngle)));
+            new Rotation2d(Units.degreesToRadians(-targetAngle)));
         Pose2d targetPose2d = aprilTagFieldPose3d.toPose2d().plus(offset);
-        return new TrcPose2D(targetPose2d.getX(), -targetPose2d.getY(), -targetPose2d.getRotation().getDegrees());
+        return new TrcPose2D(
+            Units.metersToInches(-targetPose2d.getY()), Units.metersToInches(targetPose2d.getX()),
+            -targetPose2d.getRotation().getDegrees());
     }   //getTargetPoseOffsetFromAprilTag
 
 }   //class FrcPhotonVision
