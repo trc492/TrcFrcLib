@@ -481,15 +481,15 @@ public abstract class FrcPhotonVision extends PhotonCamera
      * @param aprilTagFieldPose3d specifies the AprilTag 3D field pose.
      * @param xOffset specifies the x-offset from AprilTag in inches.
      * @param yOffset specifies the y-offset from AprilTag in inches.
-     * @param targetAngle specifies the target field angle in degrees.
+     * @param angleOffset specifies the angle offset in degrees.
      * @return calculated target pose.
      */
-    public TrcPose2D getTargetPoseOffsetFromAprilTag(Pose3d aprilTagFieldPose3d, double xOffset, double yOffset, double targetAngle)
+    public TrcPose2D getTargetPoseOffsetFromAprilTag(Pose3d aprilTagFieldPose3d, double xOffset, double yOffset, double angleOffset)
     {
+        // TODO: Need to be debugged.
         Transform2d offset = new Transform2d(
-            new Translation2d(Units.inchesToMeters(yOffset), Units.inchesToMeters(-xOffset)),
-            new Rotation2d(Units.degreesToRadians(-targetAngle)));
-        Pose2d targetPose2d = aprilTagFieldPose3d.toPose2d().plus(offset);
+            new Translation2d(Units.inchesToMeters(yOffset), Units.inchesToMeters(-xOffset)), new Rotation2d(-angleOffset));
+        Pose2d targetPose2d = aprilTagFieldPose3d.toPose2d().transformBy(offset);
         return new TrcPose2D(
             Units.metersToInches(-targetPose2d.getY()), Units.metersToInches(targetPose2d.getX()),
             -targetPose2d.getRotation().getDegrees());
