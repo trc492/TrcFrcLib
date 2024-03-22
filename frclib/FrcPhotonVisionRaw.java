@@ -42,7 +42,7 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
         public final Object target;
-        public final TrcPose2D pose;
+        public final TrcPose2D targetPose;
         public final double area;
         public final double pitch;
         public final double yaw;
@@ -52,7 +52,7 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
          * Constructor: Creates an instance of the object.
          *
          * @param target specifies the detected object.
-         * @param pose specifies the detected target pose.
+         * @param targetPose specifies the detected target pose.
          * @param area specifies the area of the detected target.
          * @param pitch specifies the pitch angle of the detected target.
          * @param yaw specifies the yaw angle of the detected target.
@@ -60,10 +60,10 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
          * @param pixelY specifies the y screen coordinate in pixels of the detected target.
          */
         public DetectedObject(
-            Object target, TrcPose2D pose, double area, double pitch, double yaw, double pixelX, double pixelY)
+            Object target, TrcPose2D targetPose, double area, double pitch, double yaw, double pixelX, double pixelY)
         {
             this.target = target;
-            this.pose = pose;
+            this.targetPose = targetPose;
             this.area = area;
             this.pitch = pitch;
             this.yaw = yaw;
@@ -81,7 +81,7 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
         {
             return
                 "{Target=" + target +
-                ",Pose=" + pose + 
+                ",Pose=" + targetPose +
                 ",area=" + area +
                 ",pitch=" + pitch +
                 ",yaw=" + yaw +
@@ -119,7 +119,7 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
         @Override
         public TrcPose2D getObjectPose()
         {
-            return pose;
+            return targetPose;
         }   //getObjectPose
 
         /**
@@ -411,7 +411,7 @@ public class FrcPhotonVisionRaw extends FrcRemoteVisionProcessor
     @Override
     protected TrcPose2D getTargetPose(TargetData<?> targetData)
     {
-        return ((DetectedObject) targetData.data).pose;
+        return ((DetectedObject) targetData.data).targetPose;
     }   //getTargetPose
 
 }   //class FrcPhotonVisionRaw
