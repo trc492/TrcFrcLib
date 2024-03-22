@@ -439,7 +439,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
             robotPose = new TrcPose2D(
                 Units.metersToInches(-translation.getY()),
                 Units.metersToInches(translation.getX()),
-                rotation.getDegrees());
+                -rotation.getDegrees());
         }
 
         return robotPose;
