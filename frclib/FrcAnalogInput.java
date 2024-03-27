@@ -98,9 +98,9 @@ public class FrcAnalogInput extends TrcAnalogInput
      * @return raw sensor data of the specified type.
      */
     @Override
-    public SensorData<Double> getRawData(int index, DataType dataType)
+    public SensorData getRawData(int index, DataType dataType)
     {
-        SensorData<Double> data;
+        SensorData data;
 
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordStartTime();
         if (dataType == DataType.RAW_DATA || dataType == DataType.INPUT_DATA)
@@ -118,7 +118,7 @@ public class FrcAnalogInput extends TrcAnalogInput
                 "AnalogInput sensor only support RAW_DATA/INPUT_DATA/NORMALIZED_DATA types.");
         }
         if (getInputElapsedTimer != null) getInputElapsedTimer.recordEndTime();
-        data = new SensorData<>(TrcTimer.getCurrentTime(), sensorData);
+        data = new SensorData(TrcTimer.getCurrentTime(), sensorData);
 
         return data;
     }   //getRawData

@@ -77,7 +77,7 @@ public class FrcAHRSGyro extends TrcGyro
      * @param dataType specifies the data type.
      * @return raw data of the specified type for the x-axis.
      */
-    public SensorData<Double> getRawXData(DataType dataType)
+    public SensorData getRawXData(DataType dataType)
     {
         double value = 0.0;
 
@@ -89,7 +89,7 @@ public class FrcAHRSGyro extends TrcGyro
         {
             value = ahrs.getPitch();
         }
-        SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
+        SensorData data = new SensorData(TrcTimer.getCurrentTime(), value);
 
         return data;
     }   //getRawXData
@@ -100,7 +100,7 @@ public class FrcAHRSGyro extends TrcGyro
      * @param dataType specifies the data type.
      * @return raw data of the specified type for the y-axis.
      */
-    public SensorData<Double> getRawYData(DataType dataType)
+    public SensorData getRawYData(DataType dataType)
     {
         double value = 0.0;
 
@@ -112,7 +112,7 @@ public class FrcAHRSGyro extends TrcGyro
         {
             value = ahrs.getRoll();
         }
-        SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
+        SensorData data = new SensorData(TrcTimer.getCurrentTime(), value);
 
         return data;
     }   //getRawYData
@@ -123,7 +123,7 @@ public class FrcAHRSGyro extends TrcGyro
      * @param dataType specifies the data type.
      * @return raw data of the specified type for the z-axis.
      */
-    public SensorData<Double> getRawZData(DataType dataType)
+    public SensorData getRawZData(DataType dataType)
     {
         double value = 0.0;
 
@@ -135,7 +135,7 @@ public class FrcAHRSGyro extends TrcGyro
         {
             value = ahrs.getAngle();
         }
-        SensorData<Double> data = new SensorData<>(TrcTimer.getCurrentTime(), value);
+        SensorData data = new SensorData(TrcTimer.getCurrentTime(), value);
 
         return data;
     }   //getRawZData
@@ -178,9 +178,9 @@ public class FrcAHRSGyro extends TrcGyro
      *
      * @return X rotation rate.
      */
-    public SensorData<Double> getXRotationRate()
+    public SensorData getXRotationRate()
     {
-        return new SensorData<>(TrcTimer.getCurrentTime(), xSign*ahrs.getRawGyroX());
+        return new SensorData(TrcTimer.getCurrentTime(), xSign*ahrs.getRawGyroX());
     }   //getXRotationRate
 
     /**
@@ -188,9 +188,9 @@ public class FrcAHRSGyro extends TrcGyro
      *
      * @return Y rotation rate.
      */
-    public SensorData<Double> getYRotationRate()
+    public SensorData getYRotationRate()
     {
-        return new SensorData<>(TrcTimer.getCurrentTime(), ySign*ahrs.getRawGyroY());
+        return new SensorData(TrcTimer.getCurrentTime(), ySign*ahrs.getRawGyroY());
     }   //getYRotationRate
 
     /**
@@ -198,9 +198,9 @@ public class FrcAHRSGyro extends TrcGyro
      *
      * @return Z rotation rate.
      */
-    public SensorData<Double> getZRotationRate()
+    public SensorData getZRotationRate()
     {
-        return new SensorData<>(TrcTimer.getCurrentTime(), zSign*ahrs.getRate());
+        return new SensorData(TrcTimer.getCurrentTime(), zSign*ahrs.getRate());
     }   //getZRotationRate
 
     /**
@@ -210,9 +210,9 @@ public class FrcAHRSGyro extends TrcGyro
      *
      * @return X heading.
      */
-    public SensorData<Double> getXHeading()
+    public SensorData getXHeading()
     {
-        return new SensorData<>(TrcTimer.getCurrentTime(), xSign*ahrs.getPitch());
+        return new SensorData(TrcTimer.getCurrentTime(), xSign*ahrs.getPitch());
     }   //getXHeading
 
     /**
@@ -222,9 +222,9 @@ public class FrcAHRSGyro extends TrcGyro
      *
      * @return Y heading.
      */
-    public SensorData<Double> getYHeading()
+    public SensorData getYHeading()
     {
-        return new SensorData<>(TrcTimer.getCurrentTime(), ySign*ahrs.getRoll());
+        return new SensorData(TrcTimer.getCurrentTime(), ySign*ahrs.getRoll());
     }   //getYHeading
 
     /**
@@ -234,9 +234,9 @@ public class FrcAHRSGyro extends TrcGyro
      *
      * @return Z heading.
      */
-    public SensorData<Double> getZHeading()
+    public SensorData getZHeading()
     {
-        return new SensorData<>(TrcTimer.getCurrentTime(), zSign*ahrs.getAngle());
+        return new SensorData(TrcTimer.getCurrentTime(), zSign*ahrs.getAngle());
     }   //getZHeading
 
     /**
