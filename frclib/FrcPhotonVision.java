@@ -480,9 +480,14 @@ public abstract class FrcPhotonVision extends PhotonCamera
      * @return robot's field position.
      */
     public TrcPose2D getRobotPoseFromAprilTagFieldPose(
-        TrcPose2D aprilTagFieldPose, TrcPose2D aprilTagTargetPose, TrcPose2D robotToCamera)
+        Pose3d aprilTagFieldPose3d, Transform3d cameraToTarget, Transform3d robotToCamera)
     {
-        return aprilTagFieldPose.subtractRelativePose(aprilTagTargetPose).subtractRelativePose(robotToCamera);
+        Pose2d robotPose2d =
+            aprilTagFieldPose3d.transformBy(cameraToTarget.inverse()).transformBy(robotToCamera.inverse()).toPose2d();
+
+        return new TrcPose2D(
+            Units.metersToInches(-robotPose2d.getY()), Units.metersToInches(robotPose2d.getX()),
+            -robotPose2d.getRotation().getDegrees());
     }   //getRobotPoseFromAprilTagFieldPose
 
     /**
