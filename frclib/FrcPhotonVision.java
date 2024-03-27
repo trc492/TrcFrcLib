@@ -484,15 +484,17 @@ public abstract class FrcPhotonVision extends PhotonCamera
      * @param angleOffset specifies the angle offset in degrees.
      * @return calculated target pose.
      */
-    public TrcPose2D getTargetPoseOffsetFromAprilTag(Pose3d aprilTagFieldPose3d, double xOffset, double yOffset, double angleOffset)
+    public TrcPose2D getTargetPoseOffsetFromAprilTag(
+        Pose3d aprilTagFieldPose3d, double xOffset, double yOffset, double angleOffset)
     {
         // TODO: Need to be debugged.
         Transform2d offset = new Transform2d(
-            new Translation2d(Units.inchesToMeters(yOffset), Units.inchesToMeters(-xOffset)), new Rotation2d(-angleOffset));
+            new Translation2d(Units.inchesToMeters(yOffset), Units.inchesToMeters(-xOffset)),
+            new Rotation2d(Units.degreesToRadians(-angleOffset)));
         Pose2d targetPose2d = aprilTagFieldPose3d.toPose2d().transformBy(offset);
         return new TrcPose2D(
             Units.metersToInches(-targetPose2d.getY()), Units.metersToInches(targetPose2d.getX()),
-            -targetPose2d.getRotation().getDegrees());
+            180.0 - targetPose2d.getRotation().getDegrees());
     }   //getTargetPoseOffsetFromAprilTag
 
 }   //class FrcPhotonVision
