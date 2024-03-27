@@ -440,6 +440,16 @@ public abstract class FrcPhotonVision extends PhotonCamera
                 Units.metersToInches(-translation.getY()),
                 Units.metersToInches(translation.getX()),
                 -rotation.getDegrees());
+            tracer.traceDebug(
+                instanceName,
+                "PhotonVision reported estimatedPose for aprilTagId=" + result.getBestTarget().getFiducialId() + ".");
+        }
+        else
+        {
+            tracer.traceDebug(
+                instanceName,
+                "PhotonVision reported estimatedPose not present for aprilTagId=" +
+                result.getBestTarget().getFiducialId() + ".");
         }
 
         return robotPose;
