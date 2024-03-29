@@ -448,8 +448,7 @@ public abstract class FrcPhotonVision extends PhotonCamera
         {
             tracer.traceDebug(
                 instanceName,
-                "PhotonVision reported estimatedPose not present for aprilTagId=" +
-                result.getBestTarget().getFiducialId() + ".");
+                "PhotonVision reported estimatedPose not present");
         }
 
         return robotPose;
