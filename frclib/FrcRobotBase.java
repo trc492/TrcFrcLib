@@ -27,6 +27,7 @@ import java.io.IOException;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.internal.DriverStationModeThread;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.hal.DriverStationJNI;
@@ -106,6 +107,9 @@ public abstract class FrcRobotBase extends RobotBase
     private RobotMode autoMode = null;
     private RobotMode testMode = null;
     private RobotMode disabledMode = null;
+    private TrcEvent sysActiveEvent = null;
+    private TrcEvent.Callback sysActiveEventCallback = null;
+    private boolean isSysActive = false;
 
     /**
      * Constructor: Create an instance of the object.
@@ -281,6 +285,36 @@ public abstract class FrcRobotBase extends RobotBase
             TrcDbgTrace.printThreadStack();
         }
     }   //sendWatchdogHeartBeat
+
+    /**
+     * This method enables/disables SysActive monitoring. This is very useful for detecting comm lost or comm
+     * reconnect.
+     *
+     * @param callback specifies the callback handler to enable SysActive monitoring, null to disable.
+     */
+    public void setSysActiveMonitorEnabled(TrcEvent.Callback callback)
+    {
+        if (callback != null)
+        {
+            sysActiveEvent = new TrcEvent("SysActive");
+            isSysActive = RobotController.isSysActive();
+        }
+        else
+        {
+            sysActiveEvent = null;
+        }
+        this.sysActiveEventCallback = callback;
+    }   //setSysActiveMonitorEnabled
+
+    /**
+     * This method returns the sysActiveEvent object if sysActive monitor is enabled..
+     *
+     * @return sysActiveEvent object, null if sysActive Monitor is not enabled.
+     */
+    public TrcEvent getSysActiveEvent()
+    {
+        return sysActiveEvent;
+    }   //getSysActiveEvent
 
     /**
      * Start the competition match. This specific startCompetition() implements "main loop" behavior like that of the
@@ -484,6 +518,21 @@ public abstract class FrcRobotBase extends RobotBase
             {
                 nextSlowLoopTime = currTime + slowPeriodicInterval;
                 slowLoopCounter++;
+            }
+            // SysActive monitor is enabled.
+            if (sysActiveEventCallback != null)
+            {
+                boolean sysActive = RobotController.isSysActive();
+
+                if (isSysActive ^ sysActive)
+                {
+                    globalTracer.traceInfo(
+                        moduleName,
+                        "***** SysActive: robot is " + (sysActive? "connected": "disconnected") + ". *****");
+                    sysActiveEvent.setCallback(sysActiveEventCallback, sysActive);
+                    sysActiveEvent.signal();
+                    isSysActive = sysActive;
+                }
             }
             //
             // PrePeriodic.
