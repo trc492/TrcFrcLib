@@ -107,9 +107,9 @@ public abstract class FrcRobotBase extends RobotBase
     private RobotMode autoMode = null;
     private RobotMode testMode = null;
     private RobotMode disabledMode = null;
-    private TrcEvent sysActiveEvent = null;
-    private TrcEvent.Callback sysActiveEventCallback = null;
-    private boolean isSysActive = false;
+    private TrcEvent commStatusEvent = null;
+    private TrcEvent.Callback commStatusEventCallback = null;
+    private boolean prevCommStatus = false;
 
     /**
      * Constructor: Create an instance of the object.
@@ -287,34 +287,46 @@ public abstract class FrcRobotBase extends RobotBase
     }   //sendWatchdogHeartBeat
 
     /**
-     * This method enables/disables SysActive monitoring. This is very useful for detecting comm lost or comm
+     * This method returns the Comm Status.
+     *
+     * @return true if comm is still active, false if we lost comm.
+     */
+    public boolean getCommStatus()
+    {
+        // If there is a brownout, isSysActive also returns false but it doesn't mean we lost comm.
+        // We lost comm only if both isSysActive and isBrownedOut are false.
+        return RobotController.isSysActive() || RobotController.isBrownedOut();
+    }   //getCommStatus
+
+    /**
+     * This method enables/disables Comm Status monitoring. This is very useful for detecting comm lost or comm
      * reconnect.
      *
-     * @param callback specifies the callback handler to enable SysActive monitoring, null to disable.
+     * @param callback specifies the callback handler to enable Comm Status monitoring, null to disable.
      */
-    public void setSysActiveMonitorEnabled(TrcEvent.Callback callback)
+    public void setCommStatusMonitorEnabled(TrcEvent.Callback callback)
     {
         if (callback != null)
         {
-            sysActiveEvent = new TrcEvent("SysActive");
-            isSysActive = RobotController.isSysActive();
+            commStatusEvent = new TrcEvent("CommStatus");
+            prevCommStatus = getCommStatus();
         }
         else
         {
-            sysActiveEvent = null;
+            commStatusEvent = null;
         }
-        this.sysActiveEventCallback = callback;
-    }   //setSysActiveMonitorEnabled
+        this.commStatusEventCallback = callback;
+    }   //setCommStatusMonitorEnabled
 
     /**
-     * This method returns the sysActiveEvent object if sysActive monitor is enabled..
+     * This method returns the commStatusEvent object if Comm Status Monitor is enabled.
      *
-     * @return sysActiveEvent object, null if sysActive Monitor is not enabled.
+     * @return commStatusEvent object, null if Comm Status Monitor is not enabled.
      */
-    public TrcEvent getSysActiveEvent()
+    public TrcEvent getCommStatusEvent()
     {
-        return sysActiveEvent;
-    }   //getSysActiveEvent
+        return commStatusEvent;
+    }   //getCommStatusEvent
 
     /**
      * Start the competition match. This specific startCompetition() implements "main loop" behavior like that of the
@@ -519,19 +531,19 @@ public abstract class FrcRobotBase extends RobotBase
                 nextSlowLoopTime = currTime + slowPeriodicInterval;
                 slowLoopCounter++;
             }
-            // SysActive monitor is enabled.
-            if (sysActiveEventCallback != null)
+            // Comm Status Monitor is enabled.
+            if (commStatusEventCallback != null)
             {
-                boolean sysActive = RobotController.isSysActive();
+                boolean commStatus = getCommStatus();
 
-                if (isSysActive ^ sysActive)
+                if (prevCommStatus ^ commStatus)
                 {
                     globalTracer.traceInfo(
                         moduleName,
-                        "***** SysActive: robot is " + (sysActive? "connected": "disconnected") + ". *****");
-                    sysActiveEvent.setCallback(sysActiveEventCallback, sysActive);
-                    sysActiveEvent.signal();
-                    isSysActive = sysActive;
+                        "***** CommStatus: Comm is " + (commStatus? "connected": "disconnected") + ". *****");
+                    commStatusEvent.setCallback(commStatusEventCallback, commStatus);
+                    commStatusEvent.signal();
+                    prevCommStatus = commStatus;
                 }
             }
             //
